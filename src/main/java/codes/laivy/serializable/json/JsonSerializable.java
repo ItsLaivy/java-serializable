@@ -8,12 +8,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 import sun.misc.Unsafe;
 
-import java.io.InvalidClassException;
-import java.io.ObjectStreamClass;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.io.*;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -319,6 +315,8 @@ public final class JsonSerializable {
 
             // Start serialization
             @NotNull JsonObject json = new JsonObject();
+            @NotNull JsonArray writeObjectArray = new JsonArray();
+            boolean hasWriteObjectData = false;
 
             // Start serializes the fields
             @NotNull Class<?> type = object.getClass();
@@ -329,7 +327,39 @@ public final class JsonSerializable {
                     serialize0(json, object, field, map);
                 }
 
+                // Check for #writeObject availability and invoke it
+                @Nullable Method writeObject = getWriteObjectField(type);
+                @NotNull ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+                if (writeObject != null) try (@NotNull ObjectOutputStream oss = new ObjectOutputStream(stream)) {
+                    writeObject.setAccessible(true);
+                    writeObject.invoke(object, oss);
+                    writeObject.setAccessible(false);
+                } catch (@NotNull IOException e) {
+                    throw new RuntimeException("cannot create object output stream to perform #writeObject invoke from class '" + type + "'", e);
+                } catch (@NotNull InvocationTargetException e) {
+                    throw new RuntimeException("cannot execute #writeObject from class '" + type + "'", e);
+                } catch (@NotNull IllegalAccessException e) {
+                    throw new RuntimeException("cannot access #writeObject method from class '" + type + "'", e);
+                }
+
+                @NotNull JsonArray array = new JsonArray();
+                for (byte b : stream.toByteArray()) {
+                    array.add(b);
+                }
+
+                writeObjectArray.add(array);
+
+                if (!array.isEmpty()) {
+                    hasWriteObjectData = true;
+                }
+
+                // Finish with the superclass
                 type = type.getSuperclass();
+            }
+
+            if (hasWriteObjectData) {
+                json.add("#writeObject", writeObjectArray);
             }
 
             return json;
@@ -489,33 +519,70 @@ public final class JsonSerializable {
             }
         } else if (element.isJsonObject()) try {
             @NotNull JsonObject object = element.getAsJsonObject();
-
             @NotNull Object instance = getUnsafe().allocateInstance(type);
-            @NotNull Class<?> clazz = instance.getClass();
 
             for (@NotNull String key : object.keySet()) {
                 @NotNull JsonElement value = object.get(key);
-                @Nullable Field field = getFieldByName(instance, key);
 
-                if (field == null) {
-                    throw new InvalidClassException("there's no field with name '" + key + "'");
-                }
-
-                field.setAccessible(true);
-
-                boolean isFinal = Modifier.isFinal(field.getModifiers());
-                if (isFinal) setFieldFinal(field, false);
-
-                try {
-                    if (value.isJsonNull()) {
-                        field.set(instance, null);
-                    } else if (field.getType().isArray()) {
-                        field.set(instance, deserialize(field.getType().getComponentType(), value.getAsJsonArray()));
-                    } else {
-                        field.set(instance, deserialize0(field.getType(), value));
+                if (key.equals("#writeObject")) {
+                    if (!value.isJsonArray()) {
+                        throw new InstantiationException("writeObject json data must be an array!");
                     }
-                } finally {
-                    if (isFinal) setFieldFinal(field, true);
+
+                    @NotNull JsonArray array = value.getAsJsonArray();
+                    @NotNull Class<?> clazz = instance.getClass();
+
+                    for (@NotNull JsonArray inner : array.asList().stream().map(JsonElement::getAsJsonArray).toArray(JsonArray[]::new)) {
+                        @Nullable Method method = getReadObjectField(clazz);
+
+                        if (method != null) try {
+                            byte[] bytes = new byte[inner.size()];
+                            int row = 0;
+
+                            for (@NotNull Byte b : inner.asList().stream().map(JsonElement::getAsByte).toArray(Byte[]::new)) {
+                                bytes[row] = b;
+                                row++;
+                            }
+
+                            @NotNull ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+                            @NotNull ObjectInputStream ois = new ObjectInputStream(stream);
+
+                            method.setAccessible(true);
+                            method.invoke(instance, ois);
+                            method.setAccessible(false);
+                        } catch (@NotNull IOException e) {
+                            throw new RuntimeException("cannot create object input stream to perform #readObject invoke from class '" + type + "'", e);
+                        } catch (@NotNull InvocationTargetException e) {
+                            throw new RuntimeException("cannot execute #readObject from class '" + type + "'", e);
+                        } catch (@NotNull IllegalAccessException e) {
+                            throw new RuntimeException("cannot access #readObject method from class '" + type + "'", e);
+                        }
+
+                        clazz = clazz.getSuperclass();
+                    }
+                } else {
+                    @Nullable Field field = getFieldByName(instance, key);
+
+                    if (field == null) {
+                        throw new InvalidClassException("there's no field with name '" + key + "'");
+                    }
+
+                    field.setAccessible(true);
+
+                    boolean isFinal = Modifier.isFinal(field.getModifiers());
+                    if (isFinal) setFieldFinal(field, false);
+
+                    try {
+                        if (value.isJsonNull()) {
+                            field.set(instance, null);
+                        } else if (field.getType().isArray()) {
+                            field.set(instance, deserialize(field.getType().getComponentType(), value.getAsJsonArray()));
+                        } else {
+                            field.set(instance, deserialize0(field.getType(), value));
+                        }
+                    } finally {
+                        if (isFinal) setFieldFinal(field, true);
+                    }
                 }
             }
 
@@ -625,6 +692,37 @@ public final class JsonSerializable {
             }
         } catch (@NotNull NoSuchFieldException | @NotNull IllegalAccessException e) {
             throw new RuntimeException("cannot mark field as" + (isFinal ? " " : " not") + " final", e);
+        }
+    }
+
+    private static @Nullable Method getWriteObjectField(@NotNull Class<?> type) throws InvalidClassException {
+        try {
+            @NotNull Method method = type.getDeclaredMethod("writeObject", ObjectOutputStream.class);
+
+            if (method.getReturnType() != void.class) {
+                throw new InvalidClassException("the #writeObject method must return void");
+            } else if (!Modifier.isPrivate(method.getModifiers())) {
+                throw new InvalidClassException("the #writeObject method must be private");
+            }
+
+            return method;
+        } catch (@NotNull NoSuchMethodException e) {
+            return null;
+        }
+    }
+    private static @Nullable Method getReadObjectField(@NotNull Class<?> type) throws InvalidClassException {
+        try {
+            @NotNull Method method = type.getDeclaredMethod("readObject", ObjectInputStream.class);
+
+            if (method.getReturnType() != void.class) {
+                throw new InvalidClassException("the #writeObject method must return void");
+            } else if (!Modifier.isPrivate(method.getModifiers())) {
+                throw new InvalidClassException("the #writeObject method must be private");
+            }
+
+            return method;
+        } catch (@NotNull NoSuchMethodException e) {
+            return null;
         }
     }
 
