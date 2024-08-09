@@ -41,6 +41,8 @@ public final class User {
     private final String name;
     
     private final int age;
+    
+    private final transient String data; // This data will be ignored, it's transient!
 
     // Constructors, getters, and setters
 }
