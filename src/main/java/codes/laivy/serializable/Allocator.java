@@ -28,17 +28,19 @@ public final class Allocator {
                     @NotNull String arch = System.getProperty("os.arch");
 
                     if (os.contains("win")) {
-                        if (arch.endsWith("64")) {
+                        if (arch.contains("64")) {
                             stream = Allocator.class.getResourceAsStream("/libs/win64.dll");
-                        } else if (arch.endsWith("32")) {
+                        } else if (arch.contains("32")) {
                             stream = Allocator.class.getResourceAsStream("/libs/win32.dll");
-                        } else {
-                            throw new UnsupportedOperationException("the library isn't compatible with your windows OS arch '" + arch + "'");
                         }
+                    } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+                        stream = Allocator.class.getResourceAsStream("/libs/linux.so");
+                    } else if (os.contains("mac")) {
+                        stream = Allocator.class.getResourceAsStream("/libs/macos.dylib");
                     }
 
                     if (stream == null) {
-                        throw new UnsupportedOperationException("this operating system isn't compatible with the library '" + os + "'");
+                        throw new UnsupportedOperationException("this operating system isn't compatible with the library '" + os + "' with arch '" + arch + "'");
                     }
 
                     try (@NotNull OutputStream out = Files.newOutputStream(file.toPath())) {
