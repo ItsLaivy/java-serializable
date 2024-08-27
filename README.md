@@ -3,6 +3,8 @@
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
 ![License](https://img.shields.io/github/license/ItsLaivy/java-serializable?style=for-the-badge)
 
+> :warning: **Java Serializable 1.0 has issues serializing objects with the custom [`#readObject`](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/Serializable.html#readObject(java.io.ObjectInputStream)) or [`#writeObject`](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/Serializable.html#writeObject(java.io.ObjectOutputStream)) method(s). I'm already preparing an update to fix this in the 1.1 release!**
+
 ## 🌐 Overview
 
 Welcome to the java-serializable library!
