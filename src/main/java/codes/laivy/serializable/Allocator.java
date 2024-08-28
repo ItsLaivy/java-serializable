@@ -34,7 +34,11 @@ public final class Allocator {
                             stream = Allocator.class.getResourceAsStream("/libs/win32.dll");
                         }
                     } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
-                        stream = Allocator.class.getResourceAsStream("/libs/linux.so");
+                        if (arch.contains("64")) {
+                            stream = Allocator.class.getResourceAsStream("/libs/linux64.dll");
+                        } else if (arch.contains("32")) {
+                            stream = Allocator.class.getResourceAsStream("/libs/linux32.dll");
+                        }
                     } else if (os.contains("mac")) {
                         stream = Allocator.class.getResourceAsStream("/libs/macos.dylib");
                     }

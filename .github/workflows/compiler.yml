@@ -71,22 +71,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
-          
-      - name: Build SO
+          sudo apt-get install -y build-essential gcc-multilib
+
+      - name: Build SO x64
         run: |
           mkdir -p src/main/resources/libs
-          gcc -shared -o src/main/resources/libs/linux.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+          gcc -m64 -shared -o src/main/resources/libs/linux64.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
 
-      - name: Upload linux SO
+      - name: Build SO x86
+        run: |
+          mkdir -p src/main/resources/libs
+          gcc -m32 -shared -o src/main/resources/libs/linux32.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+
+      - name: Upload linux SO x64
         uses: actions/upload-artifact@v3
         with:
-          name: linux-so
-          path: src/main/resources/libs/linux.so
+          name: linux64-so
+          path: src/main/resources/libs/linux64.so
+
+      - name: Upload linux SO x86
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux32-so
+          path: src/main/resources/libs/linux32.so
 
   build_macos:
     name: Build on macOS
@@ -108,7 +119,7 @@ jobs:
         with:
           name: macos-dylib
           path: src/main/resources/libs/macos.dylib
-          
+
   post_processing:
     name: Post-processing and Deployment
     needs: [build_windows_x64, build_windows_x86, build_linux, build_macos]
@@ -125,11 +136,15 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: win32-dll
-          
-      - name: Download artifacts from Linux
+
+      - name: Download artifacts from Linux x64
         uses: actions/download-artifact@v3
         with:
-          name: linux-so
+          name: linux64-so
+      - name: Download artifacts from Linux x86
+        uses: actions/download-artifact@v3
+        with:
+          name: linux32-so
 
       - name: Download artifacts from macOS
         uses: actions/download-artifact@v3
@@ -143,12 +158,13 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
       - name: Move artifacts to repo
-        run: | 
+        run: |
           mkdir -p src/main/resources/libs
-        
+          
           mv win64.dll src/main/resources/libs/
           mv win32.dll src/main/resources/libs/
-          mv linux.so src/main/resources/libs/
+          mv linux64.so src/main/resources/libs/
+          mv linux32.so src/main/resources/libs/
           mv macos.dylib src/main/resources/libs/
 
       - name: Commit and push changes
