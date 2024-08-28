@@ -1,0 +1,26 @@
+name: Maven Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        java-version: [8, 9, 12, 17, 20, 21]
+
+    name: Java ${{ matrix.java-version }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: zulu
+
+      - name: Compile and test with Maven
+        run: mvn clean verify

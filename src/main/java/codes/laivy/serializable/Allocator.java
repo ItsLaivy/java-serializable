@@ -20,6 +20,7 @@ public final class Allocator {
             System.loadLibrary("laivy/serializable");
         } catch (@NotNull UnsatisfiedLinkError ignore) { // Library doesn't exist
             @NotNull String os = System.getProperty("os.name").toLowerCase();
+            // todo: improve this caching
             @NotNull File file = new File(new File(System.getProperty("java.io.tmpdir")), "java-serializable." + (os.contains("win") ? "dll" : "so"));
 
             try {

@@ -5,6 +5,7 @@ on:
     paths:
       - '**/*.c'
       - '.github/workflows/**'
+      - 'src/main/resources/libs/**'
 
 jobs:
   build_windows_x64:
