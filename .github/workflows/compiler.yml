@@ -33,14 +33,14 @@ jobs:
 
       - name: Build 64-bit DLL
         run: |
-          mkdir -p src/resources/libs
-          gcc -m64 -shared -o src/resources/libs/win64.dll src/main/c/allocator.c -I "$env:JAVA_HOME/include" -I "$env:JAVA_HOME/include/win32"
+          mkdir -p src/main/resources/libs
+          gcc -m64 -shared -o src/main/resources/libs/win64.dll src/main/c/allocator.c -I "$env:JAVA_HOME/include" -I "$env:JAVA_HOME/include/win32"
 
       - name: Upload win64 DLL
         uses: actions/upload-artifact@v3
         with:
           name: win64-dll
-          path: src/resources/libs/win64.dll
+          path: src/main/resources/libs/win64.dll
 
   build_windows_x86:
     name: Build on Windows x86
@@ -56,14 +56,14 @@ jobs:
 
       - name: Build 32-bit DLL
         run: |
-          mkdir -p src/resources/libs
-          i686-w64-mingw32-gcc -shared -o src/resources/libs/win32.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+          mkdir -p src/main/resources/libs
+          i686-w64-mingw32-gcc -shared -o src/main/resources/libs/win32.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
 
       - name: Upload win32 DLL
         uses: actions/upload-artifact@v3
         with:
           name: win32-dll
-          path: src/resources/libs/win32.dll
+          path: src/main/resources/libs/win32.dll
 
   build_linux:
     name: Build on Linux
@@ -79,14 +79,14 @@ jobs:
           
       - name: Build SO
         run: |
-          mkdir -p src/resources/libs
-          gcc -shared -o src/resources/libs/linux.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+          mkdir -p src/main/resources/libs
+          gcc -shared -o src/main/resources/libs/linux.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
 
       - name: Upload linux SO
         uses: actions/upload-artifact@v3
         with:
           name: linux-so
-          path: src/resources/libs/linux.so
+          path: src/main/resources/libs/linux.so
 
   build_macos:
     name: Build on macOS
@@ -100,14 +100,14 @@ jobs:
 
       - name: Build DYLIB
         run: |
-          mkdir -p src/resources/libs
-          gcc -dynamiclib -o src/resources/libs/macos.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin"
+          mkdir -p src/main/resources/libs
+          gcc -dynamiclib -o src/main/resources/libs/macos.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin"
 
       - name: Upload macos64 SO
         uses: actions/upload-artifact@v3
         with:
           name: macos-dylib
-          path: src/resources/libs/macos.dylib
+          path: src/main/resources/libs/macos.dylib
           
   post_processing:
     name: Post-processing and Deployment
@@ -144,17 +144,17 @@ jobs:
 
       - name: Move artifacts to repo
         run: | 
-          mkdir -p src/resources/libs
+          mkdir -p src/main/resources/libs
         
-          mv win64.dll src/resources/libs/
-          mv win32.dll src/resources/libs/
-          mv linux.so src/resources/libs/
-          mv macos.dylib src/resources/libs/
+          mv win64.dll src/main/resources/libs/
+          mv win32.dll src/main/resources/libs/
+          mv linux.so src/main/resources/libs/
+          mv macos.dylib src/main/resources/libs/
 
       - name: Commit and push changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add src/resources/libs/
+          git add src/main/resources/libs/
           git commit -m "Add built libraries"
           git push
