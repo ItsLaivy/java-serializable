@@ -24,7 +24,7 @@ jobs:
           distribution: zulu
 
       - name: Compile and test with Maven
-        run: mvn clean verify
+        run: mvn clean verify -e -X
 
       - name: Display logs
         if: failure()
@@ -50,7 +50,7 @@ jobs:
           distribution: zulu
 
       - name: Compile and test with Maven
-        run: mvn clean verify
+        run: mvn clean verify -e -X
 
       - name: Display logs
         if: failure()
@@ -76,7 +76,7 @@ jobs:
           distribution: zulu
 
       - name: Compile and test with Maven
-        run: mvn clean verify
+        run: mvn clean verify -e -X
 
       - name: Display logs
         if: failure()
