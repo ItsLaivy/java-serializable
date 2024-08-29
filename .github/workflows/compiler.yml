@@ -121,6 +121,12 @@ jobs:
           mkdir -p src/main/resources/libs
           gcc -dynamiclib -o src/main/resources/libs/macos.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin"
 
+      - name: Build DYLIB for x86_64 and arm64
+        run: |
+          mkdir -p src/main/resources/libs
+          gcc -dynamiclib -o src/main/resources/libs/macos_x86_64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch x86_64
+          gcc -dynamiclib -o src/main/resources/libs/macos_arm64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch arm64
+
       - name: Upload macos64 SO
         uses: actions/upload-artifact@v3
         with:
