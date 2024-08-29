@@ -57,7 +57,7 @@ jobs:
 
       - name: Build 32-bit DLL
         run: |
-          mkdir -p src/main/resources/libs
+          New-Item -ItemType Directory -Path src/main/resources/libs -Force
           i686-w64-mingw32-gcc -shared -o src/main/resources/libs/win32.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
 
       - name: Upload win32 DLL
