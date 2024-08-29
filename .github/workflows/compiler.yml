@@ -127,11 +127,11 @@ jobs:
           gcc -dynamiclib -o src/main/resources/libs/macos_x86_64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch x86_64
           gcc -dynamiclib -o src/main/resources/libs/macos_arm64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch arm64
 
-      - name: Upload macos64 SO
+      - name: Upload macos SO
         uses: actions/upload-artifact@v3
         with:
-          name: macos-dylib
-          path: src/main/resources/libs/macos.dylib
+          name: macos-dylibs
+          path: src/main/resources/libs/*.dylib
 
   post_processing:
     name: Post-processing and Deployment
@@ -162,7 +162,7 @@ jobs:
       - name: Download artifacts from macOS
         uses: actions/download-artifact@v3
         with:
-          name: macos-dylib
+          name: macos-dylibs
 
       - name: Set up GitHub credentials
         run: |
@@ -178,7 +178,8 @@ jobs:
           mv win32.dll src/main/resources/libs/
           mv linux64.so src/main/resources/libs/
           mv linux32.so src/main/resources/libs/
-          mv macos.dylib src/main/resources/libs/
+          mv macos_x86_64.dylib src/main/resources/libs/
+          mv macos_arm64.dylib src/main/resources/libs/
 
       - name: Commit and push changes
         run: |
