@@ -80,4 +80,9 @@ jobs:
 
       - name: Display logs
         if: failure()
-        run: cat target/surefire-reports/*.txt || type target\surefire-reports\*.txt || true
+        run: |
+          if ls target/surefire-reports/*.txt 1> /dev/null 2>&1; then
+             cat target/surefire-reports/*.txt
+          else
+            echo "No surefire reports found."
+          fi

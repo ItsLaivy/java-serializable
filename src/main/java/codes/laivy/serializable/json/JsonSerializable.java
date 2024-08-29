@@ -1,12 +1,12 @@
 package codes.laivy.serializable.json;
 
+import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.annotations.KnownAs;
 import com.google.gson.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
-import sun.misc.Unsafe;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -519,7 +519,7 @@ public final class JsonSerializable {
             }
         } else if (element.isJsonObject()) try {
             @NotNull JsonObject object = element.getAsJsonObject();
-            @NotNull Object instance = getUnsafe().allocateInstance(type);
+            @NotNull Object instance = Allocator.allocate(type);
 
             for (@NotNull String key : object.keySet()) {
                 @NotNull JsonElement value = object.get(key);
@@ -644,16 +644,6 @@ public final class JsonSerializable {
     }
     private static @NotNull Field[] getFields(@NotNull Class<?> type) {
         return Stream.of(type.getFields(), type.getDeclaredFields()).flatMap(Arrays::stream).distinct().toArray(Field[]::new);
-    }
-
-    private static @NotNull Unsafe getUnsafe() {
-        try {
-            @NotNull Field f = Unsafe.class.getDeclaredField("theUnsafe");
-            f.setAccessible(true);
-            return (Unsafe) f.get(null);
-        } catch (@NotNull NoSuchFieldException | @NotNull IllegalAccessException e) {
-            throw new RuntimeException("cannot retrieve unsafe sun misc instance", e);
-        }
     }
 
     private static @Nullable Object @NotNull [] toObjectArray(@NotNull Object array) {
