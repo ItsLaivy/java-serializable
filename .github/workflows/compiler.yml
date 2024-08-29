@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - '**/*.c'
-      - '.github/workflows/**'
+      - '.github/workflows/compiler.yml'
       - 'src/main/resources/libs/**'
 
 jobs:
@@ -58,7 +58,7 @@ jobs:
       - name: Build 32-bit DLL
         run: |
           mkdir -p src/main/resources/libs
-          i686-w64-mingw32-gcc -shared -o src/main/resources/libs/win32.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+          i686-w64-mingw32-gcc -shared -o src/main/resources/libs/win32.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux" -Os -Wl,--strip-all -Wl,--gc-sections
 
       - name: Upload win32 DLL
         uses: actions/upload-artifact@v3
@@ -69,6 +69,7 @@ jobs:
   build_linux:
     name: Build on Linux
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -102,7 +103,7 @@ jobs:
 
   build_macos:
     name: Build on macOS
-    runs-on: macos-latest
+    runs-on: macos-12
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -110,16 +111,17 @@ jobs:
       - name: Check JAVA_HOME
         run: echo $JAVA_HOME
 
-      - name: Build DYLIB
+      - name: Build DYLIB for x86_64 and arm64
         run: |
           mkdir -p src/main/resources/libs
-          gcc -dynamiclib -o src/main/resources/libs/macos.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin"
+          gcc -dynamiclib -o src/main/resources/libs/macos_x86_64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch x86_64
+          gcc -dynamiclib -o src/main/resources/libs/macos_arm64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch arm64
 
-      - name: Upload macos64 SO
+      - name: Upload macos SO
         uses: actions/upload-artifact@v3
         with:
-          name: macos-dylib
-          path: src/main/resources/libs/macos.dylib
+          name: macos-dylibs
+          path: src/main/resources/libs/*.dylib
 
   post_processing:
     name: Post-processing and Deployment
@@ -150,7 +152,7 @@ jobs:
       - name: Download artifacts from macOS
         uses: actions/download-artifact@v3
         with:
-          name: macos-dylib
+          name: macos-dylibs
 
       - name: Set up GitHub credentials
         run: |
@@ -166,7 +168,8 @@ jobs:
           mv win32.dll src/main/resources/libs/
           mv linux64.so src/main/resources/libs/
           mv linux32.so src/main/resources/libs/
-          mv macos.dylib src/main/resources/libs/
+          mv macos_x86_64.dylib src/main/resources/libs/
+          mv macos_arm64.dylib src/main/resources/libs/
 
       - name: Commit and push changes
         run: |
