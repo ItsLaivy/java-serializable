@@ -14,6 +14,17 @@ public final class AllocatorTest {
     // Classes
 
     private static final class Cool {
+
+        private final @NotNull String name;
+
+        public Cool(@NotNull String name) {
+            this.name = name;
+        }
+
+        public @NotNull String getName() {
+            return name;
+        }
+
     }
 
 }
