@@ -45,7 +45,7 @@ jobs:
 
   build_windows_x86:
     name: Build on Windows x86
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
