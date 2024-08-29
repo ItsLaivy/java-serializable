@@ -35,7 +35,7 @@ jobs:
       - name: Build 64-bit DLL
         run: |
           New-Item -ItemType Directory -Path src/main/resources/libs -Force
-          Invoke-Expression -Command 'gcc -m64 -shared -o src/main/resources/libs/win64.dll src/main/c/allocator.c -I "$env:JAVA_HOME/include" -I "$env:JAVA_HOME/include/win32" -Os -Wl,--strip-all -Wl,--gc-sections'
+          gcc -m64 -shared -o src/main/resources/libs/win64.dll src/main/c/allocator.c -I "$env:JAVA_HOME/include" -I "$env:JAVA_HOME/include/win32"
 
       - name: Upload win64 DLL
         uses: actions/upload-artifact@v3
