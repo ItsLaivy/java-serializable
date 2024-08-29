@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - '**/*.c'
-      - '.github/workflows/**'
+      - '.github/workflows/compiler.yml'
       - 'src/main/resources/libs/**'
 
 jobs:
@@ -69,6 +69,12 @@ jobs:
   build_linux:
     name: Build on Linux
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ macos-latest, macos-13, macos-12 ]
+        java: [ 8, 9, 13, 17, 20, 21 ]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
