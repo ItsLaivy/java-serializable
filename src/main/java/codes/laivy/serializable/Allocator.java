@@ -20,13 +20,14 @@ public final class Allocator {
             System.loadLibrary("laivy/serializable");
         } catch (@NotNull UnsatisfiedLinkError ignore) { // Library doesn't exist
             @NotNull String os = System.getProperty("os.name").toLowerCase();
+            @NotNull String arch = System.getProperty("os.arch");
+
             // todo: improve this caching
             @NotNull File file = new File(new File(System.getProperty("java.io.tmpdir")), "java-serializable." + (os.contains("win") ? "dll" : "so"));
 
             try {
                 if (!file.exists()) {
                     @Nullable InputStream stream = null;
-                    @NotNull String arch = System.getProperty("os.arch");
 
                     if (os.contains("win")) {
                         if (arch.contains("64")) {
@@ -36,9 +37,9 @@ public final class Allocator {
                         }
                     } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
                         if (arch.contains("64")) {
-                            stream = Allocator.class.getResourceAsStream("/libs/linux64.dll");
+                            stream = Allocator.class.getResourceAsStream("/libs/linux64.so");
                         } else if (arch.contains("32")) {
-                            stream = Allocator.class.getResourceAsStream("/libs/linux32.dll");
+                            stream = Allocator.class.getResourceAsStream("/libs/linux32.so");
                         }
                     } else if (os.contains("mac")) {
                         stream = Allocator.class.getResourceAsStream("/libs/macos.dylib");
@@ -60,8 +61,12 @@ public final class Allocator {
                 throw new RuntimeException("cannot create library temporary file '" + file + "'", e);
             }
 
-            // Try to load the library again
-            System.load(file.toString());
+            try {
+                // Try to load the library again
+                System.load(file.toString());
+            } catch (@NotNull Throwable throwable) {
+                throw new RuntimeException("cannot load library using os '" + os + "' with arch '" + arch + "'", throwable);
+            }
         }
     }
 
