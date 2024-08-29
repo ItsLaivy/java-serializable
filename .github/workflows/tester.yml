@@ -62,6 +62,7 @@ jobs:
       matrix:
         os: [macos-latest, macos-13, macos-12]
         java: [8]
+#        java: [8, 13, 17, 20, 21]
 
     name: Java ${{ matrix.java }} on ${{ matrix.os }}
 

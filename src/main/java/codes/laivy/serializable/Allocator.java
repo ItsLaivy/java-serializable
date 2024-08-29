@@ -42,7 +42,11 @@ public final class Allocator {
                             stream = Allocator.class.getResourceAsStream("/libs/linux32.so");
                         }
                     } else if (os.contains("mac")) {
-                        stream = Allocator.class.getResourceAsStream("/libs/macos.dylib");
+                        if (arch.equalsIgnoreCase("x86_64")) {
+                            stream = Allocator.class.getResourceAsStream("/libs/macos_x86_64.dylib");
+                        } else if (arch.equalsIgnoreCase("aarch64")) {
+                            stream = Allocator.class.getResourceAsStream("/libs/macos_arm64.dylib");
+                        }
                     }
 
                     if (stream == null) {

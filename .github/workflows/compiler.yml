@@ -70,11 +70,6 @@ jobs:
     name: Build on Linux
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        os: [ macos-latest, macos-13, macos-12 ]
-        java: [ 8, 9, 13, 17, 20, 21 ]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -115,11 +110,6 @@ jobs:
 
       - name: Check JAVA_HOME
         run: echo $JAVA_HOME
-
-      - name: Build DYLIB
-        run: |
-          mkdir -p src/main/resources/libs
-          gcc -dynamiclib -o src/main/resources/libs/macos.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin"
 
       - name: Build DYLIB for x86_64 and arm64
         run: |
