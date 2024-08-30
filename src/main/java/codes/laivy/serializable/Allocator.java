@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 
 public final class Allocator {
@@ -75,7 +76,10 @@ public final class Allocator {
     }
 
     @ApiStatus.Internal
-    public static native <T> @NotNull T allocate(@NotNull Class<?> type);
+    public static native <T> @NotNull T allocate(@NotNull Class<T> type);
+
+    @ApiStatus.Internal
+    public static native void setFieldValue(@NotNull Field field, @Nullable Object instance, @Nullable Object object);
 
     // Object
 

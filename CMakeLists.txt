@@ -18,6 +18,8 @@ file(MAKE_DIRECTORY ${LIBRARY_DIR})
 add_library(Allocator SHARED
         src/main/c/allocator.c
         src/main/c/codes_laivy_serializable_Allocator.h
+        src/main/c/fields.c
+        src/main/c/fields.h
 )
 
 # JNI Directories
@@ -31,16 +33,7 @@ find_package(JNI REQUIRED)
 add_custom_command(
         TARGET Allocator
         POST_BUILD
-        COMMAND "C:/mingw/bin/x86_64-w64-mingw32-gcc.exe" -m64 -shared -o ${LIBRARY_DIR}/win64.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/win32"
-        COMMAND "C:/mingw/bin/i686-w64-mingw32-gcc.exe" -m32 -shared -o ${LIBRARY_DIR}/win32.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/win32"
+        COMMAND "C:/mingw/bin/x86_64-w64-mingw32-gcc.exe" -m64 -shared -o ${LIBRARY_DIR}/win64.dll src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/win32"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Compiling libraries for Windows (32-bit and 64-bit)..."
-)
-add_custom_command(
-        TARGET Allocator
-        POST_BUILD
-        COMMAND "gcc" -fPIC -shared -o ${LIBRARY_DIR}/linux.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/win32"
-        COMMAND "clang" -fPIC -shared -o ${LIBRARY_DIR}/macos.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/win32"
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Compiling libraries for Linux and macOS..."
+        COMMENT "Compiling libraries for Windows 64-bit..."
 )

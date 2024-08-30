@@ -35,7 +35,7 @@ jobs:
       - name: Build 64-bit DLL
         run: |
           New-Item -ItemType Directory -Path src/main/resources/libs -Force
-          gcc -m64 -shared -o src/main/resources/libs/win64.dll src/main/c/allocator.c -I "$env:JAVA_HOME/include" -I "$env:JAVA_HOME/include/win32"
+          gcc -m64 -shared -o src/main/resources/libs/win64.dll src/main/c/*.c -I "$env:JAVA_HOME/include" -I "$env:JAVA_HOME/include/win32"
 
       - name: Upload win64 DLL
         uses: actions/upload-artifact@v3
@@ -58,7 +58,7 @@ jobs:
       - name: Build 32-bit DLL
         run: |
           mkdir -p src/main/resources/libs
-          i686-w64-mingw32-gcc -shared -o src/main/resources/libs/win32.dll src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux" -Os -Wl,--strip-all -Wl,--gc-sections
+          i686-w64-mingw32-gcc -shared -o src/main/resources/libs/win32.dll src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux" -Os -Wl,--strip-all -Wl,--gc-sections
 
       - name: Upload win32 DLL
         uses: actions/upload-artifact@v3
@@ -82,12 +82,12 @@ jobs:
       - name: Build SO x64
         run: |
           mkdir -p src/main/resources/libs
-          gcc -m64 -shared -o src/main/resources/libs/linux64.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+          gcc -m64 -shared -o src/main/resources/libs/linux64.so src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
 
       - name: Build SO x86
         run: |
           mkdir -p src/main/resources/libs
-          gcc -m32 -shared -o src/main/resources/libs/linux32.so src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+          gcc -m32 -shared -o src/main/resources/libs/linux32.so src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
 
       - name: Upload linux SO x64
         uses: actions/upload-artifact@v3
@@ -114,8 +114,8 @@ jobs:
       - name: Build DYLIB for x86_64 and arm64
         run: |
           mkdir -p src/main/resources/libs
-          gcc -dynamiclib -o src/main/resources/libs/macos_x86_64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch x86_64
-          gcc -dynamiclib -o src/main/resources/libs/macos_arm64.dylib src/main/c/allocator.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch arm64
+          gcc -dynamiclib -o src/main/resources/libs/macos_x86_64.dylib src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch x86_64
+          gcc -dynamiclib -o src/main/resources/libs/macos_arm64.dylib src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch arm64
 
       - name: Upload macos SO
         uses: actions/upload-artifact@v3
