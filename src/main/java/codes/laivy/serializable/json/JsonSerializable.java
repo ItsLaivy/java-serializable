@@ -327,6 +327,7 @@ public final class JsonSerializable {
                     serialize0(json, object, field, map);
                 }
 
+
                 // Check for #writeObject availability and invoke it
                 @Nullable Method writeObject = getWriteObjectField(type);
                 @NotNull ByteArrayOutputStream stream = new ByteArrayOutputStream();

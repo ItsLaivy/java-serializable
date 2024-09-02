@@ -122,6 +122,11 @@ final class JsonUtilities {
             return javaSerializeObject(object);
         }
 
+        // Strict classes
+        if (object.getClass() == Class.class) { // Class
+            return serializer.serialize(((Class<?>) object).getCanonicalName());
+        }
+
         // Start serialization
         @NotNull JsonObject json = new JsonObject();
 
@@ -227,7 +232,7 @@ final class JsonUtilities {
             } else if (value instanceof Object[]) {
                 element = serializer.serialize((Object[]) value);
             } else {
-                element = serializeObject(serializer, instance, map);
+                element = serializeObject(serializer, value, map);
             }
 
             object.add(name, element);

@@ -73,6 +73,8 @@ public interface Serializer<T> {
     <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T object) throws InvalidClassException;
     <E> @NotNull Collection<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable T @NotNull ... array) throws InvalidClassException;
 
+    // todo: deserialize and serialize with custom adapters per invocation
+
     // Classes
 
     interface Adapters<T> extends Iterable<Adapter<T, ?>> {

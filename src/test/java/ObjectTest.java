@@ -29,7 +29,7 @@ public final class ObjectTest {
         Assertions.assertEquals(object, deserialized, "cannot match objects with json '" + json + "'");
     }
 
-//    @Test
+    @Test
     public void time() throws InvalidClassException, InstantiationException {
         match(Duration.ofDays(6).plusHours(6).plusMinutes(6));
         match(OffsetTime.now());

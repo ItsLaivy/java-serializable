@@ -272,11 +272,11 @@ public class TestJson implements Serializer<JsonElement> {
         } else if (element == null || element.isJsonNull()) {
             return null;
         } else if (element.isJsonObject()) {
-            @NotNull JsonObject object = element.getAsJsonObject();
+            @NotNull JsonObject jsonObject = element.getAsJsonObject();
             @NotNull Object instance = Allocator.allocate(reference);
 
-            for (@NotNull String key : object.keySet()) {
-                @NotNull JsonElement value = object.get(key);
+            for (@NotNull String key : jsonObject.keySet()) {
+                @NotNull JsonElement value = jsonObject.get(key);
 
                 @Nullable Field field = JsonUtilities.getFieldByName(instance, key);
 
@@ -289,7 +289,17 @@ public class TestJson implements Serializer<JsonElement> {
                 } else if (field.getType().isArray()) {
                     Allocator.setFieldValue(field, instance, deserializeUnsafe(field.getType().getComponentType(), value.getAsJsonArray()));
                 } else {
-                    Allocator.setFieldValue(field, instance, deserializeUnsafe(field.getType(), value));
+                    @Nullable Object object;
+
+                    if (field.getType() == Class.class) try {
+                        object = Class.forName(value.getAsString());
+                    } catch (@NotNull ClassNotFoundException e) {
+                        throw new InvalidClassException("there's no class '" + value.getAsString() + "' to deserialize at runtime");
+                    } else {
+                        object = deserializeUnsafe(field.getType(), value);
+                    }
+
+                    Allocator.setFieldValue(field, instance, object);
                 }
             }
 
@@ -403,7 +413,17 @@ public class TestJson implements Serializer<JsonElement> {
 
         @Override
         public boolean contains(@NotNull Class<?> reference) {
-            return map.containsKey(reference);
+            @Nullable Adapter<JsonElement, ?> adapter = map.getOrDefault(reference, null);
+            if (adapter != null) return true;
+
+            // Check assignable
+            for (@NotNull Class<?> r : map.keySet()) {
+                if (r.isAssignableFrom(reference)) {
+                    return map.get(r) != null;
+                }
+            }
+
+            return false;
         }
 
         @Override
