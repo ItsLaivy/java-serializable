@@ -1,23 +1,22 @@
 package codes.laivy.serializable.json;
 
+import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
-import codes.laivy.serializable.annotations.KnownAs;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.InvalidClassException;
-import java.io.Serializable;
-import java.lang.reflect.Array;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class TestJson implements Serializer<JsonElement> {
 
-    private final @NotNull Utilities utilities = new Utilities();
     private final @NotNull JsonAdapters adapters = new JsonAdapters();
 
     @Override
@@ -26,7 +25,7 @@ public class TestJson implements Serializer<JsonElement> {
     }
 
     @Override
-    public @Nullable JsonObject serialize(@Nullable Serializable object) throws InvalidClassException {
+    public @Nullable JsonElement serialize(@Nullable Serializable object) throws InvalidClassException {
         if (object == null) return null;
         return serialize((Object) object);
     }
@@ -240,13 +239,13 @@ public class TestJson implements Serializer<JsonElement> {
     }
 
     @Override
-    public @Nullable JsonObject serialize(@Nullable Object object) throws InvalidClassException {
+    public @Nullable JsonElement serialize(@Nullable Object object) throws InvalidClassException {
         if (object == null) {
             return null;
         }
 
         @NotNull Map<Class<?>, Set<Integer>> map = new HashMap<>();
-        @NotNull JsonObject json = utilities.serializeObject(object, map);
+        @NotNull JsonElement json = JsonUtilities.serializeObject(this, object, map);
 
         // Finish
         return json;
@@ -264,189 +263,112 @@ public class TestJson implements Serializer<JsonElement> {
 
     // Deserializer
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable JsonElement element) throws InvalidClassException {
+        @Nullable Adapter adapter = getAdapters().get(reference).orElse(null);
+
+        if (adapter != null) {
+            return adapter.deserialize(element);
+        } else if (element == null || element.isJsonNull()) {
+            return null;
+        } else if (element.isJsonObject()) {
+            @NotNull JsonObject object = element.getAsJsonObject();
+            @NotNull Object instance = Allocator.allocate(reference);
+
+            for (@NotNull String key : object.keySet()) {
+                @NotNull JsonElement value = object.get(key);
+
+                @Nullable Field field = JsonUtilities.getFieldByName(instance, key);
+
+                if (field == null) {
+                    throw new InvalidClassException("there's no field with name '" + key + "'");
+                }
+
+                if (value.isJsonNull()) {
+                    Allocator.setFieldValue(field, instance, null);
+                } else if (field.getType().isArray()) {
+                    Allocator.setFieldValue(field, instance, deserializeUnsafe(field.getType().getComponentType(), value.getAsJsonArray()));
+                } else {
+                    Allocator.setFieldValue(field, instance, deserializeUnsafe(field.getType(), value));
+                }
+            }
+
+            return instance;
+        } else if (element.isJsonPrimitive()) {
+            if (reference == String.class) {
+                return element.getAsString();
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        } else {
+            throw new UnsupportedOperationException("cannot deserialize '" + element + "' into a valid '" + reference + "' object");
+        }
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable JsonElement object) throws InvalidClassException {
+    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable JsonElement element) throws InvalidClassException {
         if (Modifier.isAbstract(reference.getModifiers())) {
             throw new InvalidClassException("cannot deserialize an abstract class reference!");
         }
 
-        return null;
+        // Adapter
+        @Nullable Adapter adapter = getAdapters().get(reference).orElse(null);
+
+        if (adapter != null) {
+            return (E) adapter.deserialize(element);
+        }
+
+        if (JsonUtilities.usesJavaSerialization(reference)) {
+            if (element == null || element.isJsonNull()) {
+                return null;
+            } else if (!element.isJsonArray()) {
+                throw new IllegalArgumentException("cannot deserialize '" + element + "' into a valid '" + reference + "' object");
+            }
+
+            @NotNull JsonArray array = element.getAsJsonArray();
+            byte[] bytes = new byte[array.size()];
+
+            int row = 0;
+            for (@NotNull JsonElement e : array) {
+                bytes[row] = e.getAsByte();
+                row++;
+            }
+
+            try {
+                @NotNull ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(bytes));
+                //noinspection unchecked
+                return (E) stream.readObject();
+            } catch (@NotNull IOException | @NotNull ClassNotFoundException e) {
+                throw new RuntimeException("an unknown error occurred trying to deserialize reference '" + reference + "' with json data '" + element + "'");
+            }
+        } else {
+            if (element == null || element.isJsonNull()) {
+                return null;
+            }
+
+            //noinspection unchecked
+            return (E) deserializeUnsafe(reference, element);
+        }
     }
 
     @Override
-    public <E> @NotNull Collection<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull JsonElement @Nullable ... array) throws InvalidClassException {
+    public <E> @NotNull Collection<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable JsonElement @NotNull ... array) throws InvalidClassException {
         if (Modifier.isAbstract(reference.getModifiers())) {
             throw new InvalidClassException("cannot deserialize an abstract class reference!");
         }
 
-        return null;
+        @NotNull List<E> list = new ArrayList<>();
+
+        for (@Nullable JsonElement object : array) {
+            list.add(object != null ? deserialize(reference, object) : null);
+        }
+
+        return list;
     }
 
     // Classes
 
-    private final class Utilities {
-
-        private Utilities() {
-        }
-
-        private @NotNull JsonArray serializeArray(@Nullable Object @NotNull [] array, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
-            @NotNull JsonArray json = new JsonArray();
-
-            for (@Nullable Object object : array) {
-                if (object == null) {
-                    json.add(JsonNull.INSTANCE);
-                } else if (object.getClass().isArray()) {
-                    json.add(serializeArray(toObjectArray(array), map));
-                } else {
-                    System.out.println("Object: '" + serializeObject(object, map) + "'");
-                    json.add(serializeObject(object, map));
-                }
-            }
-
-            return json;
-        }
-        private @NotNull JsonObject serializeObject(@NotNull Object object, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
-            if (object.getClass().isArray()) {
-                throw new InvalidClassException("cannot deserialize an array object using this method");
-            }
-
-            // Start serialization
-            @NotNull JsonObject json = new JsonObject();
-
-            // Start serializes the fields
-            @NotNull Class<?> type = object.getClass();
-
-            // Start looking fields into class and superclasses
-            while (type != Object.class) {
-                for (@NotNull Field field : getFields(type)) {
-                    serializeField(json, object, field, map);
-                }
-
-                // Finish with the superclass
-                type = type.getSuperclass();
-            }
-
-            return json;
-        }
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        private void serializeField(@NotNull JsonObject object, @NotNull Object instance, @NotNull Field field, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
-            try {
-                // Check if not transient or static
-                if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
-                    return;
-                }
-
-                // Check accessibility
-                boolean accessible = field.isAccessible();
-                if (!accessible) field.setAccessible(true);
-
-                // Get value and prevent recursive serialization
-                @Nullable Object value = field.get(instance);
-                if (value != null) {
-                    int hash = value.hashCode();
-
-                    @NotNull Set<Integer> set = map.computeIfAbsent(value.getClass(), k -> new HashSet<>());
-                    if (set.contains(hash)) return;
-
-                    set.add(hash);
-                }
-
-                // Get field name (or @KnownAs name)
-                @NotNull String name = field.getName();
-
-                if (field.isAnnotationPresent(KnownAs.class)) {
-                    name = field.getAnnotation(KnownAs.class).name();
-                }
-
-                // Serialize field value and add it to JSON
-                @Nullable Adapter adapter = value == null ? null : getAdapters().get(value.getClass()).orElse(null);
-                @Nullable JsonElement element;
-
-                if (adapter != null) {
-                    element = (JsonElement) adapter.serialize(value);
-                } else if (value == null) {
-                    element = JsonNull.INSTANCE;
-                } else if (value instanceof Enum<?>) {
-                    element = serialize((Enum<?>) value);
-                } else if (value instanceof Enum<?>[]) {
-                    element = serialize((Enum<?>[]) value);
-                } else if (value instanceof Boolean) {
-                    element = serialize((Boolean) value);
-                } else if (value instanceof Boolean[]) {
-                    element = serialize((Boolean[]) value);
-                } else if (value instanceof Byte) {
-                    element = serialize((Byte) value);
-                } else if (value instanceof Byte[]) {
-                    element = serialize((Byte[]) value);
-                } else if (value instanceof Short) {
-                    element = serialize((Short) value);
-                } else if (value instanceof Float) {
-                    element = serialize((Float) value);
-                } else if (value instanceof Double) {
-                    element = serialize((Double) value);
-                } else if (value instanceof Number) {
-                    element = serialize((Number) value);
-                } else if (value instanceof Number[]) {
-                    element = serialize((Number[]) value);
-                } else if (value instanceof Character) {
-                    element = serialize((Character) value);
-                } else if (value instanceof Character[]) {
-                    element = serialize((Character[]) value);
-                } else if (value instanceof char[]) {
-                    element = serialize((char[]) value);
-                } else if (value instanceof boolean[]) {
-                    element = serialize((boolean[]) value);
-                } else if (value instanceof byte[]) {
-                    element = serialize((byte[]) value);
-                } else if (value instanceof int[]) {
-                    element = serialize((int[]) value);
-                } else if (value instanceof short[]) {
-                    element = serialize((short[]) value);
-                } else if (value instanceof long[]) {
-                    element = serialize((long[]) value);
-                } else if (value instanceof float[]) {
-                    element = serialize((float[]) value);
-                } else if (value instanceof double[]) {
-                    element = serialize((double[]) value);
-                } else if (value instanceof String) {
-                    element = serialize((String) value);
-                } else if (value instanceof String[]) {
-                    element = serialize((String[]) value);
-                } else if (value instanceof Object[]) {
-                    element = serialize((Object[]) value);
-                } else {
-                    element = serializeObject(object, map);
-                }
-
-                object.add(name, element);
-
-                // Make it inaccessible again
-                field.setAccessible(accessible);
-            } catch (@NotNull IllegalAccessException e) {
-                throw new RuntimeException("cannot access field '" + field.getName() + "' to proceed serialization", e);
-            }
-        }
-
-        private @NotNull Field[] getFields(@NotNull Class<?> type) {
-            return Stream.of(type.getFields(), type.getDeclaredFields()).flatMap(Arrays::stream).distinct().toArray(Field[]::new);
-        }
-
-        private @Nullable Object @NotNull [] toObjectArray(@NotNull Object array) {
-            if (!array.getClass().isArray()) {
-                throw new IllegalArgumentException("the provided object is not an array");
-            }
-
-            int length = Array.getLength(array);
-            @Nullable Object @NotNull [] objectArray = new Object[length];
-
-            for (int i = 0; i < length; i++) {
-                objectArray[i] = Array.get(array, i);
-            }
-
-            return objectArray;
-        }
-
-    }
     private static final class JsonAdapters implements Adapters<JsonElement> {
 
         private final @NotNull Map<Class<?>, Adapter<JsonElement, ?>> map = new HashMap<>();
@@ -492,7 +414,18 @@ public class TestJson implements Serializer<JsonElement> {
         @Override
         public @NotNull <E> Optional<Adapter<JsonElement, E>> get(@NotNull Class<E> reference) {
             //noinspection unchecked
-            return Optional.ofNullable((Adapter<JsonElement, E>) map.getOrDefault(reference, null));
+            @Nullable Adapter<JsonElement, E> adapter = (Adapter<JsonElement, E>) map.getOrDefault(reference, null);
+            if (adapter != null) return Optional.of(adapter);
+
+            // Check assignable
+            for (@NotNull Class<?> r : map.keySet()) {
+                if (r.isAssignableFrom(reference)) {
+                    //noinspection unchecked
+                    return Optional.ofNullable((Adapter<JsonElement, E>) map.get(r));
+                }
+            }
+
+            return Optional.empty();
         }
 
         @Override
