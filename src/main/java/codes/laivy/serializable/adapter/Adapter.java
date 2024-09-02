@@ -14,6 +14,6 @@ public interface Adapter<T, O> {
     // Objects pure serialization
 
     @Nullable T serialize(@Nullable O object) throws InvalidClassException;
-    @Nullable O deserialize(@NotNull Class<O> reference, @Nullable T object) throws InvalidClassException;
+    @Nullable O deserialize(@Nullable T object) throws InvalidClassException;
 
 }

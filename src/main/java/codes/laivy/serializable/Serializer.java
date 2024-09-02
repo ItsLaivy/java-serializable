@@ -71,7 +71,7 @@ public interface Serializer<T> {
     // Deserialization
 
     <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T object) throws InvalidClassException;
-    <E> @NotNull Collection<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull T @Nullable ... array) throws InvalidClassException;
+    <E> @NotNull Collection<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable T @NotNull ... array) throws InvalidClassException;
 
     // Classes
 

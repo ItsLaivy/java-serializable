@@ -56,7 +56,7 @@ public final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public Character @Nullable [] deserialize(@NotNull Class<Character[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public Character @Nullable [] deserialize(@Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }
@@ -103,7 +103,7 @@ public final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public char @Nullable [] deserialize(@NotNull Class<char[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public char @Nullable [] deserialize(@Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }
