@@ -1,13 +1,15 @@
-package codes.laivy.serializable.json.provided;
+package codes.laivy.serializable.json.adapter;
 
-import codes.laivy.serializable.json.JsonAdapter;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.InvalidClassException;
 
-public final class GsonJsonAdapter implements JsonAdapter<JsonElement> {
+final class GsonJsonAdapter implements JsonAdapter<JsonElement> {
+
+    public GsonJsonAdapter() {
+    }
 
     @Override
     public @NotNull Class<JsonElement> getReference() {
@@ -19,7 +21,7 @@ public final class GsonJsonAdapter implements JsonAdapter<JsonElement> {
         return object;
     }
     @Override
-    public @Nullable JsonElement deserialize(@Nullable JsonElement object) throws InvalidClassException {
+    public @Nullable JsonElement deserialize(@NotNull Class<JsonElement> reference, @Nullable JsonElement object) throws InvalidClassException {
         return object;
     }
 

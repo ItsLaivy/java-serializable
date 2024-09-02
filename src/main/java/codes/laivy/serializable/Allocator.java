@@ -12,7 +12,6 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public final class Allocator {
 

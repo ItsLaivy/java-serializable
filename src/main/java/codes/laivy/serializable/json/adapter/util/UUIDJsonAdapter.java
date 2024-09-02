@@ -1,6 +1,6 @@
-package codes.laivy.serializable.json.provided;
+package codes.laivy.serializable.json.adapter.util;
 
-import codes.laivy.serializable.json.JsonAdapter;
+import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +10,10 @@ import java.io.InvalidClassException;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
-public final class UUIDJsonAdapter implements JsonAdapter<UUID> {
+final class UUIDJsonAdapter implements JsonAdapter<UUID> {
+
+    public UUIDJsonAdapter() {
+    }
 
     @Override
     public @NotNull Class<UUID> getReference() {
@@ -23,7 +26,7 @@ public final class UUIDJsonAdapter implements JsonAdapter<UUID> {
         else return new JsonPrimitive(object.toString());
     }
     @Override
-    public @Nullable UUID deserialize(@Nullable JsonElement element) throws InvalidClassException {
+    public @Nullable UUID deserialize(@NotNull Class<UUID> reference, @Nullable JsonElement element) throws InvalidClassException {
         if (element == null || element.isJsonNull()) {
             return null;
         } else if (element.isJsonPrimitive()) try {

@@ -6,7 +6,7 @@
 
     <groupId>codes.laivy</groupId>
     <artifactId>java-serializable</artifactId>
-    <version>1.1</version>
+    <version>1.1-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A lightweight Java library to serialize Java objects to JSON and others formats and back. Simple, efficient, and low-level.</description>
@@ -43,6 +43,12 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.10.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>

@@ -13,13 +13,12 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 final class JsonUtilities {
+    private static @NotNull Entry<String, Field> entry;
 
     // Static initializers
 
@@ -135,8 +134,11 @@ final class JsonUtilities {
 
         // Start looking fields into class and superclasses
         while (type != Object.class) {
-            for (@NotNull Field field : getFields(type)) {
-                serializeField(serializer, json, object, field, map);
+            for (@NotNull Entry<String, Field> entry : getFields(type).entrySet()) {
+                @NotNull String name = entry.getKey();
+                @NotNull Field field = entry.getValue();
+
+                serializeField(serializer, json, object, field, name, map);
             }
 
             // Finish with the superclass
@@ -146,7 +148,7 @@ final class JsonUtilities {
         return json;
     }
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void serializeField(@NotNull TestJson serializer, @NotNull JsonObject object, @NotNull Object instance, @NotNull Field field, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
+    public static void serializeField(@NotNull TestJson serializer, @NotNull JsonObject object, @NotNull Object instance, @NotNull Field field, @NotNull String name, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
         try {
             // Check if not transient or static
             if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
@@ -168,13 +170,6 @@ final class JsonUtilities {
                 set.add(hash);
             }
 
-            // Get field name (or @KnownAs name)
-            @NotNull String name = field.getName();
-
-            if (field.isAnnotationPresent(KnownAs.class)) {
-                name = field.getAnnotation(KnownAs.class).name();
-            }
-
             // Serialize field value and add it to JSON
             @Nullable JsonElement element;
             @Nullable Adapter adapter = value == null ? null : serializer.getAdapters().get(value.getClass()).orElse(null);
@@ -191,28 +186,22 @@ final class JsonUtilities {
                 element = serializer.serialize((Boolean) value);
             } else if (value instanceof Boolean[]) {
                 element = serializer.serialize((Boolean[]) value);
-            } else if (value instanceof Byte) {
-                element = serializer.serialize((Byte) value);
-            } else if (value instanceof Byte[]) {
-                element = serializer.serialize((Byte[]) value);
-            } else if (value instanceof Short) {
-                element = serializer.serialize((Short) value);
-            } else if (value instanceof Float) {
-                element = serializer.serialize((Float) value);
-            } else if (value instanceof Double) {
-                element = serializer.serialize((Double) value);
-            } else if (value instanceof Number) {
-                element = serializer.serialize((Number) value);
-            } else if (value instanceof Number[]) {
-                element = serializer.serialize((Number[]) value);
             } else if (value instanceof Character) {
                 element = serializer.serialize((Character) value);
             } else if (value instanceof Character[]) {
                 element = serializer.serialize((Character[]) value);
-            } else if (value instanceof char[]) {
-                element = serializer.serialize((char[]) value);
+            } else if (value instanceof Byte) {
+                element = serializer.serialize((Byte) value);
+            } else if (value instanceof Byte[]) {
+                element = serializer.serialize((Byte[]) value);
+            } else if (value instanceof Number[]) {
+                element = serializer.serialize((Number[]) value);
+            } else if (value instanceof Number) {
+                element = serializer.serialize((Number) value);
             } else if (value instanceof boolean[]) {
                 element = serializer.serialize((boolean[]) value);
+            } else if (value instanceof char[]) {
+                element = serializer.serialize((char[]) value);
             } else if (value instanceof byte[]) {
                 element = serializer.serialize((byte[]) value);
             } else if (value instanceof int[]) {
@@ -244,29 +233,51 @@ final class JsonUtilities {
         }
     }
 
-    static @NotNull Field[] getFields(@NotNull Class<?> type) {
-        return Stream.of(type.getFields(), type.getDeclaredFields()).flatMap(Arrays::stream).distinct().toArray(Field[]::new);
-    }
-    static @Nullable Field getFieldByName(@NotNull Object object, @NotNull String name) {
-        for (@NotNull Field field : getFields(object.getClass())) {
-            // Skip transient and static fields
-            if (Modifier.isTransient(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
+    static @NotNull Map<String, Field> getFields(final @NotNull Class<?> type) {
+        @NotNull Map<String, Field> map = new LinkedHashMap<>();
+        @NotNull Map<String, Integer> repeat = new HashMap<>();
 
-            // Check and get by @KnownAs, will use the name otherwise.
-            if (field.isAnnotationPresent(KnownAs.class)) {
-                @NotNull KnownAs annotation = field.getAnnotation(KnownAs.class);
+        @NotNull Class<?> temp = type;
+        while (temp != Object.class) {
+            @NotNull Set<Field> fields = Arrays.stream(temp.getDeclaredFields()).collect(Collectors.toSet());
 
-                if (annotation.name().equals(name)) {
-                    return field;
+            for (@NotNull Field field : fields) {
+                @NotNull String name = field.getName();
+
+                // Known as variable
+                if (field.isAnnotationPresent(KnownAs.class)) {
+                    @NotNull KnownAs known = field.getAnnotation(KnownAs.class);
+                    name = known.name();
+
+                    if (map.containsKey(name)) {
+                        throw new IllegalStateException("there's two or more fields with the same @KnownAs name at the class '" + type + "', check it's super classes.");
+                    } else {
+                        map.put(name, field);
+                    }
+                } else {
+                    // Reserve name
+                    if (!map.containsKey(name)) {
+                        map.put(name, field);
+                    } else if (!map.containsKey(name + "_" + repeat.get(name))) {
+                        map.put(name + "_" + repeat.get(name), field);
+                    } else if (!map.containsKey("$" + name + "_" + repeat.get(name))) {
+                        map.put(name + "_" + repeat.get(name), field);
+                    } else {
+                        throw new IllegalStateException("cannot reserve a custom name for field '" + name + "' from class '" + type + "'");
+                    }
+
+                    repeat.putIfAbsent(name, 0);
+                    repeat.put(name, repeat.get(name) + 1);
                 }
-            } else if (field.getName().equals(name)) {
-                return field;
             }
+
+            temp = temp.getSuperclass();
         }
 
-        return null;
+        return map;
+    }
+    static @Nullable Field getFieldByName(@NotNull Object object, @NotNull String name) {
+        return getFields(object.getClass()).get(name);
     }
 
     // Object

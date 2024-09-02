@@ -3,6 +3,7 @@ package codes.laivy.serializable.json;
 import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
+import codes.laivy.serializable.json.adapter.JsonAdapters;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -268,7 +269,7 @@ public class TestJson implements Serializer<JsonElement> {
         @Nullable Adapter adapter = getAdapters().get(reference).orElse(null);
 
         if (adapter != null) {
-            return adapter.deserialize(element);
+            return adapter.deserialize(reference, element);
         } else if (element == null || element.isJsonNull()) {
             return null;
         } else if (element.isJsonObject()) {
@@ -307,8 +308,24 @@ public class TestJson implements Serializer<JsonElement> {
         } else if (element.isJsonPrimitive()) {
             if (reference == String.class) {
                 return element.getAsString();
+            } else if (reference == Boolean.class || reference == boolean.class) {
+                return element.getAsBoolean();
+            } else if (reference == Character.class || reference == char.class) {
+                return element.getAsString().charAt(0);
+            } else if (reference == Byte.class || reference == byte.class) {
+                return element.getAsByte();
+            } else if (reference == Short.class || reference == short.class) {
+                return element.getAsShort();
+            } else if (reference == Integer.class || reference == int.class) {
+                return element.getAsInt();
+            } else if (reference == Long.class || reference == long.class) {
+                return element.getAsLong();
+            } else if (reference == Float.class || reference == float.class) {
+                return element.getAsFloat();
+            } else if (reference == Double.class || reference == double.class) {
+                return element.getAsDouble();
             } else {
-                throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException("there's no primitive type with reference '" + reference + "', is missing any adapter here?");
             }
         } else {
             throw new UnsupportedOperationException("cannot deserialize '" + element + "' into a valid '" + reference + "' object");
@@ -326,7 +343,7 @@ public class TestJson implements Serializer<JsonElement> {
         @Nullable Adapter adapter = getAdapters().get(reference).orElse(null);
 
         if (adapter != null) {
-            return (E) adapter.deserialize(element);
+            return (E) adapter.deserialize(reference, element);
         }
 
         if (JsonUtilities.usesJavaSerialization(reference)) {
@@ -375,93 +392,6 @@ public class TestJson implements Serializer<JsonElement> {
         }
 
         return list;
-    }
-
-    // Classes
-
-    private static final class JsonAdapters implements Adapters<JsonElement> {
-
-        private final @NotNull Map<Class<?>, Adapter<JsonElement, ?>> map = new HashMap<>();
-
-        private JsonAdapters() {
-        }
-
-        @Override
-        public <E> void put(@NotNull Adapter<JsonElement, E> adapter) {
-            map.put(adapter.getReference(), adapter);
-        }
-
-        @Override
-        public <E> boolean add(@NotNull Adapter<JsonElement, E> adapter) {
-            if (map.containsKey(adapter.getReference())) {
-                return false;
-            }
-
-            map.put(adapter.getReference(), adapter);
-            return true;
-        }
-
-        @Override
-        public <E> boolean remove(@NotNull Class<E> reference) {
-            if (map.containsKey(reference)) {
-                map.remove(reference);
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        @Override
-        public boolean contains(@NotNull Class<?> reference) {
-            @Nullable Adapter<JsonElement, ?> adapter = map.getOrDefault(reference, null);
-            if (adapter != null) return true;
-
-            // Check assignable
-            for (@NotNull Class<?> r : map.keySet()) {
-                if (r.isAssignableFrom(reference)) {
-                    return map.get(r) != null;
-                }
-            }
-
-            return false;
-        }
-
-        @Override
-        public boolean contains(@NotNull Adapter<JsonElement, ?> adapter) {
-            return map.containsValue(adapter);
-        }
-
-        @Override
-        public @NotNull <E> Optional<Adapter<JsonElement, E>> get(@NotNull Class<E> reference) {
-            //noinspection unchecked
-            @Nullable Adapter<JsonElement, E> adapter = (Adapter<JsonElement, E>) map.getOrDefault(reference, null);
-            if (adapter != null) return Optional.of(adapter);
-
-            // Check assignable
-            for (@NotNull Class<?> r : map.keySet()) {
-                if (r.isAssignableFrom(reference)) {
-                    //noinspection unchecked
-                    return Optional.ofNullable((Adapter<JsonElement, E>) map.get(r));
-                }
-            }
-
-            return Optional.empty();
-        }
-
-        @Override
-        public int size() {
-            return map.size();
-        }
-
-        @Override
-        public void clear() {
-            map.clear();
-        }
-
-        @Override
-        public @NotNull Iterator<Adapter<JsonElement, ?>> iterator() {
-            return map.values().iterator();
-        }
     }
 
 }
