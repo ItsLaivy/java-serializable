@@ -18,8 +18,6 @@ file(MAKE_DIRECTORY ${LIBRARY_DIR})
 add_library(Allocator SHARED
         src/main/c/allocator.c
         src/main/c/codes_laivy_serializable_Allocator.h
-        src/main/c/fields.c
-        src/main/c/fields.h
 )
 
 # JNI Directories

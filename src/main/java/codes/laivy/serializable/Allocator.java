@@ -10,10 +10,25 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public final class Allocator {
 
     // Static initializers
+
+    private static final @NotNull Map<Class<?>, Class<?>> WRAPPERS = new HashMap<Class<?>, Class<?>>() {{
+        put(boolean.class, Boolean.class);
+        put(byte.class, Byte.class);
+        put(char.class, Character.class);
+        put(double.class, Double.class);
+        put(float.class, Float.class);
+        put(int.class, Integer.class);
+        put(long.class, Long.class);
+        put(short.class, Short.class);
+        put(void.class, Void.class);
+    }};
 
     static {
         try {
@@ -80,6 +95,16 @@ public final class Allocator {
 
     @ApiStatus.Internal
     public static native void setFieldValue(@NotNull Field field, @Nullable Object instance, @Nullable Object object);
+
+    private static boolean isAssignableFromIncludingPrimitive(@NotNull Class<?> c1, @NotNull Class<?> c2) {
+        if (c1 == c2) {
+            return true;
+        } else if (c1.isAssignableFrom(c2)) {
+            return true;
+        } else {
+            return WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2);
+        }
+    }
 
     // Object
 

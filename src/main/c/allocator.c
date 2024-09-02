@@ -1,6 +1,4 @@
 #include <jni.h>
-
-#include "fields.h"
 #include "codes_laivy_serializable_Allocator.h"
 
 // Java Native Interface methods
@@ -26,19 +24,17 @@ JNIEXPORT void JNICALL Java_codes_laivy_serializable_Allocator_setFieldValue(JNI
             (*env)->ThrowNew(env, exception, "cannot find this field at the runtime!");
         } else {
             // Check if the newValue is assignable with the field type
-            const jobject fieldType = (*env)->CallObjectMethod(
-                env, field, (*env)->GetMethodID(env, (*env)->GetObjectClass(env, field), "getType",
-                                                "()Ljava/lang/Class;"));
+            const jobject fieldType = (*env)->CallObjectMethod(env, field, (*env)->GetMethodID(env, (*env)->GetObjectClass(env, field), "getType", "()Ljava/lang/Class;"));
             jboolean isAssignable = JNI_TRUE;
 
             if (object != NULL) {
                 const jclass objectClass = (*env)->GetObjectClass(env, object);
-                isAssignable = objectClass == NULL ? JNI_TRUE : (*env)->CallBooleanMethod(env, fieldType, (*env)->GetMethodID(env, (*env)->FindClass(env, "java/lang/Class"), "isAssignableFrom", "(Ljava/lang/Class;)Z"), objectClass);
+                isAssignable = objectClass == NULL ? JNI_TRUE : (*env)->CallStaticBooleanMethod(env, fieldType, (*env)->GetStaticMethodID(env, (*env)->FindClass(env, "codes/laivy/serializable/Allocator"), "isAssignableFromIncludingPrimitive", "(Ljava/lang/Class;Ljava/lang/Class;)Z"), fieldType, objectClass);
             }
 
             // Finish
             if (!isAssignable) {
-                jclass classCastException = (*env)->FindClass(env, "java/lang/ClassCastException");
+                const jclass classCastException = (*env)->FindClass(env, "java/lang/ClassCastException");
                 (*env)->ThrowNew(env, classCastException, "cannot assign object of this type to the field!");
             } else if (instance == NULL) {
                 // Static field:
