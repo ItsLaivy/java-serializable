@@ -1,5 +1,6 @@
-package codes.laivy.serializable.json.adapter;
+package codes.laivy.serializable.json.adapter.primitive;
 
+import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -75,11 +76,11 @@ final class CharacterArrayJsonAdapter {
                 return array;
             } else if (object.isJsonArray()) {
                 @NotNull JsonArray array = object.getAsJsonArray();
-                @NotNull Character[] chars = new Character[array.size()];
+                @Nullable Character[] chars = new Character[array.size()];
 
                 int row = 0;
                 for (@NotNull JsonElement element : array) {
-                    chars[row] = element.getAsString().charAt(row);
+                    chars[row] = element.isJsonNull() ? null : element.getAsString().charAt(row);
                     row++;
                 }
 

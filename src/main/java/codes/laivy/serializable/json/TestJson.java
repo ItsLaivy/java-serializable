@@ -287,8 +287,6 @@ public class TestJson implements Serializer<JsonElement> {
 
                 if (value.isJsonNull()) {
                     Allocator.setFieldValue(field, instance, null);
-                } else if (field.getType().isArray()) {
-                    Allocator.setFieldValue(field, instance, deserializeUnsafe(field.getType().getComponentType(), value.getAsJsonArray()));
                 } else {
                     @Nullable Object object;
 
@@ -346,29 +344,8 @@ public class TestJson implements Serializer<JsonElement> {
             return (E) adapter.deserialize(reference, element);
         }
 
-        if (JsonUtilities.usesJavaSerialization(reference)) {
-            if (element == null || element.isJsonNull()) {
-                return null;
-            } else if (!element.isJsonArray()) {
-                throw new IllegalArgumentException("cannot deserialize '" + element + "' into a valid '" + reference + "' object");
-            }
-
-            @NotNull JsonArray array = element.getAsJsonArray();
-            byte[] bytes = new byte[array.size()];
-
-            int row = 0;
-            for (@NotNull JsonElement e : array) {
-                bytes[row] = e.getAsByte();
-                row++;
-            }
-
-            try {
-                @NotNull ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(bytes));
-                //noinspection unchecked
-                return (E) stream.readObject();
-            } catch (@NotNull IOException | @NotNull ClassNotFoundException e) {
-                throw new RuntimeException("an unknown error occurred trying to deserialize reference '" + reference + "' with json data '" + element + "'");
-            }
+        if (JavaSerializableUtils.usesJavaSerialization(reference)) {
+            return JavaSerializableUtils.javaDeserializeObject(this, reference, element);
         } else {
             if (element == null || element.isJsonNull()) {
                 return null;

@@ -2,107 +2,23 @@ package codes.laivy.serializable.json;
 
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.annotations.KnownAs;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.InvalidClassException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 final class JsonUtilities {
-    private static @NotNull Entry<String, Field> entry;
 
     // Static initializers
 
-    /**
-     * Esse método é para verificar se a serialização deve ocorrer usando a serialização nativa do java ou a da biblioteca.
-     * Quando a serialização nativa do java é usada, o json retornado pela biblioteca é um json array contendo os dados do ObjectStream.
-     *
-     * Um objeto deve usar a serialização nativa do java quando ele possui uma ou mais dessas características, aplicando também para suas super classes:
-     * 1. Possui o método #writeObject(java.io.ObjectOutputStream out)
-     * 2. Possui o método #readObject(java.io.ObjectInputStream in)
-     * 3. Possui o método #readObjectNoData()
-     * 4. Possui o método #writeReplace()
-     * 5. Possui o método #readResolve()
-     * 6. Implementa a interface {@link java.io.Externalizable}
-     *
-     * Não é possível serializar um objeto adaptado para a serialização nativa do java de forma bonita (tipo {"field":"value"}) pois esses objetos
-     * possuem integração direta com os ObjectInputs e ObjectInputStreams, não é possível obter o nome dos campos nesse tipo de serialização, logo a
-     * única forma de se serializar isso, é salvando os bytes diretos.
-     * <p>
-     * Ainda é possível serializar um objeto que está adaptado para a serialização nativa de forma bonita usando {@link Adapter}
-     *
-     * @param c
-     * @return
-     */
-    public static boolean usesJavaSerialization(final @NotNull Class<?> c) {
-        if (Externalizable.class.isAssignableFrom(c)) {
-            return true;
-        }
-
-        boolean methods = false;
-        @NotNull Class<?> copy = c;
-
-        while (copy != Object.class) {
-            @NotNull Method method;
-
-            try {
-                method = copy.getDeclaredMethod("writeObject", ObjectOutputStream.class);
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            } try {
-                method = copy.getDeclaredMethod("readObject", ObjectInputStream.class);
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            } try {
-                method = copy.getDeclaredMethod("readObjectNoData");
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            } try {
-                method = copy.getDeclaredMethod("writeReplace");
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            } try {
-                method = copy.getDeclaredMethod("readResolve");
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            }
-
-            copy = copy.getSuperclass();
-        }
-
-        if (methods && !Serializable.class.isAssignableFrom(c)) {
-            throw new IllegalStateException("the class '" + c + "' have serialization methods but doesn't implements Serializable interface");
-        }
-
-        return methods;
-    }
-
-    public static @NotNull JsonArray javaSerializeObject(@NotNull Object object) {
-        try {
-            @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);
-            stream.writeObject(object);
-
-            @NotNull JsonArray array = new JsonArray();
-
-            for (byte b : bytes.toByteArray()) {
-                array.add(b);
-            }
-
-            return array;
-        } catch (@NotNull IOException e) {
-            throw new RuntimeException("cannot serialize", e);
-        }
-    }
     @SuppressWarnings({"DataFlowIssue", "rawtypes", "unchecked"})
     public static @NotNull JsonElement serializeObject(@NotNull TestJson serializer, @NotNull Object object, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
         if (object.getClass().isArray()) {
@@ -117,8 +33,8 @@ final class JsonUtilities {
         }
 
         // Java serialization
-        if (usesJavaSerialization(object.getClass())) {
-            return javaSerializeObject(object);
+        if (JavaSerializableUtils.usesJavaSerialization(object.getClass())) {
+            return JavaSerializableUtils.javaSerializeObject(serializer, object);
         }
 
         // Strict classes
