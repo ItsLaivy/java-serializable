@@ -1,6 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
-import codes.laivy.serializable.json.TestJson;
+import codes.laivy.serializable.json.JsonSerializable;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
@@ -25,7 +25,7 @@ final class InstantJsonAdapter implements JsonAdapter<Instant> {
     // Serializers
 
     @Override
-    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Instant instance) throws InvalidClassException {
+    public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, @Nullable Instant instance) throws InvalidClassException {
         if (instance == null) {
             return null;
         } else {
@@ -33,7 +33,7 @@ final class InstantJsonAdapter implements JsonAdapter<Instant> {
         }
     }
     @Override
-    public @Nullable Instant deserialize(@NotNull TestJson serializer, @NotNull Class<Instant> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable Instant deserialize(@NotNull JsonSerializable serializer, @NotNull Class<Instant> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else {

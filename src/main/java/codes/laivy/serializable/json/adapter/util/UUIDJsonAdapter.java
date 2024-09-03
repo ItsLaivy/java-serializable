@@ -1,6 +1,6 @@
 package codes.laivy.serializable.json.adapter.util;
 
-import codes.laivy.serializable.json.TestJson;
+import codes.laivy.serializable.json.JsonSerializable;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
@@ -22,12 +22,12 @@ final class UUIDJsonAdapter implements JsonAdapter<UUID> {
     }
 
     @Override
-    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable UUID instance) throws InvalidClassException {
+    public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, @Nullable UUID instance) throws InvalidClassException {
         if (instance == null) return null;
         else return new JsonPrimitive(instance.toString());
     }
     @Override
-    public @Nullable UUID deserialize(@NotNull TestJson serializer, @NotNull Class<UUID> reference, @Nullable JsonElement element) throws InvalidClassException {
+    public @Nullable UUID deserialize(@NotNull JsonSerializable serializer, @NotNull Class<UUID> reference, @Nullable JsonElement element) throws InvalidClassException {
         if (element == null || element.isJsonNull()) {
             return null;
         } else if (element.isJsonPrimitive()) try {

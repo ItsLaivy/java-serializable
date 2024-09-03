@@ -1,6 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
-import codes.laivy.serializable.json.TestJson;
+import codes.laivy.serializable.json.JsonSerializable;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
@@ -111,7 +111,7 @@ public final class OffsetDateTimeJsonAdapter implements JsonAdapter<OffsetDateTi
      * @throws InvalidClassException If the {@link OffsetDateTime} cannot be serialized by this adapter.
      */
     @Override
-    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable OffsetDateTime instance) throws InvalidClassException {
+    public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, @Nullable OffsetDateTime instance) throws InvalidClassException {
         if (instance == null) {
             return null;
         } else {
@@ -135,7 +135,7 @@ public final class OffsetDateTimeJsonAdapter implements JsonAdapter<OffsetDateTi
      * @throws IllegalArgumentException If the JSON element does not match the expected format for {@link OffsetDateTime}.
      */
     @Override
-    public @Nullable OffsetDateTime deserialize(@NotNull TestJson serializer, @NotNull Class<OffsetDateTime> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable OffsetDateTime deserialize(@NotNull JsonSerializable serializer, @NotNull Class<OffsetDateTime> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else {

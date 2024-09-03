@@ -1,7 +1,6 @@
 package codes.laivy.serializable.json;
 
 import codes.laivy.serializable.adapter.Adapter;
-import codes.laivy.serializable.annotations.KnownAs;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -11,16 +10,17 @@ import org.jetbrains.annotations.Nullable;
 import java.io.InvalidClassException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 final class JsonUtilities {
 
     // Static initializers
 
     @SuppressWarnings({"DataFlowIssue", "rawtypes", "unchecked"})
-    public static @NotNull JsonElement serializeObject(@NotNull TestJson serializer, @NotNull Object object, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
+    public static @NotNull JsonElement serializeObject(@NotNull JsonSerializable serializer, @NotNull Object object, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
         if (object.getClass().isArray()) {
             throw new InvalidClassException("cannot deserialize an array object using this method");
         }
@@ -50,7 +50,7 @@ final class JsonUtilities {
 
         // Start looking fields into class and superclasses
         while (type != Object.class) {
-            for (@NotNull Entry<String, Field> entry : getFields(type).entrySet()) {
+            for (@NotNull Entry<String, Field> entry : FieldUtils.getFields(type).entrySet()) {
                 @NotNull String name = entry.getKey();
                 @NotNull Field field = entry.getValue();
 
@@ -64,7 +64,7 @@ final class JsonUtilities {
         return json;
     }
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void serializeField(@NotNull TestJson serializer, @NotNull JsonObject object, @NotNull Object instance, @NotNull Field field, @NotNull String name, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
+    public static void serializeField(@NotNull JsonSerializable serializer, @NotNull JsonObject object, @NotNull Object instance, @NotNull Field field, @NotNull String name, @NotNull Map<Class<?>, Set<Integer>> map) throws InvalidClassException {
         try {
             // Check if not transient or static
             if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
@@ -147,53 +147,6 @@ final class JsonUtilities {
         } catch (@NotNull IllegalAccessException e) {
             throw new RuntimeException("cannot access field '" + field.getName() + "' to proceed serialization", e);
         }
-    }
-
-    static @NotNull Map<String, Field> getFields(final @NotNull Class<?> type) {
-        @NotNull Map<String, Field> map = new LinkedHashMap<>();
-        @NotNull Map<String, Integer> repeat = new HashMap<>();
-
-        @NotNull Class<?> temp = type;
-        while (temp != Object.class) {
-            @NotNull Set<Field> fields = Arrays.stream(temp.getDeclaredFields()).collect(Collectors.toSet());
-
-            for (@NotNull Field field : fields) {
-                @NotNull String name = field.getName();
-
-                // Known as variable
-                if (field.isAnnotationPresent(KnownAs.class)) {
-                    @NotNull KnownAs known = field.getAnnotation(KnownAs.class);
-                    name = known.name();
-
-                    if (map.containsKey(name)) {
-                        throw new IllegalStateException("there's two or more fields with the same @KnownAs name at the class '" + type + "', check it's super classes.");
-                    } else {
-                        map.put(name, field);
-                    }
-                } else {
-                    // Reserve name
-                    if (!map.containsKey(name)) {
-                        map.put(name, field);
-                    } else if (!map.containsKey(name + "_" + repeat.get(name))) {
-                        map.put(name + "_" + repeat.get(name), field);
-                    } else if (!map.containsKey("$" + name + "_" + repeat.get(name))) {
-                        map.put(name + "_" + repeat.get(name), field);
-                    } else {
-                        throw new IllegalStateException("cannot reserve a custom name for field '" + name + "' from class '" + type + "'");
-                    }
-
-                    repeat.putIfAbsent(name, 0);
-                    repeat.put(name, repeat.get(name) + 1);
-                }
-            }
-
-            temp = temp.getSuperclass();
-        }
-
-        return map;
-    }
-    static @Nullable Field getFieldByName(@NotNull Object object, @NotNull String name) {
-        return getFields(object.getClass()).get(name);
     }
 
     // Object

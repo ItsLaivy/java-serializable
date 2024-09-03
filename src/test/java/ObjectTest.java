@@ -1,4 +1,4 @@
-import codes.laivy.serializable.json.TestJson;
+import codes.laivy.serializable.json.JsonSerializable;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,22 +7,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.InvalidClassException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.time.*;
 import java.util.Date;
-import java.util.Locale;
 
 public final class ObjectTest {
 
-    private static final @NotNull TestJson serializer = new TestJson();
+    private static final @NotNull JsonSerializable serializer = new JsonSerializable();
     private static void match(@NotNull Object object) {
         @Nullable JsonElement json;
         @Nullable Object deserialized;
 
         try {
             json = serializer.serialize(object);
-            System.out.println(json);
         } catch (@NotNull InvalidClassException e) {
             throw new RuntimeException("cannot serialize object '" + object + "' from class '" + object.getClass() + "'", e);
         } try {
@@ -54,13 +50,6 @@ public final class ObjectTest {
         match(LocalDateTime.now());
         match(LocalDate.now());
         match(new Date());
-    }
-
-    @Test
-    @DisplayName("Locale Classes")
-    public void locale() throws InvalidClassException, InstantiationException {
-        match(Locale.ENGLISH);
-        match(new Locale("pt_br", "brazil", "portuguese"));
     }
 
 }

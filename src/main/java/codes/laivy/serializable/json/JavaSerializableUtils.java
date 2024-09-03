@@ -113,7 +113,7 @@ final class JavaSerializableUtils {
      * @throws InvalidClassException if deserialization fails due to class issues
      * @throws RuntimeException if deserialization fails due to IO or class not found issues
      */
-    public static <E> @Nullable E javaDeserializeObject(@NotNull TestJson serializer, @NotNull Class<E> reference, @Nullable JsonElement element) throws InvalidClassException {
+    public static <E> @Nullable E javaDeserializeObject(@NotNull JsonSerializable serializer, @NotNull Class<E> reference, @Nullable JsonElement element) throws InvalidClassException {
         if (element == null || element.isJsonNull()) {
             return null;
         }
@@ -164,7 +164,7 @@ final class JavaSerializableUtils {
      * @return the JSON element representing the serialized object, or {@code null} if the object is {@code null}
      * @throws RuntimeException if serialization fails due to IO issues
      */
-    public static @Nullable JsonElement javaSerializeObject(@NotNull TestJson serializer, @Nullable Object object) {
+    public static @Nullable JsonElement javaSerializeObject(@NotNull JsonSerializable serializer, @Nullable Object object) {
         try {
             @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);

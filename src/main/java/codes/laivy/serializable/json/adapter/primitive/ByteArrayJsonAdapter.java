@@ -1,6 +1,6 @@
 package codes.laivy.serializable.json.adapter.primitive;
 
-import codes.laivy.serializable.json.TestJson;
+import codes.laivy.serializable.json.JsonSerializable;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -33,7 +33,7 @@ final class ByteArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Byte @Nullable [] instance) throws InvalidClassException {
+        public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, @Nullable Byte @Nullable [] instance) throws InvalidClassException {
             if (instance == null) {
                 return null;
             }
@@ -61,7 +61,7 @@ final class ByteArrayJsonAdapter {
         }
 
         @Override
-        public Byte @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<Byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public Byte @Nullable [] deserialize(@NotNull JsonSerializable serializer, @NotNull Class<Byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }
@@ -102,7 +102,7 @@ final class ByteArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@NotNull TestJson serializer, byte @Nullable [] instance) throws InvalidClassException {
+        public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, byte @Nullable [] instance) throws InvalidClassException {
             if (instance == null) {
                 return null;
             }
@@ -111,7 +111,7 @@ final class ByteArrayJsonAdapter {
         }
 
         @Override
-        public byte @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public byte @Nullable [] deserialize(@NotNull JsonSerializable serializer, @NotNull Class<byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }

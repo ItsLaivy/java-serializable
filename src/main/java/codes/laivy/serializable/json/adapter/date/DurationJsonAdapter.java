@@ -1,6 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
-import codes.laivy.serializable.json.TestJson;
+import codes.laivy.serializable.json.JsonSerializable;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -90,7 +90,7 @@ public final class DurationJsonAdapter implements JsonAdapter<Duration> {
      * @throws InvalidClassException If the {@link Duration} cannot be serialized by this adapter.
      */
     @Override
-    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Duration instance) throws InvalidClassException {
+    public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, @Nullable Duration instance) throws InvalidClassException {
         if (instance == null) {
             return null;
         } else if (getTimeUnit() != null) {
@@ -128,7 +128,7 @@ public final class DurationJsonAdapter implements JsonAdapter<Duration> {
      * @throws IllegalArgumentException If the input JSON is not in the expected format for the given {@code timeUnit}.
      */
     @Override
-    public @Nullable Duration deserialize(@NotNull TestJson serializer, @NotNull Class<Duration> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable Duration deserialize(@NotNull JsonSerializable serializer, @NotNull Class<Duration> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else if (getTimeUnit() != null) {

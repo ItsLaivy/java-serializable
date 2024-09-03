@@ -1,6 +1,6 @@
 package codes.laivy.serializable.json.adapter.primitive;
 
-import codes.laivy.serializable.json.TestJson;
+import codes.laivy.serializable.json.JsonSerializable;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -33,7 +33,7 @@ final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Character @Nullable [] instance) throws InvalidClassException {
+        public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, @Nullable Character @Nullable [] instance) throws InvalidClassException {
             if (instance == null) {
                 return null;
             }
@@ -61,7 +61,7 @@ final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public Character @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<Character[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public Character @Nullable [] deserialize(@NotNull JsonSerializable serializer, @NotNull Class<Character[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }
@@ -102,7 +102,7 @@ final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@NotNull TestJson serializer, char @Nullable [] instance) throws InvalidClassException {
+        public @Nullable JsonElement serialize(@NotNull JsonSerializable serializer, char @Nullable [] instance) throws InvalidClassException {
             if (instance == null) {
                 return null;
             }
@@ -111,7 +111,7 @@ final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public char @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<char[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public char @Nullable [] deserialize(@NotNull JsonSerializable serializer, @NotNull Class<char[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }
