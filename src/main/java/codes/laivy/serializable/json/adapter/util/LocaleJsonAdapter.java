@@ -14,6 +14,7 @@ import java.io.InvalidClassException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.IllformedLocaleException;
 import java.util.LinkedHashSet;
 import java.util.Locale;
@@ -91,6 +92,12 @@ final class LocaleJsonAdapter implements JsonAdapter<Locale> {
     public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Locale instance) throws InvalidClassException {
         if (instance == null) {
             return null;
+        }
+
+        for (@NotNull Field field : Locale.class.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers())) {
+                System.out.println("Name: '" + field.getName() + "', Transient: '" + Modifier.isTransient(field.getModifiers()) + "', Type: '" + field.getType().getName() + "'");
+            }
         }
 
         @NotNull BaseLocale baseLocale = getBaseLocale(instance);
