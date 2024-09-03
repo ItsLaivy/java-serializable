@@ -94,12 +94,6 @@ final class LocaleJsonAdapter implements JsonAdapter<Locale> {
             return null;
         }
 
-        for (@NotNull Field field : Locale.class.getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers())) {
-                System.out.println("Name: '" + field.getName() + "', Transient: '" + Modifier.isTransient(field.getModifiers()) + "', Type: '" + field.getType().getName() + "'");
-            }
-        }
-
         @NotNull BaseLocale baseLocale = getBaseLocale(instance);
 
         // Start serialize

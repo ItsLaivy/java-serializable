@@ -7,11 +7,21 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.InvalidClassException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.time.*;
 import java.util.Date;
 import java.util.Locale;
 
 public final class ObjectTest {
+
+    static {
+        for (@NotNull Field field : Locale.class.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers())) {
+                System.out.println("Name: '" + field.getName() + "', Transient: '" + Modifier.isTransient(field.getModifiers()) + "', Type: '" + field.getType().getName() + "'");
+            }
+        }
+    }
 
     private static final @NotNull TestJson serializer = new TestJson();
     private static void match(@NotNull Object object) {
@@ -20,6 +30,7 @@ public final class ObjectTest {
 
         try {
             json = serializer.serialize(object);
+            System.out.println(json);
         } catch (@NotNull InvalidClassException e) {
             throw new RuntimeException("cannot serialize object '" + object + "' from class '" + object.getClass() + "'", e);
         } try {
