@@ -4,19 +4,18 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Allocator {
 
     // Static initializers
 
+    private static final @NotNull String VERSION;
     private static final @NotNull Map<Class<?>, Class<?>> WRAPPERS = new HashMap<Class<?>, Class<?>>() {{
         put(boolean.class, Boolean.class);
         put(byte.class, Byte.class);
@@ -30,6 +29,17 @@ public final class Allocator {
     }};
 
     static {
+        try (@NotNull BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Allocator.class.getResourceAsStream("/version"), "cannot retrieve version stream")))) {
+            VERSION = reader.readLine();
+        } catch (@NotNull IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) {
+    }
+
+    static {
         try {
             // Get file name without the extension and load the library
             System.loadLibrary("laivy/serializable");
@@ -37,8 +47,7 @@ public final class Allocator {
             @NotNull String os = System.getProperty("os.name").toLowerCase();
             @NotNull String arch = System.getProperty("os.arch");
 
-            // todo: improve this caching
-            @NotNull File file = new File(new File(System.getProperty("java.io.tmpdir")), "java-serializable." + (os.contains("win") ? "dll" : "so"));
+            @NotNull File file = new File(new File(System.getProperty("java.io.tmpdir")), "java-serializable-" + VERSION + "." + (os.contains("win") ? "dll" : os.contains("mac") ? "dylib" : "so"));
 
             try {
                 if (!file.exists()) {
