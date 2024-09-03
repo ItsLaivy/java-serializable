@@ -15,14 +15,6 @@ import java.util.Locale;
 
 public final class ObjectTest {
 
-    static {
-        for (@NotNull Field field : Locale.class.getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers())) {
-                System.out.println("Name: '" + field.getName() + "', Transient: '" + Modifier.isTransient(field.getModifiers()) + "', Type: '" + field.getType().getName() + "'");
-            }
-        }
-    }
-
     private static final @NotNull TestJson serializer = new TestJson();
     private static void match(@NotNull Object object) {
         @Nullable JsonElement json;
