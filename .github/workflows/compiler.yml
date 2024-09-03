@@ -1,0 +1,180 @@
+name: Build JNI Libraries
+
+on:
+  push:
+    paths:
+      - '**/*.c'
+      - '.github/workflows/compiler.yml'
+      - 'src/main/resources/libs/**'
+
+jobs:
+  build_windows_x64:
+    name: Build on Windows x64
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up build tools
+        uses: msys2/setup-msys2@v2
+        with:
+          msys_packages: 'mingw-w64-x86_64-gcc mingw-w64-i686-gcc make'
+
+      - name: Set up JAVA_HOME
+        run: |
+          echo "JAVA_HOME=C:/Program Files/Java/jdk-xx" >> $GITHUB_ENV
+
+      - name: Check for jni.h
+        run: |
+          dir "$env:JAVA_HOME\include\win32"
+
+      - name: Check JAVA_HOME
+        run: |
+          echo $env:JAVA_HOME
+
+      - name: Build 64-bit DLL
+        run: |
+          New-Item -ItemType Directory -Path src/main/resources/libs -Force
+          gcc -m64 -shared -o src/main/resources/libs/win64.dll src/main/c/*.c -I "$env:JAVA_HOME/include" -I "$env:JAVA_HOME/include/win32"
+
+      - name: Upload win64 DLL
+        uses: actions/upload-artifact@v3
+        with:
+          name: win64-dll
+          path: src/main/resources/libs/win64.dll
+
+  build_windows_x86:
+    name: Build on Windows x86
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install MinGW-w64
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-i686
+
+      - name: Build 32-bit DLL
+        run: |
+          mkdir -p src/main/resources/libs
+          i686-w64-mingw32-gcc -shared -o src/main/resources/libs/win32.dll src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux" -Os -Wl,--strip-all -Wl,--gc-sections
+
+      - name: Upload win32 DLL
+        uses: actions/upload-artifact@v3
+        with:
+          name: win32-dll
+          path: src/main/resources/libs/win32.dll
+
+  build_linux:
+    name: Build on Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-multilib
+
+      - name: Build SO x64
+        run: |
+          mkdir -p src/main/resources/libs
+          gcc -m64 -shared -o src/main/resources/libs/linux64.so src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+
+      - name: Build SO x86
+        run: |
+          mkdir -p src/main/resources/libs
+          gcc -m32 -shared -o src/main/resources/libs/linux32.so src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/linux"
+
+      - name: Upload linux SO x64
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux64-so
+          path: src/main/resources/libs/linux64.so
+
+      - name: Upload linux SO x86
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux32-so
+          path: src/main/resources/libs/linux32.so
+
+  build_macos:
+    name: Build on macOS
+    runs-on: macos-12
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check JAVA_HOME
+        run: echo $JAVA_HOME
+
+      - name: Build DYLIB for x86_64 and arm64
+        run: |
+          mkdir -p src/main/resources/libs
+          gcc -dynamiclib -o src/main/resources/libs/macos_x86_64.dylib src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch x86_64
+          gcc -dynamiclib -o src/main/resources/libs/macos_arm64.dylib src/main/c/*.c -I "${JAVA_HOME}/include" -I "${JAVA_HOME}/include/darwin" -arch arm64
+
+      - name: Upload macos SO
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-dylibs
+          path: src/main/resources/libs/*.dylib
+
+  post_processing:
+    name: Post-processing and Deployment
+    needs: [build_windows_x64, build_windows_x86, build_linux, build_macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download artifacts from Windows x64
+        uses: actions/download-artifact@v3
+        with:
+          name: win64-dll
+      - name: Download artifacts from Windows x86
+        uses: actions/download-artifact@v3
+        with:
+          name: win32-dll
+
+      - name: Download artifacts from Linux x64
+        uses: actions/download-artifact@v3
+        with:
+          name: linux64-so
+      - name: Download artifacts from Linux x86
+        uses: actions/download-artifact@v3
+        with:
+          name: linux32-so
+
+      - name: Download artifacts from macOS
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-dylibs
+
+      - name: Set up GitHub credentials
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "github-actions"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Move artifacts to repo
+        run: |
+          mkdir -p src/main/resources/libs
+          
+          mv win64.dll src/main/resources/libs/
+          mv win32.dll src/main/resources/libs/
+          mv linux64.so src/main/resources/libs/
+          mv linux32.so src/main/resources/libs/
+          mv macos_x86_64.dylib src/main/resources/libs/
+          mv macos_arm64.dylib src/main/resources/libs/
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add src/main/resources/libs/
+          git commit -m "Add built libraries"
+          git push

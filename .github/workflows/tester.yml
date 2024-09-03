@@ -1,0 +1,88 @@
+name: Maven Test
+
+on: [push, pull_request]
+
+jobs:
+  ubuntu:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04, ubuntu-22.04, ubuntu-20.04]
+        java: [8, 9, 12, 17, 20, 21]
+
+    name: Java ${{ matrix.java }} on ${{ matrix.os }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: zulu
+
+      - name: Compile and test with Maven
+        run: mvn clean verify -e -X
+
+      - name: Display logs
+        if: failure()
+        run: cat target/surefire-reports/*.txt || type target\surefire-reports\*.txt || true
+  windows:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest, windows-2022, windows-2019]
+        java: [8, 9, 12, 17, 20, 21]
+
+    name: Java ${{ matrix.java }} on ${{ matrix.os }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: zulu
+
+      - name: Compile and test with Maven
+        run: mvn clean verify -e -X
+
+      - name: Display logs
+        if: failure()
+        run: cat target/surefire-reports/*.txt || type target\surefire-reports\*.txt || true
+  macos:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, macos-13, macos-12]
+        java: [8, 17, 20, 21]
+
+    name: Java ${{ matrix.java }} on ${{ matrix.os }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: zulu
+
+      - name: Compile and test with Maven
+        run: mvn clean verify -e -X
+
+      - name: Display logs
+        if: failure()
+        run: |
+          if ls target/surefire-reports/*.txt 1> /dev/null 2>&1; then
+             cat target/surefire-reports/*.txt
+          else
+            echo "No surefire reports found."
+          fi

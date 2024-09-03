@@ -1,4 +1,4 @@
-# Serialization Library 📚
+# Java Serializable 📚
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
 ![License](https://img.shields.io/github/license/ItsLaivy/java-serializable?style=for-the-badge)
@@ -9,7 +9,7 @@
 
 Welcome to the java-serializable library!
 This Java library provides a simple way to easily serialize all the objects from java
-(including the ones without the `Serializble` interface implementation) with an extreme performance and customization
+(including the ones without the `Serializable` interface implementation) with an extreme performance and customization
 
 ## 🚀 Features
 
@@ -61,7 +61,7 @@ public class Main {
         User user = new User("Alice", 30);
         JsonSerializable serializer = new JsonSerializable();
 
-        String json = serializer.serialize(user);
+        JsonElement json = serializer.serialize(user);
         System.out.println(json);
         // Output: {"user_name":"Alice","age":30}
     }
