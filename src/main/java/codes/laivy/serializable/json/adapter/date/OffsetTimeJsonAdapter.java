@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
+import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
@@ -101,17 +102,18 @@ public final class OffsetTimeJsonAdapter implements JsonAdapter<OffsetTime> {
      * it is formatted into a string using the specified {@link DateTimeFormatter}. The formatted string
      * is then converted into a {@link JsonPrimitive}.</p>
      *
-     * @param object The {@link OffsetTime} to be serialized, which may be null.
+     * @param serializer The serializer instance.
+     * @param instance The {@link OffsetTime} to be serialized, which may be null.
      * @return A {@link JsonPrimitive} containing the serialized string representation of the {@link OffsetTime},
      *         or null if the input {@link OffsetTime} was null.
      * @throws InvalidClassException If the {@link OffsetTime} cannot be serialized by this adapter.
      */
     @Override
-    public @Nullable JsonElement serialize(@Nullable OffsetTime object) throws InvalidClassException {
-        if (object == null) {
+    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable OffsetTime instance) throws InvalidClassException {
+        if (instance == null) {
             return null;
         } else {
-            return new JsonPrimitive(object.format(getFormatter()));
+            return new JsonPrimitive(instance.format(getFormatter()));
         }
     }
 
@@ -123,14 +125,15 @@ public final class OffsetTimeJsonAdapter implements JsonAdapter<OffsetTime> {
      * The format of the string must match the pattern defined by the formatter; otherwise, an
      * {@link InvalidClassException} will be thrown.</p>
      *
-     * @param json The {@link JsonElement} to be deserialized, which may be null.
+     * @param serializer The serializer instance.
      * @param reference The {@link OffsetTime} reference class.
+     * @param json The {@link JsonElement} to be deserialized, which may be null.
      * @return The deserialized {@link OffsetTime} object, or null if the input JSON element was null.
      * @throws InvalidClassException If the JSON element cannot be parsed into an {@link OffsetTime}.
      * @throws IllegalArgumentException If the JSON element does not match the expected format for {@link OffsetTime}.
      */
     @Override
-    public @Nullable OffsetTime deserialize(@NotNull Class<OffsetTime> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable OffsetTime deserialize(@NotNull TestJson serializer, @NotNull Class<OffsetTime> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else {

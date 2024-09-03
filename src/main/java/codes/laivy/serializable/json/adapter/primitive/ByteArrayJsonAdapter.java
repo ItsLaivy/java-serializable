@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json.adapter.primitive;
 
+import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -32,26 +33,26 @@ final class ByteArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@Nullable Byte @Nullable [] array) throws InvalidClassException {
-            if (array == null) {
+        public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Byte @Nullable [] instance) throws InvalidClassException {
+            if (instance == null) {
                 return null;
             }
 
-            boolean anyNull = Arrays.stream(array).anyMatch(Objects::isNull);
+            boolean anyNull = Arrays.stream(instance).anyMatch(Objects::isNull);
 
             if (anyNull) { // There's an impostor here...
                 @NotNull JsonArray json = new JsonArray();
 
-                for (@Nullable Byte c : array) {
+                for (@Nullable Byte c : instance) {
                     if (c == null) json.add(JsonNull.INSTANCE);
                     else json.add(c);
                 }
 
                 return json;
             } else { // All clean to be a plain text!
-                byte[] primitive = new byte[array.length];
-                for (int row = 0; row < array.length; row++) {
-                    @NotNull Byte b = Objects.requireNonNull(array[row]);
+                byte[] primitive = new byte[instance.length];
+                for (int row = 0; row < instance.length; row++) {
+                    @NotNull Byte b = Objects.requireNonNull(instance[row]);
                     primitive[row] = b;
                 }
 
@@ -60,7 +61,7 @@ final class ByteArrayJsonAdapter {
         }
 
         @Override
-        public Byte @Nullable [] deserialize(@NotNull Class<Byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public Byte @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<Byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }
@@ -101,16 +102,16 @@ final class ByteArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(byte @Nullable [] object) throws InvalidClassException {
-            if (object == null) {
+        public @Nullable JsonElement serialize(@NotNull TestJson serializer, byte @Nullable [] instance) throws InvalidClassException {
+            if (instance == null) {
                 return null;
             }
 
-            return new JsonPrimitive(Base64.getEncoder().encodeToString(object));
+            return new JsonPrimitive(Base64.getEncoder().encodeToString(instance));
         }
 
         @Override
-        public byte @Nullable [] deserialize(@NotNull Class<byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public byte @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<byte[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }

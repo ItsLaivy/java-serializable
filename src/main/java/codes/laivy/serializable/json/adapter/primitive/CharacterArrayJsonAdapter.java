@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json.adapter.primitive;
 
+import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -32,17 +33,17 @@ final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@Nullable Character @Nullable [] array) throws InvalidClassException {
-            if (array == null) {
+        public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Character @Nullable [] instance) throws InvalidClassException {
+            if (instance == null) {
                 return null;
             }
 
-            boolean anyNull = Arrays.stream(array).anyMatch(Objects::isNull);
+            boolean anyNull = Arrays.stream(instance).anyMatch(Objects::isNull);
 
             if (anyNull) { // There's an impostor here...
                 @NotNull JsonArray json = new JsonArray();
 
-                for (@Nullable Character c : array) {
+                for (@Nullable Character c : instance) {
                     if (c == null) json.add(JsonNull.INSTANCE);
                     else json.add(c);
                 }
@@ -51,7 +52,7 @@ final class CharacterArrayJsonAdapter {
             } else { // All clean to be a plain text!
                 @NotNull StringBuilder builder = new StringBuilder();
 
-                for (@UnknownNullability Character c : array) {
+                for (@UnknownNullability Character c : instance) {
                     builder.append(c.charValue());
                 }
 
@@ -60,7 +61,7 @@ final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public Character @Nullable [] deserialize(@NotNull Class<Character[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public Character @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<Character[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }
@@ -101,16 +102,16 @@ final class CharacterArrayJsonAdapter {
         }
 
         @Override
-        public @Nullable JsonElement serialize(char @Nullable [] object) throws InvalidClassException {
-            if (object == null) {
+        public @Nullable JsonElement serialize(@NotNull TestJson serializer, char @Nullable [] instance) throws InvalidClassException {
+            if (instance == null) {
                 return null;
             }
 
-            return new JsonPrimitive(new String(object));
+            return new JsonPrimitive(new String(instance));
         }
 
         @Override
-        public char @Nullable [] deserialize(@NotNull Class<char[]> reference, @Nullable JsonElement object) throws InvalidClassException {
+        public char @Nullable [] deserialize(@NotNull TestJson serializer, @NotNull Class<char[]> reference, @Nullable JsonElement object) throws InvalidClassException {
             if (object == null) {
                 return null;
             }

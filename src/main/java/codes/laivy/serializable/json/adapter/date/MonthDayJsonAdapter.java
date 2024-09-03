@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
+import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
@@ -28,16 +29,16 @@ final class MonthDayJsonAdapter implements JsonAdapter<MonthDay> {
     // Serializers
 
     @Override
-    public @Nullable JsonElement serialize(@Nullable MonthDay object) throws InvalidClassException {
-        if (object == null) {
+    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable MonthDay instance) throws InvalidClassException {
+        if (instance == null) {
             return null;
         } else {
-            return new JsonPrimitive(object.format(formatter));
+            return new JsonPrimitive(instance.format(formatter));
         }
     }
 
     @Override
-    public @Nullable MonthDay deserialize(@NotNull Class<MonthDay> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable MonthDay deserialize(@NotNull TestJson serializer, @NotNull Class<MonthDay> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else {

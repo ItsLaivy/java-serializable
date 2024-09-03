@@ -29,7 +29,7 @@ final class JsonUtilities {
         @Nullable Adapter adapter = serializer.getAdapters().get(object.getClass()).orElse(null);
 
         if (adapter != null) {
-            return (JsonElement) adapter.serialize(object);
+            return (JsonElement) adapter.serialize(serializer, object);
         }
 
         // Java serialization
@@ -91,7 +91,7 @@ final class JsonUtilities {
             @Nullable Adapter adapter = value == null ? null : serializer.getAdapters().get(value.getClass()).orElse(null);
 
             if (adapter != null) {
-                element = (JsonElement) adapter.serialize(value);
+                element = (JsonElement) adapter.serialize(serializer, value);
             } else if (value == null) {
                 element = JsonNull.INSTANCE;
             } else if (value instanceof Enum<?>) {

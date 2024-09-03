@@ -1,6 +1,7 @@
 package codes.laivy.serializable.adapter;
 
 import codes.laivy.serializable.Serializer;
+import codes.laivy.serializable.json.TestJson;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,21 +47,23 @@ public interface Adapter<T, O> {
     /**
      * Serializes an object of type `O` into its corresponding serialized form `T`.
      *
-     * @param object The object to be serialized, which may be null.
+     * @param serializer The serializer instance.
+     * @param instance The object to be serialized, which may be null.
      * @return The serialized form of the object, or null if the object was null.
      * @throws InvalidClassException If this adapter cannot serialize the class of the object.
      */
-    @Nullable T serialize(@Nullable O object) throws InvalidClassException;
+    @Nullable T serialize(@NotNull TestJson serializer, @Nullable O instance) throws InvalidClassException;
 
     /**
      * Deserializes an object of type `T` back into its original form `O`.
      *
+     * @param serializer The serializer instance.
      * @param object The serialized object to be deserialized, which may be null.
      * @param reference The object class that wants to be deserialized
      * @return The original object of type `O`, or null if the serialized object was null.
      * @throws InvalidClassException If the class of the serialized object is not compatible with type `O`.
      */
-    @Nullable O deserialize(@NotNull Class<O> reference, @Nullable T object) throws InvalidClassException;
+    @Nullable O deserialize(@NotNull TestJson serializer, @NotNull Class<O> reference, @Nullable T object) throws InvalidClassException;
 
 }
 

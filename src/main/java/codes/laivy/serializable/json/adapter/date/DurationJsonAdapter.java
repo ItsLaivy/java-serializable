@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
+import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -83,16 +84,17 @@ public final class DurationJsonAdapter implements JsonAdapter<Duration> {
      * If no {@code timeUnit} is specified, the {@link Duration} is serialized as a JSON
      * object with {@code nano} and {@code seconds} properties.</p>
      *
-     * @param object The {@link Duration} to be serialized, which may be null.
+     * @param serializer The serializer instance.
+     * @param instance The {@link Duration} to be serialized, which may be null.
      * @return A {@link JsonElement} representing the serialized form of the {@link Duration}, or null if the input was null.
      * @throws InvalidClassException If the {@link Duration} cannot be serialized by this adapter.
      */
     @Override
-    public @Nullable JsonElement serialize(@Nullable Duration object) throws InvalidClassException {
-        if (object == null) {
+    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable Duration instance) throws InvalidClassException {
+        if (instance == null) {
             return null;
         } else if (getTimeUnit() != null) {
-            long durationInNanos = object.toNanos();
+            long durationInNanos = instance.toNanos();
             long unitInNanos = TimeUnit.NANOSECONDS.convert(1, timeUnit);
 
             @NotNull BigDecimal result = BigDecimal.valueOf(durationInNanos)
@@ -102,8 +104,8 @@ public final class DurationJsonAdapter implements JsonAdapter<Duration> {
             return new JsonPrimitive(result);
         } else {
             @NotNull JsonObject json = new JsonObject();
-            json.addProperty("nano", object.getNano());
-            json.addProperty("seconds", object.getSeconds());
+            json.addProperty("nano", instance.getNano());
+            json.addProperty("seconds", instance.getSeconds());
 
             return json;
         }
@@ -117,15 +119,16 @@ public final class DurationJsonAdapter implements JsonAdapter<Duration> {
      * If no {@code timeUnit} is specified, the {@link JsonElement} is expected to be a JSON object
      * with {@code nano} and {@code seconds} properties.</p>
      *
-     * @param json The {@link JsonElement} to be deserialized, which may be null.
+     * @param serializer The serializer instance.
      * @param reference The duration class reference.
+     * @param json The {@link JsonElement} to be deserialized, which may be null.
      *
      * @return The deserialized {@link Duration}, or null if the input was null.
      * @throws InvalidClassException If the {@link JsonElement} cannot be deserialized into a {@link Duration}.
      * @throws IllegalArgumentException If the input JSON is not in the expected format for the given {@code timeUnit}.
      */
     @Override
-    public @Nullable Duration deserialize(@NotNull Class<Duration> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable Duration deserialize(@NotNull TestJson serializer, @NotNull Class<Duration> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else if (getTimeUnit() != null) {

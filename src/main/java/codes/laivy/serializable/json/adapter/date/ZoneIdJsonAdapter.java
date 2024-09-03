@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
+import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
@@ -20,15 +21,15 @@ final class ZoneIdJsonAdapter implements JsonAdapter<ZoneId> {
     }
 
     @Override
-    public @Nullable JsonElement serialize(@Nullable ZoneId object) throws InvalidClassException {
-        if (object == null) {
+    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable ZoneId instance) throws InvalidClassException {
+        if (instance == null) {
             return null;
         } else {
-            return new JsonPrimitive(object.toString());
+            return new JsonPrimitive(instance.toString());
         }
     }
     @Override
-    public @Nullable ZoneId deserialize(@NotNull Class<ZoneId> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable ZoneId deserialize(@NotNull TestJson serializer, @NotNull Class<ZoneId> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else {

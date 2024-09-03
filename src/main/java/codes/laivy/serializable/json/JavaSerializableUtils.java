@@ -123,7 +123,7 @@ final class JavaSerializableUtils {
         byte[] bytes;
 
         if (adapter != null) {
-            bytes = adapter.deserialize(byte[].class, element);
+            bytes = adapter.deserialize(serializer, byte[].class, element);
         } else if (element.isJsonArray()) {
             @NotNull JsonArray array = element.getAsJsonArray();
             bytes = new byte[array.size()];
@@ -175,7 +175,7 @@ final class JavaSerializableUtils {
             @Nullable JsonElement element;
 
             if (adapter != null) {
-                return adapter.serialize(bytes.toByteArray());
+                return adapter.serialize(serializer, bytes.toByteArray());
             } else {
                 @NotNull JsonArray array = new JsonArray();
 

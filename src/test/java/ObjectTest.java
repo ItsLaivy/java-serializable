@@ -3,11 +3,13 @@ import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.InvalidClassException;
 import java.time.*;
 import java.util.Date;
+import java.util.Locale;
 
 public final class ObjectTest {
 
@@ -34,6 +36,7 @@ public final class ObjectTest {
     }
 
     @Test
+    @DisplayName("Date Classes (Like OffsetDateTime)")
     public void time() throws InvalidClassException, InstantiationException {
         match(Duration.ofDays(6).plusHours(6).plusMinutes(6));
         match(OffsetTime.now());
@@ -48,6 +51,13 @@ public final class ObjectTest {
         match(LocalDateTime.now());
         match(LocalDate.now());
         match(new Date());
+    }
+
+    @Test
+    @DisplayName("Locale Classes")
+    public void locale() throws InvalidClassException, InstantiationException {
+        match(Locale.ENGLISH);
+        match(new Locale("pt_br", "brazil", "portuguese"));
     }
 
 }

@@ -4,10 +4,7 @@ import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.json.adapter.JsonAdapters;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -245,6 +242,52 @@ public class TestJson implements Serializer<JsonElement> {
             return null;
         }
 
+        // Serialize primitives
+        if (object instanceof Enum<?>) {
+            return serialize((Enum<?>) object);
+        } else if (object instanceof Enum<?>[]) {
+            return serialize((Enum<?>[]) object);
+        } else if (object instanceof Boolean) {
+            return serialize((Boolean) object);
+        } else if (object instanceof Boolean[]) {
+            return serialize((Boolean[]) object);
+        } else if (object instanceof Character) {
+            return serialize((Character) object);
+        } else if (object instanceof Character[]) {
+            return serialize((Character[]) object);
+        } else if (object instanceof Byte) {
+            return serialize((Byte) object);
+        } else if (object instanceof Byte[]) {
+            return serialize((Byte[]) object);
+        } else if (object instanceof Number[]) {
+            return serialize((Number[]) object);
+        } else if (object instanceof Number) {
+            return serialize((Number) object);
+        } else if (object instanceof boolean[]) {
+            return serialize((boolean[]) object);
+        } else if (object instanceof char[]) {
+            return serialize((char[]) object);
+        } else if (object instanceof byte[]) {
+            return serialize((byte[]) object);
+        } else if (object instanceof int[]) {
+            return serialize((int[]) object);
+        } else if (object instanceof short[]) {
+            return serialize((short[]) object);
+        } else if (object instanceof long[]) {
+            return serialize((long[]) object);
+        } else if (object instanceof float[]) {
+            return serialize((float[]) object);
+        } else if (object instanceof double[]) {
+            return serialize((double[]) object);
+        } else if (object instanceof String) {
+            return serialize((String) object);
+        } else if (object instanceof String[]) {
+            return serialize((String[]) object);
+        } else if (object instanceof Object[]) {
+            return serialize((Object[]) object);
+        }
+
+        // Serialize object
         @NotNull Map<Class<?>, Set<Integer>> map = new HashMap<>();
         @NotNull JsonElement json = JsonUtilities.serializeObject(this, object, map);
 
@@ -269,7 +312,7 @@ public class TestJson implements Serializer<JsonElement> {
         @Nullable Adapter adapter = getAdapters().get(reference).orElse(null);
 
         if (adapter != null) {
-            return adapter.deserialize(reference, element);
+            return adapter.deserialize(this, reference, element);
         } else if (element == null || element.isJsonNull()) {
             return null;
         } else if (element.isJsonObject()) {
@@ -341,7 +384,7 @@ public class TestJson implements Serializer<JsonElement> {
         @Nullable Adapter adapter = getAdapters().get(reference).orElse(null);
 
         if (adapter != null) {
-            return (E) adapter.deserialize(reference, element);
+            return (E) adapter.deserialize(this, reference, element);
         }
 
         if (JavaSerializableUtils.usesJavaSerialization(reference)) {

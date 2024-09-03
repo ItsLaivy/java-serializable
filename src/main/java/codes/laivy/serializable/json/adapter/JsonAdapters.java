@@ -106,7 +106,7 @@ public class JsonAdapters implements Adapters<JsonElement> {
 
         // Check assignable
         for (@NotNull Class<?> r : map.keySet()) {
-            if (r.isAssignableFrom(reference)) {
+            if (reference.isAssignableFrom(r)) {
                 return map.get(r) != null;
             }
         }
@@ -127,7 +127,7 @@ public class JsonAdapters implements Adapters<JsonElement> {
 
         // Check assignable
         for (@NotNull Class<?> r : map.keySet()) {
-            if (r.isAssignableFrom(reference)) {
+            if (reference.isAssignableFrom(r)) {
                 //noinspection unchecked
                 return Optional.ofNullable((Adapter<JsonElement, E>) map.get(r));
             }

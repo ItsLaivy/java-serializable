@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json.adapter.date;
 
+import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
@@ -103,17 +104,18 @@ public final class LocalDateJsonAdapter implements JsonAdapter<LocalDate> {
      * is formatted into a string using the specified {@link DateTimeFormatter}. The formatted string is then
      * wrapped in a {@link JsonPrimitive} for inclusion in the JSON output.</p>
      *
-     * @param object The {@link LocalDate} to be serialized, which may be null.
+     * @param serializer The serializer instance.
+     * @param instance The {@link LocalDate} to be serialized, which may be null.
      * @return A {@link JsonPrimitive} containing the serialized string representation of the {@link LocalDate},
      *         or null if the input {@link LocalDate} was null.
      * @throws InvalidClassException If the {@link LocalDate} cannot be serialized by this adapter.
      */
     @Override
-    public @Nullable JsonElement serialize(@Nullable LocalDate object) throws InvalidClassException {
-        if (object == null) {
+    public @Nullable JsonElement serialize(@NotNull TestJson serializer, @Nullable LocalDate instance) throws InvalidClassException {
+        if (instance == null) {
             return null;
         } else {
-            return new JsonPrimitive(object.format(getFormatter()));
+            return new JsonPrimitive(instance.format(getFormatter()));
         }
     }
 
@@ -125,6 +127,7 @@ public final class LocalDateJsonAdapter implements JsonAdapter<LocalDate> {
      * The JSON string must adhere to the format defined by the formatter; otherwise, an
      * {@link InvalidClassException} will be thrown.</p>
      *
+     * @param serializer The serializer instance.
      * @param json The {@link JsonElement} to be deserialized, which may be null.
      * @param reference The {@link LocalDate} reference class.
      * @return The deserialized {@link LocalDate} object, or null if the input JSON element was null.
@@ -132,7 +135,7 @@ public final class LocalDateJsonAdapter implements JsonAdapter<LocalDate> {
      * @throws IllegalArgumentException If the JSON element does not match the expected format for {@link LocalDate}.
      */
     @Override
-    public @Nullable LocalDate deserialize(@NotNull Class<LocalDate> reference, @Nullable JsonElement json) throws InvalidClassException {
+    public @Nullable LocalDate deserialize(@NotNull TestJson serializer, @NotNull Class<LocalDate> reference, @Nullable JsonElement json) throws InvalidClassException {
         if (json == null || json.isJsonNull()) {
             return null;
         } else {

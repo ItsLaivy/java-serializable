@@ -89,9 +89,38 @@ public final class Allocator {
         }
     }
 
+    /**
+     * Allocates and returns a new instance of the specified class without invoking any constructor.
+     * <p>
+     * This method bypasses the usual constructor invocation process and directly allocates memory for a new object.
+     * This can be useful in scenarios where object creation needs to occur without running any initialization code,
+     * such as in serialization frameworks or low-level libraries
+     * where precise control over object creation is required.
+     *
+     * @param type the class of the object to be created; must not be {@code null}.
+     * @param <T> the type of the object to be created.
+     * @return a new instance of the specified class, never {@code null}.
+     * @throws NullPointerException if {@code type} is {@code null}.
+     * @throws IllegalArgumentException if the class cannot be instantiated, such as for interfaces, abstract classes, or primitives.
+     */
     @ApiStatus.Internal
     public static native <T> @NotNull T allocate(@NotNull Class<T> type);
 
+    /**
+     * Sets the value of a final field, bypassing the usual immutability constraints.
+     * <p>
+     * This method allows modifying the value of a final field even after the field has been initialized.
+     * It is typically used in scenarios where fields need to be altered in frameworks that require
+     * deep integration with Java's reflection mechanisms,
+     * such as dependency injection, testing, or mocking libraries.
+     * <p>
+     * Caution should be exercised when using this method, as it breaks the immutability guarantee of final fields,
+     * which can lead to unexpected behavior or security vulnerabilities if used improperly.
+     *
+     * @param field the field to modify; must not be {@code null}.
+     * @param instance the instance containing the field to modify, or {@code null} if the field is static.
+     * @param object the new value to set for the field; can be {@code null} if the field type allows it.
+     */
     @ApiStatus.Internal
     public static native void setFieldValue(@NotNull Field field, @Nullable Object instance, @Nullable Object object);
 
