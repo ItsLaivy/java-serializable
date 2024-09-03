@@ -3,21 +3,21 @@ package codes.laivy.serializable.json.adapter.util;
 import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.json.TestJson;
 import codes.laivy.serializable.json.adapter.JsonAdapter;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import sun.util.locale.BaseLocale;
-import sun.util.locale.InternalLocaleBuilder;
-import sun.util.locale.LocaleExtensions;
-import sun.util.locale.LocaleSyntaxException;
 
 import java.io.InvalidClassException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.IllformedLocaleException;
+import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Set;
 
 final class LocaleJsonAdapter implements JsonAdapter<Locale> {
 
@@ -36,31 +36,6 @@ final class LocaleJsonAdapter implements JsonAdapter<Locale> {
             throw new RuntimeException("cannot find old ISO codes converter method at Locale class", e);
         } catch (@NotNull NoSuchFieldException e) {
             throw new RuntimeException("cannot find baseLocale and/or localeExtensions field at Locale class", e);
-        }
-    }
-
-    public static @Nullable LocaleExtensions getLocaleExtensions(@NotNull Locale locale) {
-        try {
-            boolean accessible = localeExtensionsField.isAccessible();
-            localeExtensionsField.setAccessible(true);
-
-            @Nullable LocaleExtensions extensions = (LocaleExtensions) localeExtensionsField.get(locale);
-            localeExtensionsField.setAccessible(accessible);
-
-            return extensions;
-        } catch (@NotNull IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    public static void setLocaleExtensions(@NotNull Locale locale, @Nullable LocaleExtensions extensions) {
-        try {
-            boolean accessible = localeExtensionsField.isAccessible();
-            localeExtensionsField.setAccessible(true);
-
-            localeExtensionsField.set(locale, extensions);
-            localeExtensionsField.setAccessible(accessible);
-        } catch (@NotNull IllegalAccessException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -119,7 +94,6 @@ final class LocaleJsonAdapter implements JsonAdapter<Locale> {
         }
 
         @NotNull BaseLocale baseLocale = getBaseLocale(instance);
-        @Nullable LocaleExtensions extensions = getLocaleExtensions(instance);
 
         // Start serialize
         @NotNull JsonObject object = new JsonObject();
@@ -131,8 +105,14 @@ final class LocaleJsonAdapter implements JsonAdapter<Locale> {
             object.addProperty("country", baseLocale.getRegion());
         } if (!instance.getVariant().isEmpty()) {
             object.addProperty("variant", instance.getVariant());
-        } if (extensions != null) {
-            object.addProperty("extensions", extensions.getID());
+        } if (!instance.getExtensionKeys().isEmpty()) {
+            @NotNull JsonArray extensions = new JsonArray();
+
+            for (@NotNull Character character : instance.getExtensionKeys()) {
+                extensions.add(character);
+            }
+
+            object.add("extensions", extensions);
         }
 
         // Finish
@@ -145,33 +125,25 @@ final class LocaleJsonAdapter implements JsonAdapter<Locale> {
         } else if (element.isJsonObject()) {
             // Deserialization
             @NotNull JsonObject object = element.getAsJsonObject();
+            @NotNull Set<Character> extensions = new LinkedHashSet<>();
 
             @NotNull String language = object.get("language").getAsString();
             @NotNull String script = object.has("script") ? object.get("script").getAsString() : "";
             @NotNull String country = object.has("country") ? object.get("country").getAsString() : "";
             @NotNull String variant = object.has("variant") ? object.get("variant").getAsString() : "";
-            @NotNull String extStr = object.has("extensions") ? object.get("extensions").getAsString() : "";
+
+            if (object.has("extensions")) {
+                for (@NotNull JsonElement extensionElement : object.getAsJsonArray("extensions")) {
+                    extensions.add(extensionElement.getAsString().charAt(0));
+                }
+            }
 
             @NotNull BaseLocale base = BaseLocale.getInstance(convertOldISOCodes(language), script, country, variant);
-            @Nullable LocaleExtensions extensions;
-
-            if (!extStr.isEmpty()) {
-                try {
-                    @NotNull InternalLocaleBuilder builder = new InternalLocaleBuilder();
-                    builder.setExtensions(extStr);
-
-                    extensions = builder.getLocaleExtensions();
-                } catch (@NotNull LocaleSyntaxException e) {
-                    throw new IllformedLocaleException(e.getMessage());
-                }
-            } else {
-                extensions = null;
-            }
 
             // Reserve instance
             @NotNull Locale locale = Allocator.allocate(Locale.class);
             setBaseLocale(locale, base);
-            setLocaleExtensions(locale, extensions);
+            locale.getExtensionKeys().addAll(extensions);
 
             // Finish
             return locale;
