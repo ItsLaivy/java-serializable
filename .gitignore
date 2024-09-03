@@ -3,7 +3,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-cmake-build-debug/
+/cmake-build-debug/
 
 ### IntelliJ IDEA ###
 *.iws
