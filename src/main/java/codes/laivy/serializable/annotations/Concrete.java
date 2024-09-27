@@ -6,9 +6,13 @@ import java.lang.annotation.*;
 
 /**
  * Annotation used to specify the concrete class that should be used by the serializer when it cannot infer
- * the exact type of a field. This situation arises when the field's reference type is either an interface or an
+ * the exact type of field. This situation arises when the field's reference type is either an interface or an
  * abstract class, making it unclear which concrete implementation to use. By applying this annotation to such fields,
  * the developer explicitly indicates which concrete class the serializer should use.
+ * <p>
+ * If the field already has a defined value, the class of that existing value will be used as the concrete class,
+ * unless there is a {@code @Concrete} annotation present. In that case, the first {@code @Concrete} annotation
+ * will take priority over the existing value's class if compatible.
  * <p>
  * The class specified in the annotation's parameter MUST be a concrete class and should adhere to the following constraints:
  * <ul>
@@ -25,10 +29,28 @@ import java.lang.annotation.*;
  * Example usage:
  * <pre>
  * {@code
- * // Using multiple concrete types for deserialization
+ * // Specifies the serializer to use ArrayList
  * @Concrete(type = ArrayList.class)
- * @Concrete(type = LinkedList.class)
  * private final List<String> items;
+ * }
+ * </pre>
+ *
+ * <pre>
+ * {@code
+ * // The @Concrete annotation is not needed if the field already has a defined value,
+ * // such as a LinkedList, which will be used as the concrete class.
+ * private final List<String> items = new LinkedList<>();
+ * }
+ * </pre>
+ *
+ * <pre>
+ * {@code
+ * // The address can have variations, so we include all of them into multiples @Concrete annotations
+ * @Concrete(type = IPv4Address.class)
+ * @Concrete(type = IPv6Address.class)
+ * private final Address address;
+ *
+ * // Try out my java-address library, available on my (@itslaivy) github :)
  * }
  * </pre>
  *
@@ -44,7 +66,9 @@ public @interface Concrete {
     /**
      * Specifies the concrete class to be used by the serializer for the annotated field.
      * The specified class must be a concrete class and should be assignable to the field's declared type.
-     * This class will be used during deserialization to instantiate the correct type.
+     * This class will be used during deserialization to instantiate the correct type, unless the field already
+     * has a defined value, in which case the existing value's class will be used unless {@code @Concrete} is present.
+     * In such a case, the first {@code @Concrete} annotation will take precedence.
      * <p>
      * Constraints:
      * <ul>

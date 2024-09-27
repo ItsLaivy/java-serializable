@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 
 /**
  * This annotation allows only specific fields to be serialized. Similar to the
- * {@link Fields.Exclude} annotation, the key difference is that this annotation is
+ * {@link ExcludeFields} annotation, the key difference is that this annotation is
  * inclusive, meaning only the chosen fields will be serialized.
  * <p>
  * When this annotation is applied, it results in serialized data containing only the

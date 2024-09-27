@@ -29,7 +29,7 @@ import java.lang.annotation.*;
  * The deserialization method must follow these specific rules:
  * <ol>
  *     <li>It can have any access modifier.</li>
- *     <li>It must accept a single parameter:
+ *     <li>It must accept only one parameter:
  *         <ul>
  *             <li>{@link SerializeInputContext}: The context that contains the necessary information and
  *             utilities for reading the serialized data.</li>
@@ -58,7 +58,7 @@ import java.lang.annotation.*;
  *         // Serialization process here
  *         // return context.serialize(object); // <- The default serializer
  *     }
- *     public static CustomObject deserialize(SerializeInputContext context) {
+ *     public static CustomObject deserialize(Class<?> reference, SerializeInputContext context) {
  *         // Deserialization process here
  *         // return context.deserialize(); // <- The default deserializer
  *     }
