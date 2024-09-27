@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 
 /**
  * Annotation used to specify the concrete class that should be used by the serializer when it cannot infer
- * the exact type of field. This situation arises when the field's reference type is either an interface or an
+ * the exact type of a field. This situation arises when the field's reference type is either an interface or an
  * abstract class, making it unclear which concrete implementation to use. By applying this annotation to such fields,
  * the developer explicitly indicates which concrete class the serializer should use.
  * <p>
@@ -19,10 +19,15 @@ import java.lang.annotation.*;
  * This is particularly useful in cases where polymorphism is in use, and the serializer cannot determine the appropriate
  * concrete type for deserialization.
  * <p>
+ * This annotation can also be applied multiple times to the same field, allowing the developer to specify multiple
+ * possible concrete types. The serializer will attempt to deserialize the field using the first valid concrete type.
+ * <p>
  * Example usage:
  * <pre>
  * {@code
+ * // Using multiple concrete types for deserialization
  * @Concrete(type = ArrayList.class)
+ * @Concrete(type = LinkedList.class)
  * private final List<String> items;
  * }
  * </pre>
@@ -32,6 +37,7 @@ import java.lang.annotation.*;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
+@Repeatable(value = Concretes.class)
 @Target(ElementType.FIELD)
 public @interface Concrete {
 

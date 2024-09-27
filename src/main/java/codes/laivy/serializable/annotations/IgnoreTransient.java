@@ -23,6 +23,9 @@ import java.lang.annotation.*;
  * private final ClassWithTransients myField;
  * }
  * </pre>
+ *
+ * @author Daniel Meinicke (Laivy)
+ * @since 1.1-SNAPSHOT
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

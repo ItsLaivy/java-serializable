@@ -17,10 +17,9 @@ import java.lang.annotation.*;
  * process and potentially lead to long-term code issues. Only use it if you are absolutely certain of what
  * you are doing.</p>
  *
- * <p><strong>Important:</strong> Excluded fields that are final and do not have defined values, when deserialized
- * in a version of the class where the field does not possess an ExcludeFields annotation for that field,
- * will throw an exception. To avoid this issue, the field must have a default object or should not be final
- * even in the absence of ExcludeFields.</p>
+ * <p><strong>Important:</strong> Excluded fields that are final and do not have defined values, when deserialized will be set to null.
+ * Therefore, the user must be very careful when using this method and excluding final fields.
+ * </p>
  *
  * Example usage:
  * <pre>
@@ -30,6 +29,9 @@ import java.lang.annotation.*;
  * private final UUID myField;
  * }
  * </pre>
+ *
+ * @author Daniel Meinicke (Laivy)
+ * @since 1.1-SNAPSHOT
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

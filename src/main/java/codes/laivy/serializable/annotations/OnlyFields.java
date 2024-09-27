@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 
 /**
  * This annotation allows only specific fields to be serialized. Similar to the
- * {@link ExcludeFields} annotation, the key difference is that this annotation is
+ * {@link Fields.Exclude} annotation, the key difference is that this annotation is
  * inclusive, meaning only the chosen fields will be serialized.
  * <p>
  * When this annotation is applied, it results in serialized data containing only the
@@ -14,7 +14,7 @@ import java.lang.annotation.*;
  * deserialization, an exception will be thrown due to the absence of required fields.
  *
  * <p><strong>Important:</strong> Excluded fields must have a default value if they are final;
- * otherwise, an exception will be thrown during deserialization for missing content in the serialized data.
+ * otherwise, they will be set to null during deserialization, which may lead to unintended behavior.
  * Fields that are not final do not have this restriction.</p>
  *
  * <p><strong>Note:</strong> Using this annotation can be risky. It is important to understand the
@@ -29,6 +29,9 @@ import java.lang.annotation.*;
  * private final Color colorWithoutAlpha;
  * }
  * </pre>
+ *
+ * @author Daniel Meinicke (Laivy)
+ * @since 1.1-SNAPSHOT
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
