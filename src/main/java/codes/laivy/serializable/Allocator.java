@@ -36,9 +36,6 @@ public final class Allocator {
         }
     }
 
-    public static void main(String[] args) {
-    }
-
     static {
         try {
             // Get file name without the extension and load the library
