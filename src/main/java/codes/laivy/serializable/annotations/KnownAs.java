@@ -2,10 +2,7 @@ package codes.laivy.serializable.annotations;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * This annotation is used to explicitly specify the name that a field will be serialized as.
@@ -19,8 +16,9 @@ import java.lang.annotation.Target;
  * </p>
  *
  * @author Daniel Meinicke (Laivy)
- * @author 1.0
+ * @since 1.0
  */
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface KnownAs {

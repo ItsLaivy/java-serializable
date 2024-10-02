@@ -6,7 +6,7 @@
 
     <groupId>codes.laivy</groupId>
     <artifactId>java-serializable</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A lightweight Java library to serialize Java objects to JSON and others formats and back. Simple, efficient, and low-level.</description>
@@ -44,12 +44,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.10.2</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>24.0.1</version>
@@ -66,18 +60,40 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.10.2</version>
+            <version>5.11.0</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
         </dependency>
     </dependencies>
 
     <build>
+        <sourceDirectory>
+            ${project.basedir}/src/main/java
+        </sourceDirectory>
+        <testSourceDirectory>
+            ${project.basedir}/src/test/java
+        </testSourceDirectory>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+
+                <includes>
+                    <include>version</include>
+                </includes>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>
+                    ${project.basedir}/src/test/resources
+                </directory>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -96,12 +112,27 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.4.2</version>
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>codes.laivy.serializable.main.Main</mainClass>
+                            <mainClass>codes.laivy.serializable.Allocator</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -120,57 +151,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <!--    <build>-->
-    <!--        <sourceDirectory>-->
-    <!--            ${project.basedir}/src/main/java-->
-    <!--        </sourceDirectory>-->
-    <!--        <testSourceDirectory>-->
-    <!--            ${project.basedir}/src/test/java-->
-    <!--        </testSourceDirectory>-->
-    <!--        <resources>-->
-    <!--            <resource>-->
-    <!--                <directory>${project.basedir}/src/main/resources</directory>-->
-    <!--                <filtering>false</filtering>-->
-    <!--            </resource>-->
-    <!--        </resources>-->
-    <!--        <testResources>-->
-    <!--            <testResource>-->
-    <!--                <directory>-->
-    <!--                    ${project.basedir}/src/test/resources-->
-    <!--                </directory>-->
-    <!--            </testResource>-->
-    <!--        </testResources>-->
-    <!--        <plugins>-->
-    <!--            <plugin>-->
-    <!--                <groupId>org.apache.maven.plugins</groupId>-->
-    <!--                <artifactId>maven-source-plugin</artifactId>-->
-    <!--                <version>3.3.1</version>-->
-    <!--                <executions>-->
-    <!--                    <execution>-->
-    <!--                        <id>attach-sources</id>-->
-    <!--                        <phase>verify</phase>-->
-    <!--                        <goals>-->
-    <!--                            <goal>jar-no-fork</goal>-->
-    <!--                        </goals>-->
-    <!--                    </execution>-->
-    <!--                </executions>-->
-    <!--            </plugin>-->
-
-    <!--            <plugin>-->
-    <!--                <groupId>org.apache.maven.plugins</groupId>-->
-    <!--                <artifactId>maven-javadoc-plugin</artifactId>-->
-    <!--                <version>3.7.0</version>-->
-    <!--                <executions>-->
-    <!--                    <execution>-->
-    <!--                        <id>attach-javadocs</id>-->
-    <!--                        <goals>-->
-    <!--                            <goal>jar</goal>-->
-    <!--                        </goals>-->
-    <!--                    </execution>-->
-    <!--                </executions>-->
-    <!--            </plugin>-->
-    <!--        </plugins>-->
-    <!--    </build>-->
 
 </project>

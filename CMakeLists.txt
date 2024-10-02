@@ -4,7 +4,7 @@ set(CMAKE_C_STANDARD 11)
 # Project information
 project(
         java-serializable
-        VERSION 1.1
+        VERSION 1.1.0
         DESCRIPTION "The C implementation for java-serializable to allocate objects without passing by the constructor"
         HOMEPAGE_URL "https://github.com/ItsLaivy/java-serializable/"
         LANGUAGES C

@@ -1,6 +1,6 @@
 package codes.laivy.serializable.json;
 
-import codes.laivy.serializable.adapter.Adapter;
+import codes.laivy.serializable.exception.MalformedClassException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
@@ -10,50 +10,10 @@ import java.io.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-/**
- * A utility class for handling methods related to Java's native serialization.
- * This class provides utility methods to determine if a class uses Java native serialization
- * and to serialize and deserialize objects using Java native serialization.
- * <p>
- * Native Java serialization uses mechanisms like {@code writeObject}, {@code readObject},
- * {@code readObjectNoData}, {@code writeReplace}, and {@code readResolve} methods, as well as
- * the {@link java.io.Externalizable} interface.
- * <p>
- * Objects adapted for Java native serialization are represented as byte streams, and cannot be
- * serialized into a readable JSON format with field names and values. The only way to serialize
- * such objects is to directly store their byte representation.
- * <p>
- * It is still possible to serialize an object adapted for Java native serialization into a readable
- * format using {@link Adapter}.
- * <p>
- * The class is not intended to be instantiated.
- *
- * @author Daniel Meinicke (Laivy)
- * @since 1.1-SNAPSHOT
- */
 final class JavaSerializableUtils {
 
     // Static initializers
 
-    /**
-     * Determines if the given class uses Java native serialization.
-     * <p>
-     * A class is considered to use Java native serialization if it has one or more of the following methods:
-     * <ul>
-     *   <li>{@code writeObject(java.io.ObjectOutputStream out)}</li>
-     *   <li>{@code readObject(java.io.ObjectInputStream in)}</li>
-     *   <li>{@code readObjectNoData()}</li>
-     *   <li>{@code writeReplace()}</li>
-     *   <li>{@code readResolve()}</li>
-     * </ul>
-     * or implements {@link java.io.Externalizable}.
-     * <p>
-     * The class must also implement {@link java.io.Serializable} if it has serialization methods.
-     *
-     * @param c the class to check
-     * @return {@code true} if the class uses Java native serialization, {@code false} otherwise
-     * @throws IllegalStateException if the class has serialization methods but does not implement {@link java.io.Serializable}
-     */
     public static boolean usesJavaSerialization(final @NotNull Class<?> c) {
         if (Externalizable.class.isAssignableFrom(c)) {
             return true;
@@ -97,34 +57,15 @@ final class JavaSerializableUtils {
         return methods;
     }
 
-    /**
-     * Deserializes an object from JSON using Java native serialization.
-     * <p>
-     * This method first converts the JSON element to a byte array. It then uses an
-     * {@link ObjectInputStream} to read the object from the byte array.
-     * <p>
-     * The JSON element can be a Base64-encoded string or a JSON array of bytes.
-     *
-     * @param serializer the serializer used to get the byte array adapter
-     * @param reference the class of the object to deserialize
-     * @param element the JSON element containing the serialized data
-     * @param <E> the type of the object to deserialize
-     * @return the deserialized object, or {@code null} if the JSON element is {@code null} or empty
-     * @throws InvalidClassException if deserialization fails due to class issues
-     * @throws RuntimeException if deserialization fails due to IO or class not found issues
-     */
-    public static <E> @Nullable E javaDeserializeObject(@NotNull JsonSerializable serializer, @NotNull Class<E> reference, @Nullable JsonElement element) throws InvalidClassException {
+    public static <E> @Nullable E javaDeserializeObject(@NotNull Class<E> reference, @Nullable JsonElement element) throws MalformedClassException {
         if (element == null || element.isJsonNull()) {
             return null;
         }
 
-        // Byte array adapter
-        @Nullable Adapter<JsonElement, byte[]> adapter = serializer.getAdapters().get(byte[].class).orElse(null);
+        // Byte array
         byte[] bytes;
 
-        if (adapter != null) {
-            bytes = adapter.deserialize(serializer, byte[].class, element);
-        } else if (element.isJsonArray()) {
+        if (element.isJsonArray()) {
             @NotNull JsonArray array = element.getAsJsonArray();
             bytes = new byte[array.size()];
 
@@ -139,11 +80,6 @@ final class JavaSerializableUtils {
 
         // Deserialize using object input stream
         try {
-            // Check nullability
-            if (bytes == null) {
-                return null;
-            }
-
             // Read input stream
             @NotNull ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(bytes));
             //noinspection unchecked
@@ -153,38 +89,20 @@ final class JavaSerializableUtils {
         }
     }
 
-    /**
-     * Serializes an object into JSON using Java native serialization.
-     * <p>
-     * This method uses an {@link ObjectOutputStream} to write the object to a byte array.
-     * The byte array is then either encoded using a Base64 adapter or represented as a JSON array of bytes.
-     *
-     * @param serializer the serializer used to get the byte array adapter
-     * @param object the object to serialize
-     * @return the JSON element representing the serialized object, or {@code null} if the object is {@code null}
-     * @throws RuntimeException if serialization fails due to IO issues
-     */
-    public static @Nullable JsonElement javaSerializeObject(@NotNull JsonSerializable serializer, @Nullable Object object) {
+    public static @Nullable JsonElement javaSerializeObject(@Nullable Object object) {
         try {
             @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);
             stream.writeObject(object);
 
             // Byte array adapter
-            @Nullable Adapter<JsonElement, byte[]> adapter = serializer.getAdapters().get(byte[].class).orElse(null);
-            @Nullable JsonElement element;
+            @NotNull JsonArray array = new JsonArray();
 
-            if (adapter != null) {
-                return adapter.serialize(serializer, bytes.toByteArray());
-            } else {
-                @NotNull JsonArray array = new JsonArray();
-
-                for (byte b : bytes.toByteArray()) {
-                    array.add(b);
-                }
-
-                return array;
+            for (byte b : bytes.toByteArray()) {
+                array.add(b);
             }
+
+            return array;
         } catch (@NotNull IOException e) {
             throw new RuntimeException("cannot serialize", e);
         }
