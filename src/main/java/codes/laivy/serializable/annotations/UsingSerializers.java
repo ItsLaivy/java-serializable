@@ -24,6 +24,7 @@ import java.lang.annotation.*;
  *     </li>
  *     <li>It must return {@link Void}, signifying no return value.</li>
  *     <li>It must be static, meaning it is not bound to a particular instance of the class where it is declared.</li>
+ *     <li>The method can throw anything (Runtime or not exceptions).</li>
  * </ol>
  * <p>
  * The deserialization method must follow these specific rules:
@@ -37,6 +38,7 @@ import java.lang.annotation.*;
  *     </li>
  *     <li>It must return an object of any type. However, if the returned object is not compatible with
  *     the object expected by the deserialization context, an exception will be thrown during deserialization.</li>
+ *     <li>The method can throw anything (Runtime or not exceptions).</li>
  * </ol>
  * <p>
  * If this annotation is applied to a field, but the class type of the field already has this annotation,
@@ -54,11 +56,11 @@ import java.lang.annotation.*;
  * public class CustomObject {
  *     // Fields and methods
  *
- *     public static void serialize(CustomObject object, SerializeOutputContext context) {
+ *     public static void serialize(@NotNull CustomObject object, @NotNull SerializeOutputContext context) {
  *         // Serialization process here
  *         // return context.serialize(object); // <- The default serializer
  *     }
- *     public static CustomObject deserialize(Class<?> reference, SerializeInputContext context) {
+ *     public static @NotNull CustomObject deserialize(@NotNull SerializeInputContext<CustomObject> context) throws EOFException {
  *         // Deserialization process here
  *         // return context.deserialize(); // <- The default deserializer
  *     }

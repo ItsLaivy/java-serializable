@@ -21,6 +21,9 @@ import java.lang.annotation.*;
  * implications of limiting serialization to specific fields, as it can lead to data loss or
  * serialization issues. Only use it if you are absolutely sure of what you are doing.</p>
  *
+ * If applied with a {@link ExcludeFields} annotation, this annotation will get more priority and all the
+ * attributes from the {@link ExcludeFields} will be ignored.
+ *
  * Example usage:
  * <pre>
  * {@code

@@ -30,7 +30,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface IgnoreTransient {
+public @interface BypassTransient {
 
     /**
      * Specifies the names of the transient fields that should be serialized along with the annotated field.
