@@ -1,5 +1,6 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.json.JsonSerializer;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -154,4 +155,7 @@ public interface SerializeOutputContext {
      * @param object The object to be serialized, or {@code null}.
      */
     void write(@Nullable Object object);
+
+    @NotNull JsonSerializer getSerializer();
+
 }

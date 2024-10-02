@@ -1,11 +1,11 @@
 package codes.laivy.serializable.context;
 
-import codes.laivy.serializable.annotations.KnownAs;
+import codes.laivy.serializable.json.JsonSerializer;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
-import java.lang.reflect.Field;
+import java.io.EOFException;
 
 /**
  * Provides a context for deserializing an object of type {@link T}. This context encapsulates
@@ -45,64 +45,72 @@ public interface SerializeInputContext<T> {
      * boolean field in the serialized data.
      *
      * @return The boolean value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    boolean readBoolean();
+    boolean readBoolean() throws EOFException;
 
     /**
      * Reads a byte value from the input context. This method reads the next
      * byte field in the serialized data.
      *
      * @return The byte value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    byte readByte();
+    byte readByte() throws EOFException;
 
     /**
      * Reads a short value from the input context. This method reads the next
      * short field in the serialized data.
      *
      * @return The short value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    short readShort();
+    short readShort() throws EOFException;
 
     /**
      * Reads a char value from the input context. This method reads the next
      * char field in the serialized data.
      *
      * @return The char value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    char readChar();
+    char readChar() throws EOFException;
 
     /**
      * Reads an int value from the input context. This method reads the next
      * int field in the serialized data.
      *
      * @return The int value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    int readInt();
+    int readInt() throws EOFException;
 
     /**
      * Reads a long value from the input context. This method reads the next
      * long field in the serialized data.
      *
      * @return The long value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    long readLong();
+    long readLong() throws EOFException;
 
     /**
      * Reads a float value from the input context. This method reads the next
      * float field in the serialized data.
      *
      * @return The float value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    float readFloat();
+    float readFloat() throws EOFException;
 
     /**
      * Reads a double value from the input context. This method reads the next
      * double field in the serialized data.
      *
      * @return The double value read from the context.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    double readDouble();
+    double readDouble() throws EOFException;
 
     /**
      * Reads a line of text from the input context. This method reads the next
@@ -113,8 +121,9 @@ public interface SerializeInputContext<T> {
      * the context requirements.
      *
      * @return The string value read from the context, or {@code null} if the value is not available.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    @Nullable String readLine();
+    @UnknownNullability String readLine() throws EOFException;
 
     /**
      * Reads a generic object from the input context. The object type is dynamically determined
@@ -124,124 +133,15 @@ public interface SerializeInputContext<T> {
      * arrays, and other complex data structures.
      *
      * @param <E> The type of object being deserialized.
+     * @param reference The reference of the object that will be read
      * @return The deserialized object, or {@code null} if the value is not available.
+     * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
-    <E> @Nullable E readObject();
+    <E> @UnknownNullability E readObject(@NotNull Class<E> reference) throws EOFException;
 
-    /**
-     * Retrieves the {@link FieldData} for a given field by its name. This method provides access
-     * to metadata related to a specific field of the object, such as its {@link java.lang.reflect.Field}
-     * and the current value of the field (if available).
-     * <p>
-     * The {@link FieldData} can be used to inspect the field's properties, including its name,
-     * type, and annotations, and to retrieve its current value during deserialization.
-     *
-     * @param name The name of the field whose data is to be retrieved.
-     * @return The {@link FieldData} object containing metadata about the requested field.
-     * @throws IllegalArgumentException If the field with the specified name does not exist.
-     */
-    @NotNull FieldData getField(@NotNull String name);
+    <E> @UnknownNullability E readField(@NotNull Class<E> reference, @NotNull String name);
+    @NotNull String @NotNull [] getFields();
 
-    /**
-     * Retrieves the {@link FieldData} for a given {@link Field}. This method provides access
-     * to the field's metadata based on the {@link Field} object itself, allowing for reflection-based
-     * deserialization of specific fields.
-     *
-     * @param field The {@link Field} object representing the field.
-     * @return The {@link FieldData} object containing metadata about the requested field.
-     * @throws IllegalArgumentException If the field does not exist in the current deserialization context.
-     */
-    @NotNull FieldData getField(@NotNull Field field);
+    @NotNull JsonSerializer getSerializer();
 
-    /**
-     * Retrieves the current value of a field by its name. This method allows access to the
-     * deserialized value of a specific field from the input context.
-     *
-     * @param name The name of the field whose value is to be retrieved.
-     * @return The deserialized value of the field, or {@code null} if the value is not set or available.
-     * @throws IllegalArgumentException If the field with the specified name does not exist.
-     */
-    @Nullable Object getValue(@NotNull String name);
-
-    /**
-     * Returns an array of {@link FieldData} representing all fields present in the object
-     * being deserialized. This method can be used to iterate over all fields of the object
-     * and access their metadata.
-     *
-     * @return An array of {@link FieldData} objects, each representing a field in the object.
-     */
-    @NotNull FieldData @NotNull [] getFields();
-
-    /**
-     * Performs the deserialization of the object of type {@link T} in this context.
-     * This method will reconstruct the object using the current data provided in the
-     * input context.
-     * <p>
-     * It is expected that the method will handle all necessary field value extraction
-     * and object construction, ensuring the returned object is fully populated with
-     * the appropriate deserialized data.
-     *
-     * @return The deserialized object of type {@link T}.
-     */
-    @NotNull T deserialize();
-
-    /**
-     * Represents metadata and information about a single field within the object being
-     * deserialized. This interface provides methods to access the underlying field
-     * information and retrieve the field's value.
-     * <p>
-     * This interface abstracts the reflection and type-handling logic required for
-     * interacting with fields during deserialization, ensuring that the field's
-     * metadata and value can be easily accessed.
-     */
-    interface FieldData {
-
-        /**
-         * Returns the underlying {@link Field} object that represents this field in the
-         * deserialized object. The {@link Field} object provides reflection-based access
-         * to the field's properties, such as its type, name, and modifiers.
-         *
-         * @return The {@link Field} object representing this field.
-         */
-        @NotNull Field getField();
-
-        /**
-         * Returns the declaring class of this field. By default, this method uses the
-         * {@link Field#getDeclaringClass()} method to fetch the class where the field
-         * is defined.
-         *
-         * @return The {@link Class} object that declares this field.
-         */
-        default @NotNull Class<?> getReference() {
-            return getField().getDeclaringClass();
-        }
-
-        /**
-         * Returns the original name, without the {@link KnownAs} and repeated field patterns.
-         * This method provides access to the unmodified, original name of the field as
-         * defined in the class declaration.
-         *
-         * @return The original name of the field.
-         */
-        default @NotNull String getOriginalName() {
-            return getField().getName();
-        }
-
-        /**
-         * Returns the name of the field. The field name is the identifier used to
-         * refer to this field in the class definition and during serialization or deserialization.
-         *
-         * @return The name of the field.
-         */
-        @NotNull String getName();
-
-        /**
-         * Returns the current value of the field. If the field has been deserialized,
-         * this method will return the deserialized value. If the field has not been deserialized
-         * or its value is unset, this method may return {@code null}.
-         *
-         * @return The value of the field, or {@code null} if the value is not available or unset.
-         */
-        @Nullable Object getValue();
-    }
 }
