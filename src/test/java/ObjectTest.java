@@ -9,6 +9,7 @@ import utilities.ArrayUtils;
 
 import java.time.*;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 public final class ObjectTest {
@@ -98,9 +99,56 @@ public final class ObjectTest {
         match(new char[] { 0, 1, 2, 3, 4, 5 });
         match(new Character[] { 0, 1, 2, 3, 4, 5 });
 
-        // Object
+        // Object with adapter
         @NotNull UUID[] uuids = new UUID[] { UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID() };
         match(uuids);
+
+        // Object without adapter
+        @NotNull TestClass[] tests = new TestClass[] { new TestClass("Laivy", 19), new TestClass("Meruhz", 17) };
+        match(tests);
+    }
+
+    // Classes
+
+    private static final class TestClass {
+
+        private final @NotNull String name;
+        private final int age;
+
+        public TestClass(@NotNull String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+
+        public @NotNull String getName() {
+            return name;
+        }
+        public int getAge() {
+            return age;
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof TestClass)) return false;
+            @NotNull TestClass testClass = (TestClass) object;
+            return getAge() == testClass.getAge() && Objects.equals(getName(), testClass.getName());
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(getName(), getAge());
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return "TestClass{" +
+                    "name='" + name + '\'' +
+                    ", age=" + age +
+                    '}';
+        }
+
     }
 
 }

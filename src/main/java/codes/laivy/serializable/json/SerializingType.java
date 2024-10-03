@@ -196,7 +196,7 @@ abstract class SerializingType {
                             @NotNull SerializingProcess process = new SerializingProcess(super.json, new Father(field, instance));
                             object = process.deserialize(value);
                         }
-
+                        
                         Allocator.setFieldValue(field, instance, object);
                     }
                 }
