@@ -59,7 +59,7 @@ import java.lang.annotation.*;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(value = Concretes.class)
+@Repeatable(value = Concretes.Normal.class)
 @Target(ElementType.FIELD)
 public @interface Concrete {
 

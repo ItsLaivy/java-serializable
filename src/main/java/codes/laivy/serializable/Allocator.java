@@ -15,6 +15,9 @@ public final class Allocator {
 
     // Static initializers
 
+    public static void main(String[] args) {
+    }
+
     private static final @NotNull String VERSION;
     private static final @NotNull Map<Class<?>, Class<?>> WRAPPERS = new HashMap<Class<?>, Class<?>>() {{
         put(boolean.class, Boolean.class);
