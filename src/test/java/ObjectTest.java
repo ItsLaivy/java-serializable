@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import utilities.ArrayUtils;
 
 import java.time.*;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -108,10 +109,15 @@ public final class ObjectTest {
         match(tests);
     }
 
+    @Test
+    @DisplayName("Collections")
+    public void collection() {
+        match(Arrays.asList("a", "b", "c", "d", "e", "f"));
+    }
+
     // Classes
 
     private static final class TestClass {
-
         private final @NotNull String name;
         private final int age;
 
