@@ -115,7 +115,7 @@ final class JsonSerializeOutputContext implements SerializeOutputContext {
         return serializer;
     }
 
-    public @Nullable JsonElement serialize() {
+    public @NotNull JsonElement serialize() {
         @NotNull JsonElement json;
         
         if (getObjects().isEmpty()) {
@@ -139,7 +139,7 @@ final class JsonSerializeOutputContext implements SerializeOutputContext {
             }
         } else if (getObjects().size() == 1 && getFields().isEmpty()) {
             @Nullable Object value = objects.get(0);
-            return value != null ? new SerializingProcess(getSerializer(), value.getClass()).serialize(value) : null;
+            return value != null ? new SerializingProcess(getSerializer(), value.getClass()).serialize(value) : JsonNull.INSTANCE;
         } else {
             json = new JsonArray();
 

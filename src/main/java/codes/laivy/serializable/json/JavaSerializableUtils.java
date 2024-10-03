@@ -89,7 +89,7 @@ final class JavaSerializableUtils {
         }
     }
 
-    public static @Nullable JsonElement javaSerializeObject(@Nullable Object object) {
+    public static @NotNull JsonElement javaSerializeObject(@Nullable Object object) {
         try {
             @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);

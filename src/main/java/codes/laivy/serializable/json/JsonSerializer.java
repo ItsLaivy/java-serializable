@@ -47,13 +47,13 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
     // Serializers and Deserializers
 
     @Override
-    public @Nullable JsonElement serialize(@Nullable Serializable object) throws MalformedClassException {
+    public @NotNull JsonElement serialize(@Nullable Serializable object) throws MalformedClassException {
         return this.serialize((Object) object);
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Object object) throws MalformedClassException {
+    public @NotNull JsonElement serialize(@Nullable Object object) throws MalformedClassException {
         if (object == null) {
-            return null;
+            return JsonNull.INSTANCE;
         }
 
         @NotNull SerializingProcess process = new SerializingProcess(this, object.getClass());
@@ -89,8 +89,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
     }
 
     @Override
-    public @Nullable JsonElement serialize(@Nullable Enum<?> e) {
-        return e != null ? new JsonPrimitive(e.name()) : null;
+    public @NotNull JsonElement serialize(@Nullable Enum<?> e) {
+        return e != null ? new JsonPrimitive(e.name()) : JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Enum<?> @NotNull ... array) {
@@ -103,8 +103,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Boolean b) {
-        return b != null ? new JsonPrimitive(b) : null;
+    public @NotNull JsonElement serialize(@Nullable Boolean b) {
+        return b != null ? new JsonPrimitive(b): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Boolean @NotNull ... array) {
@@ -117,8 +117,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Short s) {
-        return s != null ? new JsonPrimitive(s) : null;
+    public @NotNull JsonElement serialize(@Nullable Short s) {
+        return s != null ? new JsonPrimitive(s): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Short @NotNull ... array) {
@@ -131,8 +131,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Integer i) {
-        return i != null ? new JsonPrimitive(i) : null;
+    public @NotNull JsonElement serialize(@Nullable Integer i) {
+        return i != null ? new JsonPrimitive(i): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Integer @NotNull ... array) {
@@ -145,8 +145,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Long l) {
-        return l != null ? new JsonPrimitive(l) : null;
+    public @NotNull JsonElement serialize(@Nullable Long l) {
+        return l != null ? new JsonPrimitive(l): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Long @NotNull ... array) {
@@ -159,8 +159,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Float f) {
-        return f != null ? new JsonPrimitive(f) : null;
+    public @NotNull JsonElement serialize(@Nullable Float f) {
+        return f != null ? new JsonPrimitive(f): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Float @NotNull ... array) {
@@ -173,8 +173,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Double d) {
-        return d != null ? new JsonPrimitive(d) : null;
+    public @NotNull JsonElement serialize(@Nullable Double d) {
+        return d != null ? new JsonPrimitive(d): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Double @NotNull ... array) {
@@ -187,8 +187,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Character c) {
-        return c != null ? new JsonPrimitive(c) : null;
+    public @NotNull JsonElement serialize(@Nullable Character c) {
+        return c != null ? new JsonPrimitive(c): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Character @NotNull ... array) {
@@ -201,8 +201,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Byte b) {
-        return b != null ? new JsonPrimitive(b) : null;
+    public @NotNull JsonElement serialize(@Nullable Byte b) {
+        return b != null ? new JsonPrimitive(b): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Byte @NotNull ... array) {
@@ -215,8 +215,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable String string) {
-        return string != null ? new JsonPrimitive(string) : null;
+    public @NotNull JsonElement serialize(@Nullable String string) {
+        return string != null ? new JsonPrimitive(string): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable String @NotNull ... array) {

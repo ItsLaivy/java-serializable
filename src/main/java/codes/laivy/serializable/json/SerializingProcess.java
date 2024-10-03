@@ -6,6 +6,7 @@ import codes.laivy.serializable.exception.NullConcreteClassException;
 import codes.laivy.serializable.json.SerializingType.Methods;
 import codes.laivy.serializable.json.SerializingType.Normal;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -68,9 +69,9 @@ final class SerializingProcess {
 
     // Modules
 
-    public @Nullable JsonElement serialize(@Nullable Object instance) {
+    public @NotNull JsonElement serialize(@Nullable Object instance) {
         if (instance == null) {
-            return null;
+            return JsonNull.INSTANCE;
         } else if (reference != instance.getClass()) {
             throw new IllegalArgumentException();
         }
@@ -82,7 +83,9 @@ final class SerializingProcess {
         boolean bypassTransients = false;
         @NotNull SerializingType serializing = new Normal(serializer, father);
 
-        if (reference.isAnnotationPresent(UsingSerializers.class)) {
+        if (father != null && father.getField().isAnnotationPresent(UsingSerializers.class)) {
+            serializing = new Methods(serializer, father, father.getField().getDeclaringClass(), father.getField().getAnnotation(UsingSerializers.class));
+        } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
             serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
         } else if (serializer.adapterMap.containsKey(reference)) {
             @NotNull JsonSerializeOutputContext context = new JsonSerializeOutputContext(serializer, instance.getClass());
@@ -156,11 +159,13 @@ final class SerializingProcess {
         // Deserialize
         @NotNull SerializingType serializing = new Normal(serializer, father);
 
-        if (reference.isAnnotationPresent(UsingSerializers.class)) {
+        if (father != null && father.getField().isAnnotationPresent(UsingSerializers.class)) {
+            serializing = new Methods(serializer, father, father.getField().getDeclaringClass(), father.getField().getAnnotation(UsingSerializers.class));
+        } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
             serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
         } else if (serializer.adapterMap.containsKey(reference)) try {
             @NotNull Adapter adapter = serializer.adapterMap.get(reference);
-            @NotNull JsonSerializeInputContext<?> context = new JsonSerializeInputContext<>(serializer, reference, element);
+            @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(serializer, reference, element);
             @NotNull Object object = adapter.deserialize(context);
 
             if (!reference.isAssignableFrom(object.getClass())) {

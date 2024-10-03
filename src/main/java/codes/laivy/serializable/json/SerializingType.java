@@ -4,7 +4,9 @@ import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.context.SerializeOutputContext;
+import codes.laivy.serializable.exception.MalformedSerializerException;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +29,7 @@ abstract class SerializingType {
 
     // Serializers
 
-    public abstract @Nullable JsonElement serialize(@Nullable Object object);
+    public abstract @NotNull JsonElement serialize(@Nullable Object object);
     public abstract <T> @Nullable T deserialize(@NotNull Class<T> reference, @NotNull JsonElement element);
 
     // Classes
@@ -95,9 +97,9 @@ abstract class SerializingType {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@Nullable Object object) {
+        public @NotNull JsonElement serialize(@Nullable Object object) {
             if (object == null) {
-                return null;
+                return JsonNull.INSTANCE;
             }
 
             @NotNull Class<?> type = object.getClass();
@@ -160,13 +162,13 @@ abstract class SerializingType {
                 @NotNull Object instance;
 
                 if ((father != null && father.getField().isAnnotationPresent(UseEmptyConstructor.class)) || reference.isAnnotationPresent(UseEmptyConstructor.class)) try {
-                    @NotNull Constructor<?> constructor = reference.getConstructor();
+                    @NotNull Constructor<?> constructor = reference.getDeclaredConstructor();
                     constructor.setAccessible(true);
 
                     instance = constructor.newInstance();
                 } catch (@NotNull NoSuchMethodException e) {
-                    throw new RuntimeException("cannot find empty constructor at class '" + reference + "'", e);
-                } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+                    throw new RuntimeException("cannot find empty constructor at class '" + reference + "'");
+                } catch (@NotNull InvocationTargetException | @NotNull InstantiationException | @NotNull IllegalAccessException e) {
                     throw new RuntimeException("cannot generate empty constructor instance at class '" + reference + "'", e);
                 } else {
                     instance = Allocator.allocate(reference);
@@ -256,7 +258,7 @@ abstract class SerializingType {
                 }
             }
 
-            throw new RuntimeException("there's no valid serialize method named '" + name + "' at class '" + reference + "'");
+            throw new MalformedSerializerException("there's no valid serialize method named '" + name + "' at class '" + reference + "'");
         }
         private static @NotNull Method getDeserializerMethod(@NotNull Class<?> reference, @NotNull UsingSerializers annotation) {
             @NotNull String string = annotation.deserialization();
@@ -283,7 +285,7 @@ abstract class SerializingType {
                 }
             }
 
-            throw new RuntimeException("there's no valid deserialize method named '" + name + "' at class '" + reference + "'");
+            throw new MalformedSerializerException("there's no valid deserialize method named '" + name + "' at class '" + reference + "'");
         }
 
         // Object
@@ -299,16 +301,16 @@ abstract class SerializingType {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@Nullable Object object) {
+        public @NotNull JsonElement serialize(@Nullable Object object) {
             try {
                 if (object == null) {
-                    return null;
+                    return JsonNull.INSTANCE;
                 }
 
                 serializer.setAccessible(true);
 
                 if (!serializer.getParameters()[0].getType().isAssignableFrom(object.getClass())) {
-                    throw new RuntimeException("the serializer cannot be used by reference '" + object.getClass() + "' because it's not a subclass/implementation from '" + serializer.getParameters()[0].getType() + "' parameter class");
+                    throw new UnsupportedOperationException("the serializer cannot be used by reference '" + object.getClass() + "' because it's not a subclass/implementation from '" + serializer.getParameters()[0].getType() + "' parameter class");
                 }
 
                 // Write into output context
@@ -329,11 +331,11 @@ abstract class SerializingType {
                 deserializer.setAccessible(true);
 
                 if (!deserializer.getReturnType().isAssignableFrom(reference)) {
-                    throw new RuntimeException("the deserializer cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + deserializer.getReturnType() + "' return class");
+                    throw new UnsupportedOperationException("the deserializer cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + deserializer.getReturnType() + "' return class");
                 }
 
                 // Start deserialize
-                @NotNull JsonSerializeInputContext<?> context = new JsonSerializeInputContext<>(super.json, reference, element);
+                @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(super.json, reference, element);
                 @Nullable Object object = deserializer.invoke(null, context);
 
                 // Finish
