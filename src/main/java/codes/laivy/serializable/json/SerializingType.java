@@ -5,6 +5,7 @@ import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.context.SerializeOutputContext;
 import codes.laivy.serializable.exception.MalformedSerializerException;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -43,7 +44,7 @@ abstract class SerializingType {
             @NotNull Map<String, Integer> repeat = new HashMap<>();
 
             @NotNull Class<?> temp = type;
-            while (temp != Object.class) {
+            while (temp != Object.class && temp != null) {
                 @NotNull Set<Field> fields = Arrays.stream(temp.getDeclaredFields()).collect(Collectors.toSet());
 
                 for (@NotNull Field field : fields) {
@@ -223,12 +224,92 @@ abstract class SerializingType {
                 } else {
                     throw new UnsupportedOperationException("there's no primitive type with reference '" + reference + "', is missing any adapter here?");
                 }
+            } else if (element.isJsonArray()) {
+                @NotNull JsonArray array = element.getAsJsonArray();
+
+                if (reference == boolean[].class) {
+                    boolean[] booleans = new boolean[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        booleans[row] = array.get(row).getAsBoolean();
+                    }
+
+                    return booleans;
+                } else if (reference == char[].class) {
+                    char[] chars = new char[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        chars[row] = array.get(row).getAsString().charAt(0);
+                    }
+
+                    return chars;
+                } else if (reference == byte[].class) {
+                    byte[] bytes = new byte[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        bytes[row] = array.get(row).getAsByte();
+                    }
+
+                    return bytes;
+                } else if (reference == short[].class) {
+                    short[] shorts = new short[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        shorts[row] = array.get(row).getAsShort();
+                    }
+
+                    return shorts;
+                } else if (reference == int[].class) {
+                    int[] ints = new int[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        ints[row] = array.get(row).getAsShort();
+                    }
+
+                    return ints;
+                } else if (reference == long[].class) {
+                    long[] longs = new long[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        longs[row] = array.get(row).getAsShort();
+                    }
+
+                    return longs;
+                } else if (reference == float[].class) {
+                    float[] floats = new float[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        floats[row] = array.get(row).getAsFloat();
+                    }
+
+                    return floats;
+                } else if (reference == double[].class) {
+                    double[] floats = new double[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        floats[row] = array.get(row).getAsDouble();
+                    }
+
+                    return floats;
+                } else if (reference.isArray()) {
+                    @NotNull Class<?> component = reference.getComponentType();
+                    @NotNull Object object = Array.newInstance(reference, array.size());
+
+                    for (int row = 0; row < array.size(); row++) {
+                        Array.set(object, row, deserialize(component, array.get(row)));
+                    }
+
+                    return object;
+                } else {
+                    throw new IllegalArgumentException("the passed object is an array but the reference isn't an array class");
+                }
             } else {
                 throw new UnsupportedOperationException("cannot deserialize '" + element + "' into a valid '" + reference + "' object");
             }
         }
 
     }
+
     public static final class Methods extends SerializingType {
 
         // Static initializers

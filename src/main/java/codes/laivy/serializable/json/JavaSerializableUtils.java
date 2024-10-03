@@ -22,7 +22,7 @@ final class JavaSerializableUtils {
         boolean methods = false;
         @NotNull Class<?> copy = c;
 
-        while (copy != Object.class) {
+        while (copy != Object.class && copy != null) {
             @NotNull Method method;
 
             try {

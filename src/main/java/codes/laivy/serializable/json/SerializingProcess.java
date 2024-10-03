@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json;
 
+import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.exception.NullConcreteClassException;
@@ -72,8 +73,8 @@ final class SerializingProcess {
     public @NotNull JsonElement serialize(@Nullable Object instance) {
         if (instance == null) {
             return JsonNull.INSTANCE;
-        } else if (reference != instance.getClass()) {
-            throw new IllegalArgumentException();
+        } else if (!Allocator.isAssignableFromIncludingPrimitive(reference, instance.getClass())) {
+            throw new IllegalArgumentException("the reference class '" + reference + "' isn't the same from object class '" + instance.getClass() + "'");
         }
 
         // Get fields

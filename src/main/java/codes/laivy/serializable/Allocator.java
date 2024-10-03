@@ -130,7 +130,8 @@ public final class Allocator {
     @ApiStatus.Internal
     public static native void setFieldValue(@NotNull Field field, @Nullable Object instance, @Nullable Object object);
 
-    private static boolean isAssignableFromIncludingPrimitive(@NotNull Class<?> c1, @NotNull Class<?> c2) {
+    @ApiStatus.Internal
+    public static boolean isAssignableFromIncludingPrimitive(@NotNull Class<?> c1, @NotNull Class<?> c2) {
         if (c1 == c2) {
             return true;
         } else if (c1.isAssignableFrom(c2)) {
