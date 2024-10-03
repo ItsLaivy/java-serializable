@@ -32,7 +32,7 @@ public final class AllocatorTest {
     }
     @Test
     @DisplayName("Advanced Test Final Field Change using JNI")
-    public void advancedSet() throws NoSuchFieldException, IllegalAccessException {
+    public void advancedSet() throws IllegalAccessException {
         @NotNull AdvancedCool cool = new AdvancedCool();
         @NotNull Map<Class<?>, Object> expectedMap = new LinkedHashMap<Class<?>, Object>() {{
             put(int.class, Integer.MAX_VALUE);

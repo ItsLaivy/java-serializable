@@ -1,5 +1,6 @@
 package annotations;
 
+import codes.laivy.serializable.annotations.ExcludeFields;
 import codes.laivy.serializable.annotations.OnlyFields;
 import codes.laivy.serializable.json.JsonSerializer;
 import org.jetbrains.annotations.NotNull;
@@ -31,17 +32,24 @@ public final class OnlyFieldsTest {
         @NotNull Without object = new Without();
         Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(object.color));
 
-        System.out.println("Color 0: '" + serializer.serialize(object) + "'");
         @NotNull Without deserialized = Objects.requireNonNull(serializer.deserialize(object.getClass(), serializer.serialize(object)));
-        System.out.println("Color 1: '" + object.equals(deserialized) + "' '" + getFAlpha(deserialized.color) + "' - " + deserialized.color);
         Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(deserialized.color), "The falpha field hasn't been included!");
+    }
+    @Test
+    @DisplayName("Test priority using @OnlyFields and @ExcludeFields")
+    public void priority() {
+        @NotNull Priority object = new Priority();
+        Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(object.color));
+
+        @NotNull Priority deserialized = Objects.requireNonNull(serializer.deserialize(object.getClass(), serializer.serialize(object)));
+        Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(deserialized.color));
     }
 
     // Classes
 
     private static final class Normal {
 
-        @OnlyFields(fields = {"value", "frgbvalue", "fvalue" })
+        @OnlyFields(fields = { "value", "frgbvalue", "fvalue" })
         private final @NotNull Color color;
 
         private Normal() {
@@ -55,8 +63,19 @@ public final class OnlyFieldsTest {
 
         private Without() {
             this.color = new Color(1.0f,1.0f, 1.0f, DEFAULT_ALPHA);
-            System.out.println("Color 2: " + color);
         }
+
+    }
+    private static final class Priority {
+
+        @ExcludeFields(fields = { "value", "frgbvalue", "fvalue", "falpha" })
+        @OnlyFields(fields = { "value", "frgbvalue", "fvalue", "falpha" })
+        private final @NotNull Color color;
+
+        private Priority() {
+            this.color = new Color(1.0f,1.0f, 1.0f, DEFAULT_ALPHA);
+        }
+
 
     }
 
