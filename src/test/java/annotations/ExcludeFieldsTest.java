@@ -12,7 +12,9 @@ import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
-public final class OnlyFieldsTest {
+import static annotations.OnlyFieldsTest.getFAlpha;
+
+public final class ExcludeFieldsTest {
 
     private static final @NotNull JsonSerializer serializer = new JsonSerializer();
     private static final float DEFAULT_ALPHA = 0.8f;
@@ -49,7 +51,7 @@ public final class OnlyFieldsTest {
 
     private static final class Normal {
 
-        @OnlyFields(fields = { "value", "frgbvalue", "fvalue" })
+        @ExcludeFields(fields = { "falpha" })
         private final @NotNull Color color;
 
         private Normal() {
@@ -76,20 +78,6 @@ public final class OnlyFieldsTest {
             this.color = new Color(1.0f,1.0f, 1.0f, DEFAULT_ALPHA);
         }
 
-
-    }
-
-    // Utilities
-
-    static float getFAlpha(@NotNull Color color) {
-        try {
-            @NotNull Field field = color.getClass().getDeclaredField("falpha");
-            field.setAccessible(true);
-
-            return field.getFloat(color);
-        } catch (@NotNull NoSuchFieldException | @NotNull IllegalAccessException e) {
-            throw new RuntimeException("cannot retrieve falpha field from color", e);
-        }
     }
 
 }
