@@ -221,6 +221,8 @@ abstract class SerializingType {
                     return element.getAsFloat();
                 } else if (reference == Double.class || reference == double.class) {
                     return element.getAsDouble();
+                } else if (json.adapterMap.containsKey(reference)) {
+                    return json.usingAdapter(reference, element);
                 } else {
                     throw new UnsupportedOperationException("there's no primitive type with reference '" + reference + "', is missing any adapter here?");
                 }
@@ -260,13 +262,13 @@ abstract class SerializingType {
 
                     return shorts;
                 } else if (reference == int[].class) {
-                    int[] ints = new int[array.size()];
+                    int[] integers = new int[array.size()];
 
                     for (int row = 0; row < array.size(); row++) {
-                        ints[row] = array.get(row).getAsShort();
+                        integers[row] = array.get(row).getAsShort();
                     }
 
-                    return ints;
+                    return integers;
                 } else if (reference == long[].class) {
                     long[] longs = new long[array.size()];
 
@@ -293,7 +295,7 @@ abstract class SerializingType {
                     return floats;
                 } else if (reference.isArray()) {
                     @NotNull Class<?> component = reference.getComponentType();
-                    @NotNull Object object = Array.newInstance(reference, array.size());
+                    @NotNull Object object = Array.newInstance(component, array.size());
 
                     for (int row = 0; row < array.size(); row++) {
                         Array.set(object, row, deserialize(component, array.get(row)));

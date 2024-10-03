@@ -174,5 +174,16 @@ final class JsonSerializeOutputContext implements SerializeOutputContext {
         
         return json;
     }
-    
+
+    // Implementations
+
+    @Override
+    public @NotNull String toString() {
+        return "JsonSerializeOutputContext{" +
+                "reference=" + reference +
+                ", objects=" + objects +
+                ", fields=" + fields +
+                '}';
+    }
+
 }

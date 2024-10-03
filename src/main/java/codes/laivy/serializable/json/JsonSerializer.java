@@ -13,6 +13,7 @@ import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.EOFException;
 import java.io.Serializable;
 import java.util.*;
 
@@ -347,6 +348,26 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         }
 
         return list;
+    }
+
+    // Utilities
+
+    @NotNull Object usingAdapter(@NotNull Class<?> reference, @NotNull JsonElement element) {
+        @NotNull Object object;
+
+        try {
+            @NotNull Adapter adapter = adapterMap.get(reference);
+            @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(this, reference, element);
+            object = adapter.deserialize(context);
+        } catch (@NotNull EOFException e) {
+            throw new RuntimeException("cannot proceed adapter deserialization '" + reference + "': " + element, e);
+        }
+
+        if (!reference.isAssignableFrom(object.getClass())) {
+            throw new IllegalStateException("the adapter returned '" + object.getClass() + "' that isn't assignable from '" + reference + "'");
+        }
+
+        return object;
     }
 
 }

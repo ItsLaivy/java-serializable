@@ -1,7 +1,6 @@
 package codes.laivy.serializable.json;
 
 import codes.laivy.serializable.Allocator;
-import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.exception.NullConcreteClassException;
 import codes.laivy.serializable.json.SerializingType.Methods;
@@ -11,7 +10,6 @@ import com.google.gson.JsonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.EOFException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
@@ -51,7 +49,7 @@ final class SerializingProcess {
     public SerializingProcess(@NotNull JsonSerializer serializer, @NotNull Father father) {
         this.serializer = serializer;
         this.father = father;
-        this.reference = checkConcrete(father);
+        this.reference = father.getField().getType();
     }
 
     // Getters
@@ -157,6 +155,12 @@ final class SerializingProcess {
             return null;
         }
 
+        @NotNull Class<?> reference = this.reference;
+        if (!isConcrete(reference)) {
+            assert father != null;
+            reference = checkConcrete(father);
+        }
+
         // Deserialize
         @NotNull SerializingType serializing = new Normal(serializer, father);
 
@@ -164,18 +168,8 @@ final class SerializingProcess {
             serializing = new Methods(serializer, father, father.getField().getDeclaringClass(), father.getField().getAnnotation(UsingSerializers.class));
         } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
             serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
-        } else if (serializer.adapterMap.containsKey(reference)) try {
-            @NotNull Adapter adapter = serializer.adapterMap.get(reference);
-            @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(serializer, reference, element);
-            @NotNull Object object = adapter.deserialize(context);
-
-            if (!reference.isAssignableFrom(object.getClass())) {
-                throw new IllegalStateException("the adapter returned '" + object.getClass() + "' that isn't assignable from '" + reference + "'");
-            }
-
-            return object;
-        } catch (@NotNull EOFException e) {
-            throw new RuntimeException("cannot proceed adapter deserialization '" + reference + "': " + element, e);
+        } else if (serializer.adapterMap.containsKey(reference)) {
+            return serializer.usingAdapter(reference, element);
         } else if (JavaSerializableUtils.usesJavaSerialization(reference)) {
             return JavaSerializableUtils.javaDeserializeObject(reference, element);
         }

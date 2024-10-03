@@ -264,4 +264,16 @@ final class JsonSerializeInputContext implements SerializeInputContext {
         return serializer;
     }
 
+    // Implementations
+
+    @Override
+    public @NotNull String toString() {
+        return "JsonSerializeInputContext{" +
+                "reference=" + reference +
+                ", index=" + index +
+                ", objects=" + objects +
+                ", fields=" + fields +
+                '}';
+    }
+
 }

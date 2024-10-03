@@ -67,8 +67,8 @@ public class CharacterArrayAdapter implements Adapter {
 
                     if (string == null) {
                         list.add(null);
-                    } else {
-                        list.add(string.charAt(0));
+                    } else for (char c : string.toCharArray()) {
+                        list.add(c);
                     }
                 } catch (@NotNull EOFException ignore) {
                     return list.toArray(new Character[0]);
