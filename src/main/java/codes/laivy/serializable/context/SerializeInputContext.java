@@ -7,38 +7,10 @@ import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.EOFException;
 
-/**
- * Provides a context for deserializing an object of type {@link T}. This context encapsulates
- * various metadata and utilities needed to extract field values and manage the deserialization
- * process.
- * <p>
- * The context allows access to the fields of the serialized object, as well as metadata
- * about the class being deserialized. Additionally, it provides methods to deserialize the
- * object or extract individual field values.
- * <p>
- * This interface is designed to abstract the complexities involved in reconstructing objects
- * from a serialized format, allowing for seamless integration with various serialization
- * frameworks and protocols.
- *
- * @param <T> The type of object being deserialized.
- *
- * @author Daniel Meinicke (Laivy)
- * @since 1.1-SNAPSHOT
- */
 @Experimental
-public interface SerializeInputContext<T> {
+public interface SerializeInputContext {
 
-    /**
-     * Returns the reference class for the object being deserialized. This provides
-     * information about the type {@link T}, which represents the type of the object
-     * currently being deserialized in this context.
-     * <p>
-     * This method is useful for frameworks that need to inspect the structure or metadata of the
-     * deserialized object before proceeding with the deserialization of specific fields.
-     *
-     * @return The {@link Class} representing the type {@link T} that is currently being deserialized.
-     */
-    @NotNull Class<T> getReference();
+    @NotNull Class<?> getReference();
 
     /**
      * Reads a boolean value from the input context. This method reads the next

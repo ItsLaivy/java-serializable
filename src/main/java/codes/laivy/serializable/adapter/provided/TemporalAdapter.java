@@ -39,7 +39,7 @@ public class TemporalAdapter implements Adapter {
         }
     }
     @Override
-    public @NotNull Object deserialize(@NotNull SerializeInputContext<?> context) throws EOFException {
+    public @NotNull Object deserialize(@NotNull SerializeInputContext context) throws EOFException {
         if (context.getReference() == Date.class) {
             return new Date(context.readLong());
         } else if (context.getReference() == Duration.class) {

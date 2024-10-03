@@ -16,22 +16,22 @@ import java.util.Map;
 
 import static codes.laivy.serializable.json.SerializingProcess.isConcrete;
 
-final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
+final class JsonSerializeInputContext implements SerializeInputContext {
 
     private final @NotNull JsonSerializer serializer;
 
-    private final @NotNull Class<T> reference;
+    private final @NotNull Class<?> reference;
     private final @NotNull Object lock = new Object();
 
     private int index = 0;
     private final @NotNull List<@Nullable JsonPrimitive> objects = new LinkedList<>();
     private final @NotNull Map<String, @Nullable JsonElement> fields = new LinkedHashMap<>();
 
-    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<T> reference) {
+    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<?> reference) {
         this.reference = reference;
         this.serializer = serializer;
     }
-    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<T> reference, @NotNull JsonElement element) {
+    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<?> reference, @NotNull JsonElement element) {
         this.reference = reference;
         this.serializer = serializer;
 
@@ -70,7 +70,7 @@ final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
     // Getters
 
     @Override
-    public @NotNull Class<T> getReference() {
+    public @NotNull Class<?> getReference() {
         return reference;
     }
 
