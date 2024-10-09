@@ -8,12 +8,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.EOFException;
 import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Type;
 import java.util.*;
 
+import static codes.laivy.serializable.json.SerializingProcess.checkCompatible;
 import static codes.laivy.serializable.json.SerializingProcess.isConcrete;
 
 final class JsonSerializeInputContext implements SerializeInputContext {
@@ -225,19 +226,45 @@ final class JsonSerializeInputContext implements SerializeInputContext {
             throw new NullConcreteClassException("the reference class '" + reference + "' isn't concrete");
         }
 
+        @Nullable JsonElement element;
+        synchronized (lock) {
+            if (index >= objects.size()) throw new EOFException();
+            element = objects.get(index);
+            index++;
+        }
+
+        if (element == null) {
+            return null;
+        }
+
+        @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference);
+        return (E) process.deserialize(element);
+    }
+
+    @Override
+    public @UnknownNullability Object readObject(@NotNull Class<?> @NotNull [] references) throws EOFException {
         @Nullable JsonPrimitive primitive;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
             primitive = objects.get(index);
-            index++;
         }
 
         if (primitive == null) {
             return null;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference);
-        return (E) process.deserialize(primitive);
+        for (@NotNull Class<?> reference : references) {
+            if (!isConcrete(reference)) {
+                throw new NullConcreteClassException("the reference class '" + reference + "' isn't concrete");
+            } else if (checkCompatible(reference, primitive)) {
+                index++;
+
+                @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference);
+                return process.deserialize(primitive);
+            }
+        }
+
+        throw new IllegalArgumentException("cannot deserialize object with those references");
     }
 
     @SuppressWarnings("unchecked")
@@ -258,7 +285,11 @@ final class JsonSerializeInputContext implements SerializeInputContext {
     }
 
     @Override
-    public @NotNull Generic @NotNull [] getGenerics(@NotNull Type type) {
+    public @NotNull Generic @NotNull [] getGenerics() {
+        return generics.values().stream().flatMap(Arrays::stream).toArray(Generic[]::new);
+    }
+    @Override
+    public @NotNull Generic @NotNull [] getGenerics(@NotNull AnnotatedType type) {
         return generics.getOrDefault(type, new Generic[0]);
     }
 

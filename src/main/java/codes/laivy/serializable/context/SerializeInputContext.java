@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.EOFException;
-import java.lang.reflect.Type;
+import java.lang.reflect.AnnotatedType;
 
 @Experimental
 public interface SerializeInputContext {
@@ -112,11 +112,13 @@ public interface SerializeInputContext {
      * @throws EOFException If the end of the input stream is reached unexpectedly.
      */
     <E> @UnknownNullability E readObject(@NotNull Class<E> reference) throws EOFException;
+    @UnknownNullability Object readObject(@NotNull Class<?> @NotNull [] references) throws EOFException;
 
     <E> @UnknownNullability E readField(@NotNull Class<E> reference, @NotNull String name);
     @NotNull String @NotNull [] getFields();
 
-    @NotNull Generic @NotNull [] getGenerics(@NotNull Type type);
+    @NotNull Generic @NotNull [] getGenerics();
+    @NotNull Generic @NotNull [] getGenerics(@NotNull AnnotatedType type);
 
     @NotNull JsonSerializer getSerializer();
 

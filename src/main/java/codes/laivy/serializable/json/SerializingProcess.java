@@ -1,6 +1,5 @@
 package codes.laivy.serializable.json;
 
-import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.exception.NullConcreteClassException;
 import codes.laivy.serializable.json.SerializingType.Methods;
@@ -13,10 +12,8 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static codes.laivy.serializable.json.JsonSerializer.generics;
@@ -55,7 +52,7 @@ final class SerializingProcess {
     public SerializingProcess(@NotNull JsonSerializer serializer, @NotNull Father father) {
         this.serializer = serializer;
         this.father = father;
-        this.reference = father.getField().getType();
+        this.reference = checkConcrete(father);
     }
 
     // Getters
@@ -77,9 +74,9 @@ final class SerializingProcess {
     public @NotNull JsonElement serialize(@Nullable Object instance) {
         if (instance == null) {
             return JsonNull.INSTANCE;
-        } else if (!Allocator.isAssignableFromIncludingPrimitive(reference, instance.getClass())) {
-            throw new IllegalArgumentException("the reference class '" + reference + "' isn't the same from object class '" + instance.getClass() + "'");
         }
+
+        @NotNull Class<?> reference = instance.getClass();
 
         // Get fields
         @NotNull Collection<Field> fields = getFields(father, reference).values();
@@ -209,32 +206,19 @@ final class SerializingProcess {
                         throw new IllegalArgumentException("the @Concrete argument must be a valid concrete class!");
                     }
 
-                    if (checkCompatible()) {
-                        return concrete.type();
-                    }
+                    // todo: concretes
+                    return concrete.type();
                 }
 
                 throw new IllegalArgumentException("cannot find a valid compatible concrete type for field '" + field + "'");
             } else {
-                try {
-                    @Nullable Object temp = field.get(instance);
-
-                    if (temp == null) {
-                        throw new NullConcreteClassException("cannot retrieve concrete class from field '" + field + "'. Try to use @Concrete of a default value for the field.");
-                    } else {
-                        return temp.getClass();
-                    }
-                } catch (@NotNull IllegalAccessException e) {
-                    throw new RuntimeException("cannot access field value for concrete check", e);
-                } finally {
-                    field.setAccessible(accessible);
-                }
+                throw new NullConcreteClassException("cannot retrieve concrete class from field '" + field + "'. Try to use @Concrete of a default value for the field.");
             }
         } else {
             return field.getType();
         }
     }
-    public static boolean checkCompatible() {
+    public static boolean checkCompatible(@NotNull Class<?> reference, @NotNull JsonElement element) {
         return true;
     }
 

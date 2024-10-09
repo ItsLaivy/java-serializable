@@ -9,10 +9,7 @@ import java.lang.annotation.*;
  * the exact type of field. This situation arises when the field's reference type is either an interface or an
  * abstract class, making it unclear which concrete implementation to use. By applying this annotation to such fields,
  * the developer explicitly indicates which concrete class the serializer should use.
- * <p>
- * If the field already has a defined value, the class of that existing value will be used as the concrete class,
- * unless there is a {@code @Concrete} annotation present. In that case, the first {@code @Concrete} annotation
- * will take priority over the existing value's class if compatible.
+ *
  * <p>
  * The class specified in the annotation's parameter MUST be a concrete class and should adhere to the following constraints:
  * <ul>
@@ -66,9 +63,8 @@ public @interface Concrete {
     /**
      * Specifies the concrete class to be used by the serializer for the annotated field.
      * The specified class must be a concrete class and should be assignable to the field's declared type.
-     * This class will be used during deserialization to instantiate the correct type, unless the field already
-     * has a defined value, in which case the existing value's class will be used unless {@code @Concrete} is present.
-     * In such a case, the first {@code @Concrete} annotation will take precedence.
+     * This class will be used during deserialization to instantiate the correct type, but it no longer
+     * overrides any pre-existing value in the field.
      * <p>
      * Constraints:
      * <ul>
@@ -79,4 +75,5 @@ public @interface Concrete {
      * @return The concrete class to be used for the annotated field. The returned class is guaranteed to be non-null.
      */
     @NotNull Class<?> type();
+
 }
