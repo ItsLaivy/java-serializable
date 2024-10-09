@@ -1,11 +1,13 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.annotations.Generic;
 import codes.laivy.serializable.json.JsonSerializer;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.EOFException;
+import java.lang.reflect.Type;
 
 @Experimental
 public interface SerializeInputContext {
@@ -113,6 +115,8 @@ public interface SerializeInputContext {
 
     <E> @UnknownNullability E readField(@NotNull Class<E> reference, @NotNull String name);
     @NotNull String @NotNull [] getFields();
+
+    @NotNull Generic @NotNull [] getGenerics(@NotNull Type type);
 
     @NotNull JsonSerializer getSerializer();
 

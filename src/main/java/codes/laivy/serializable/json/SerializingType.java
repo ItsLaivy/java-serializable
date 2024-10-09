@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import static codes.laivy.serializable.json.JsonSerializer.generics;
+
 abstract class SerializingType {
 
     protected final @NotNull JsonSerializer json;
@@ -222,7 +224,7 @@ abstract class SerializingType {
                 } else if (reference == Double.class || reference == double.class) {
                     return element.getAsDouble();
                 } else if (json.adapterMap.containsKey(reference)) {
-                    return json.usingAdapter(reference, element);
+                    return json.usingAdapter(reference, element, father != null ? generics(father.getField().getAnnotatedType()) : new HashMap<>());
                 } else {
                     throw new UnsupportedOperationException("there's no primitive type with reference '" + reference + "', is missing any adapter here?");
                 }
@@ -418,7 +420,7 @@ abstract class SerializingType {
                 }
 
                 // Start deserialize
-                @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(super.json, reference, element);
+                @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(super.json, reference, element, father != null ? generics(father.getField().getAnnotatedType()) : new HashMap<>());
                 @Nullable Object object = deserializer.invoke(null, context);
 
                 // Finish

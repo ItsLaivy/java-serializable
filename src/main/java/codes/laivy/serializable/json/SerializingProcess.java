@@ -10,10 +10,16 @@ import com.google.gson.JsonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import static codes.laivy.serializable.json.JsonSerializer.generics;
 import static codes.laivy.serializable.json.SerializingType.Normal.getFields;
 
 final class SerializingProcess {
@@ -169,7 +175,8 @@ final class SerializingProcess {
         } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
             serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
         } else if (serializer.adapterMap.containsKey(reference)) {
-            return serializer.usingAdapter(reference, element);
+            @NotNull Map<AnnotatedType, Generic[]> generics = father != null ? generics(father.getField().getAnnotatedType()) : new HashMap<>();
+            return serializer.usingAdapter(reference, element, generics);
         } else if (JavaSerializableUtils.usesJavaSerialization(reference)) {
             return JavaSerializableUtils.javaDeserializeObject(reference, element);
         }

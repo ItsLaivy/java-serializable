@@ -1,5 +1,6 @@
 package codes.laivy.serializable.json;
 
+import codes.laivy.serializable.annotations.Generic;
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.exception.NullConcreteClassException;
 import com.google.gson.JsonElement;
@@ -9,10 +10,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
 import static codes.laivy.serializable.json.SerializingProcess.isConcrete;
 
@@ -26,14 +26,12 @@ final class JsonSerializeInputContext implements SerializeInputContext {
     private int index = 0;
     private final @NotNull List<@Nullable JsonPrimitive> objects = new LinkedList<>();
     private final @NotNull Map<String, @Nullable JsonElement> fields = new LinkedHashMap<>();
+    private final @NotNull Map<@NotNull AnnotatedType, @NotNull Generic[]> generics;
 
-    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<?> reference) {
+    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<?> reference, @NotNull JsonElement element, @NotNull Map<@NotNull AnnotatedType, @NotNull Generic[]> generics) {
         this.reference = reference;
         this.serializer = serializer;
-    }
-    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<?> reference, @NotNull JsonElement element) {
-        this.reference = reference;
-        this.serializer = serializer;
+        this.generics = generics;
 
         if (element.isJsonObject()) {
             @NotNull JsonObject object = element.getAsJsonObject();
@@ -257,6 +255,11 @@ final class JsonSerializeInputContext implements SerializeInputContext {
     @Override
     public @NotNull String @NotNull [] getFields() {
         return fields.keySet().toArray(new String[0]);
+    }
+
+    @Override
+    public @NotNull Generic @NotNull [] getGenerics(@NotNull Type type) {
+        return generics.getOrDefault(type, new Generic[0]);
     }
 
     @Override
