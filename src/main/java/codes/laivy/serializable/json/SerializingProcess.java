@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +53,7 @@ final class SerializingProcess {
     public SerializingProcess(@NotNull JsonSerializer serializer, @NotNull Father father) {
         this.serializer = serializer;
         this.father = father;
-        this.reference = checkConcrete(father);
+        this.reference = father.getField().getType();
     }
 
     // Getters
@@ -158,11 +159,10 @@ final class SerializingProcess {
             return null;
         }
 
-        @NotNull Class<?> reference = this.reference;
-        if (!isConcrete(reference)) {
-            assert father != null;
-            reference = checkConcrete(father);
-        }
+        @NotNull Class<?>[] references = new Class[] { this.reference };
+        if (father != null) references = checkConcrete(father);
+
+        @NotNull Class<?> reference = Arrays.stream(references).filter(r -> checkCompatible(r, element)).findFirst().orElseThrow(() -> new IllegalArgumentException("there's no compatible reference to deserialize the object '" + element + "'"));
 
         // Deserialize
         @NotNull SerializingType serializing = new Normal(serializer, father);
@@ -184,7 +184,7 @@ final class SerializingProcess {
 
     // Utilities
 
-    public static @NotNull Class<?> checkConcrete(@NotNull Father father) {
+    public static @NotNull Class<?> @NotNull [] checkConcrete(@NotNull Father father) {
         @NotNull Field field = father.getField();
         @NotNull Object instance = father.getInstance();
 
@@ -203,22 +203,20 @@ final class SerializingProcess {
 
                 for (@NotNull Concrete concrete : concretes) {
                     if (!isConcrete(concrete.type())) {
-                        throw new IllegalArgumentException("the @Concrete argument must be a valid concrete class!");
+                        throw new IllegalArgumentException("the @Concrete argument must include only concrete classes! ('" + concrete.type() + "')");
                     }
-
-                    // todo: concretes
-                    return concrete.type();
                 }
 
-                throw new IllegalArgumentException("cannot find a valid compatible concrete type for field '" + field + "'");
+                return Arrays.stream(concretes).map(Concrete::type).toArray(Class[]::new);
             } else {
                 throw new NullConcreteClassException("cannot retrieve concrete class from field '" + field + "'. Try to use @Concrete of a default value for the field.");
             }
         } else {
-            return field.getType();
+            return new Class[] { field.getType() };
         }
     }
     public static boolean checkCompatible(@NotNull Class<?> reference, @NotNull JsonElement element) {
+        // todo: check if is concrete also
         return true;
     }
 

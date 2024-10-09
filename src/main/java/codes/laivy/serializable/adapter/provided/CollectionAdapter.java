@@ -10,9 +10,9 @@ import org.jetbrains.annotations.Nullable;
 import javax.management.AttributeList;
 import javax.management.relation.RoleList;
 import javax.management.relation.RoleUnresolvedList;
-import javax.print.attribute.standard.JobStateReason;
 import java.io.EOFException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -46,9 +46,7 @@ public class CollectionAdapter implements Adapter {
                 KeySetView.class,
                 ConcurrentSkipListSet.class,
                 CopyOnWriteArraySet.class,
-                EnumSet.class,
                 HashSet.class,
-                JobStateReason.class,
                 LinkedHashSet.class,
                 TreeSet.class
         };
@@ -108,21 +106,17 @@ public class CollectionAdapter implements Adapter {
             } else if (context.getReference() == AttributeList.class) {
                 collection = new AttributeList();
             } else if (context.getReference() == KeySetView.class) {
-                collection = new AttributeList();
+                collection = ConcurrentHashMap.newKeySet();
             } else if (context.getReference() == ConcurrentSkipListSet.class) {
-                collection = new AttributeList();
+                collection = new ConcurrentSkipListSet();
             } else if (context.getReference() == CopyOnWriteArraySet.class) {
-                collection = new AttributeList();
-            } else if (context.getReference() == EnumSet.class) {
-                collection = new AttributeList();
+                collection = new CopyOnWriteArraySet();
             } else if (context.getReference() == HashSet.class) {
-                collection = new AttributeList();
-            } else if (context.getReference() == JobStateReason.class) {
-                collection = new AttributeList();
+                collection = new HashSet();
             } else if (context.getReference() == LinkedHashSet.class) {
-                collection = new AttributeList();
+                collection = new LinkedHashSet();
             } else if (context.getReference() == TreeSet.class) {
-                collection = new AttributeList();
+                collection = new TreeSet();
             } else {
                 throw new UnsupportedOperationException("this reference collection '" + context.getReference() + "' isn't supported by this adapter");
             }
@@ -136,7 +130,7 @@ public class CollectionAdapter implements Adapter {
                 }
             }
         }
-        
+
         return collection;
     }
 
