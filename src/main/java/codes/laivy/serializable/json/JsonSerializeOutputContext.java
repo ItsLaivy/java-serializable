@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static codes.laivy.serializable.json.SerializingProcess.isConcrete;
+import static codes.laivy.serializable.utilities.Classes.isConcrete;
 
 final class JsonSerializeOutputContext implements SerializeOutputContext {
 
@@ -129,7 +129,7 @@ final class JsonSerializeOutputContext implements SerializeOutputContext {
                 @Nullable JsonElement serialized;
 
                 if (value != null) {
-                    serialized = new SerializingProcess(getSerializer(), value.getClass()).serialize(value);
+                    serialized = new SerializingProcess(getSerializer(), value.getClass(), null).serialize(value);
                 } else {
                     serialized = JsonNull.INSTANCE;
                 }
@@ -139,7 +139,7 @@ final class JsonSerializeOutputContext implements SerializeOutputContext {
             }
         } else if (getObjects().size() == 1 && getFields().isEmpty()) {
             @Nullable Object value = objects.get(0);
-            return value != null ? new SerializingProcess(getSerializer(), value.getClass()).serialize(value) : JsonNull.INSTANCE;
+            return value != null ? new SerializingProcess(getSerializer(), value.getClass(), null).serialize(value) : JsonNull.INSTANCE;
         } else {
             json = new JsonArray();
 
@@ -148,7 +148,7 @@ final class JsonSerializeOutputContext implements SerializeOutputContext {
                 if (value == null) {
                     ((JsonArray) json).add(JsonNull.INSTANCE);
                 } else {
-                    @Nullable JsonElement element = new SerializingProcess(getSerializer(), value.getClass()).serialize(value);
+                    @Nullable JsonElement element = new SerializingProcess(getSerializer(), value.getClass(), null).serialize(value);
                     ((JsonArray) json).add(element);
                 }
             }
@@ -157,11 +157,11 @@ final class JsonSerializeOutputContext implements SerializeOutputContext {
             @NotNull JsonObject fields = new JsonObject();
 
             for (@NotNull Map.Entry<String, Object> entry : getFields().entrySet()) {
-                @NotNull String name = entry.getKey();
+                @NotNull String name = "!" + entry.getKey();
                 @Nullable Object value = entry.getValue();
 
                 if (value != null) {
-                    fields.add(name, new SerializingProcess(getSerializer(), value.getClass()).serialize(value));
+                    fields.add(name, new SerializingProcess(getSerializer(), value.getClass(), null).serialize(value));
                 } else {
                     fields.add(name, JsonNull.INSTANCE);
                 }
