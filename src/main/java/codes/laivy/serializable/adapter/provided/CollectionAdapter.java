@@ -1,22 +1,23 @@
 package codes.laivy.serializable.adapter.provided;
 
 import codes.laivy.serializable.adapter.Adapter;
-import codes.laivy.serializable.annotations.Generic;
+import codes.laivy.serializable.annotations.Concrete;
+import codes.laivy.serializable.annotations.Concretes;
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.context.SerializeOutputContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.management.AttributeList;
-import javax.management.relation.RoleList;
-import javax.management.relation.RoleUnresolvedList;
 import java.io.EOFException;
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static codes.laivy.serializable.utilities.Classes.isConcrete;
 
 public class CollectionAdapter implements Adapter {
 
@@ -38,10 +39,7 @@ public class CollectionAdapter implements Adapter {
                 LinkedList.class,
                 Vector.class,
                 Stack.class,
-                RoleUnresolvedList.class,
-                RoleList.class,
                 CopyOnWriteArrayList.class,
-                AttributeList.class,
 
                 KeySetView.class,
                 ConcurrentSkipListSet.class,
@@ -67,27 +65,67 @@ public class CollectionAdapter implements Adapter {
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public @NotNull Object deserialize(@NotNull SerializeInputContext context) throws EOFException {
-        @NotNull Class<?>[] references;
+        @NotNull List<Class<?>> temp = new LinkedList<>();
+        int fromFields;
 
-        if (context.getGenerics().length > 0) {
-            references = Arrays.stream(context.getGenerics()).map(Generic::type).toArray(Class[]::new);
+        if (context.getAnnotatedType() != null) {
+            @NotNull AnnotatedType type = context.getAnnotatedType();
+            @NotNull List<AnnotatedType> types = new LinkedList<>();
+
+            // Função auxiliar para adicionar tipos concretos
+            Consumer<AnnotatedType> addConcreteTypes = (t) -> {
+                if (t.getType() instanceof Class && isConcrete((Class<?>) t.getType())) {
+                    temp.add((Class<?>) t.getType());
+                }
+
+                temp.addAll(Arrays.stream(t.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toList()));
+                temp.addAll(Arrays.stream(t.getAnnotationsByType(Concretes.class)).flatMap(concretes -> Arrays.stream(concretes.value())).map(Concrete::type).collect(Collectors.toList()));
+            };
+
+            // Adiciona a partir dos campos nativos
+            addConcreteTypes.accept(type);
+            fromFields = temp.size();
+
+            if (type instanceof AnnotatedParameterizedType) {
+                types.addAll(Arrays.asList(((AnnotatedParameterizedType) type).getAnnotatedActualTypeArguments()));
+            }
+
+            while (!types.isEmpty()) {
+                type = types.remove(0);
+
+                if (type instanceof AnnotatedParameterizedType) {
+                    types.addAll(Arrays.asList(((AnnotatedParameterizedType) type).getAnnotatedActualTypeArguments()));
+                }
+                addConcreteTypes.accept(type);
+            }
         } else {
-            throw new UnsupportedOperationException("a collection requires the @Generic annotation");
+            throw new UnsupportedOperationException("a collection requires an annotated type");
         }
 
         @NotNull Collection collection;
 
-        if (context.getReference() == ARRAYS_ARRAYLIST) {
-            @NotNull List<@Nullable Object> list = new LinkedList<>();
+        // Functions
+
+        @NotNull Consumer<Collection<Object>> adder = objects -> {
+            @NotNull Class<?>[] references = temp.toArray(new Class[0]);
+            references = Arrays.copyOfRange(references, fromFields, references.length);
 
             while (true) {
                 try {
                     @Nullable Object object = context.readObject(references);
-                    list.add(object);
+                    objects.add(object);
                 } catch (@NotNull EOFException ignore) {
                     break;
+                } catch (@NotNull Throwable throwable) {
+                    throw new RuntimeException("cannot deserialize object to collection '" + objects.getClass().getName() + "' using references " + Arrays.toString(references), throwable);
                 }
             }
+        };
+
+        // Read
+        if (context.getReference() == ARRAYS_ARRAYLIST) {
+            @NotNull List<@Nullable Object> list = new LinkedList<>();
+            adder.accept(list);
 
             return Arrays.asList(list.toArray());
         } else {
@@ -97,14 +135,8 @@ public class CollectionAdapter implements Adapter {
                 collection = new LinkedList<>();
             } else if (context.getReference() == Stack.class) {
                 collection = new Stack<>();
-            } else if (context.getReference() == RoleUnresolvedList.class) {
-                collection = new RoleUnresolvedList();
-            } else if (context.getReference() == RoleList.class) {
-                collection = new RoleList();
             } else if (context.getReference() == CopyOnWriteArrayList.class) {
                 collection = new CopyOnWriteArrayList<>();
-            } else if (context.getReference() == AttributeList.class) {
-                collection = new AttributeList();
             } else if (context.getReference() == KeySetView.class) {
                 collection = ConcurrentHashMap.newKeySet();
             } else if (context.getReference() == ConcurrentSkipListSet.class) {
@@ -117,18 +149,13 @@ public class CollectionAdapter implements Adapter {
                 collection = new LinkedHashSet();
             } else if (context.getReference() == TreeSet.class) {
                 collection = new TreeSet();
+            } else if (context.getReference() == Vector.class) {
+                collection = new Vector();
             } else {
                 throw new UnsupportedOperationException("this reference collection '" + context.getReference() + "' isn't supported by this adapter");
             }
 
-            while (true) {
-                try {
-                    @Nullable Object object = context.readObject(references);
-                    collection.add(object);
-                } catch (@NotNull EOFException ignore) {
-                    break;
-                }
-            }
+            adder.accept(collection);
         }
 
         return collection;
