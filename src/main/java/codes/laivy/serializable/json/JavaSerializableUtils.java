@@ -104,7 +104,7 @@ final class JavaSerializableUtils {
 
             return array;
         } catch (@NotNull IOException e) {
-            throw new RuntimeException("cannot serialize", e);
+            throw new RuntimeException("cannot serialize java object '" + object + "' from class '" + (object != null ? object.getClass().getName() : null) + "'", e);
         }
     }
 

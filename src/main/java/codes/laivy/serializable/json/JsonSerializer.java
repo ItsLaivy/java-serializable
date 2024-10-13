@@ -6,7 +6,6 @@ import codes.laivy.serializable.adapter.provided.CharacterArrayAdapter;
 import codes.laivy.serializable.adapter.provided.CollectionAdapter;
 import codes.laivy.serializable.adapter.provided.TemporalAdapter;
 import codes.laivy.serializable.adapter.provided.UUIDAdapter;
-import codes.laivy.serializable.annotations.Generic;
 import codes.laivy.serializable.exception.MalformedClassException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -17,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
 import java.io.Serializable;
-import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.util.*;
 
@@ -62,7 +60,7 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
             return JsonNull.INSTANCE;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(this, object.getClass());
+        @NotNull SerializingProcess process = new SerializingProcess(this, object.getClass(), null);
         return process.serialize(object);
     }
 
@@ -332,7 +330,7 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
             return null;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(this, reference);
+        @NotNull SerializingProcess process = new SerializingProcess(this, reference, null);
         return (E) process.deserialize(object);
     }
     @Override
@@ -357,12 +355,12 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
 
     // Utilities
 
-    @NotNull Object usingAdapter(@NotNull Class<?> reference, @NotNull JsonElement element, @NotNull Map<@NotNull AnnotatedType, @NotNull Generic[]> generics) {
+    @NotNull Object usingAdapter(@NotNull Class<?> reference, @NotNull JsonElement element, @Nullable AnnotatedType annotatedType) {
         @NotNull Object object;
 
         try {
             @NotNull Adapter adapter = adapterMap.get(reference);
-            @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(this, reference, element, generics);
+            @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(this, reference, element, annotatedType);
             object = adapter.deserialize(context);
         } catch (@NotNull EOFException e) {
             throw new RuntimeException("cannot proceed adapter deserialization '" + reference + "': " + element, e);
@@ -373,28 +371,6 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         }
 
         return object;
-    }
-    static @NotNull Map<@NotNull AnnotatedType, @NotNull Generic @NotNull []> generics(@NotNull AnnotatedType type) {
-        @NotNull Map<AnnotatedType, Generic[]> map = new HashMap<>();
-        @NotNull List<AnnotatedType> types = new LinkedList<>();
-        types.add(type);
-
-        while (!types.isEmpty()) {
-            type = types.get(0);
-            types.remove(0);
-
-            if (type instanceof AnnotatedParameterizedType) {
-                @NotNull AnnotatedParameterizedType annotated = (AnnotatedParameterizedType) type;
-                types.addAll(Arrays.asList(annotated.getAnnotatedActualTypeArguments()));
-            }
-
-            if (type.isAnnotationPresent(Generic.class)) {
-                map.put(type, type.getAnnotationsByType(Generic.class));
-            }
-        }
-
-        // Finish
-        return map;
     }
 
 }

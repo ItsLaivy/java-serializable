@@ -18,8 +18,6 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import static codes.laivy.serializable.json.JsonSerializer.generics;
-
 abstract class SerializingType {
 
     protected final @NotNull JsonSerializer json;
@@ -41,11 +39,11 @@ abstract class SerializingType {
 
         // Static initializers
 
-        static @NotNull Map<String, Field> getFields(@Nullable Father father, final @NotNull Class<?> type) {
+        static @NotNull Map<String, Field> getFields(@Nullable Father father, final @NotNull Class<?> reference) {
             @NotNull Map<String, Field> map = new LinkedHashMap<>();
             @NotNull Map<String, Integer> repeat = new HashMap<>();
 
-            @NotNull Class<?> temp = type;
+            @NotNull Class<?> temp = reference;
             while (temp != Object.class && temp != null) {
                 @NotNull Set<Field> fields = Arrays.stream(temp.getDeclaredFields()).collect(Collectors.toSet());
 
@@ -66,7 +64,7 @@ abstract class SerializingType {
                         name = known.name();
 
                         if (map.containsKey(name)) {
-                            throw new IllegalStateException("there's two or more fields with the same @KnownAs name at the class '" + type + "', check it's super classes.");
+                            throw new IllegalStateException("there's two or more fields with the same @KnownAs name at the class '" + reference + "', check it's super classes.");
                         } else {
                             map.put(name, field);
                         }
@@ -79,7 +77,7 @@ abstract class SerializingType {
                         } else if (!map.containsKey("$" + name + "_" + repeat.get(name))) {
                             map.put(name + "_" + repeat.get(name), field);
                         } else {
-                            throw new IllegalStateException("cannot reserve a custom name for field '" + name + "' from class '" + type + "'");
+                            throw new IllegalStateException("cannot reserve a custom name for field '" + name + "' from class '" + reference + "'");
                         }
 
                         repeat.putIfAbsent(name, 0);
@@ -138,7 +136,7 @@ abstract class SerializingType {
                 try {
                     field.setAccessible(true);
 
-                    @NotNull SerializingProcess serialization = new SerializingProcess(this.json, new Father(field, object));
+                    @NotNull SerializingProcess serialization = new SerializingProcess(this.json, new Father(field, object), field.getAnnotatedType());
                     json.add(name, serialization.serialize(field.get(object)));
                 } catch (@NotNull IllegalAccessException e) {
                     throw new RuntimeException("cannot access field '" + field.getName() + "'", e);
@@ -195,7 +193,7 @@ abstract class SerializingType {
                         } catch (@NotNull ClassNotFoundException e) {
                             throw new InvalidClassException("there's no class '" + value.getAsString() + "' to deserialize at runtime");
                         } else {
-                            @NotNull SerializingProcess process = new SerializingProcess(super.json, new Father(field, instance));
+                            @NotNull SerializingProcess process = new SerializingProcess(super.json, new Father(field, instance), field.getAnnotatedType());
                             object = process.deserialize(value);
                         }
                         
@@ -224,7 +222,7 @@ abstract class SerializingType {
                 } else if (reference == Double.class || reference == double.class) {
                     return element.getAsDouble();
                 } else if (json.adapterMap.containsKey(reference)) {
-                    return json.usingAdapter(reference, element, father != null ? generics(father.getField().getAnnotatedType()) : new HashMap<>());
+                    return json.usingAdapter(reference, element, father != null ? father.getField().getAnnotatedType() : null);
                 } else {
                     throw new UnsupportedOperationException("there's no primitive type with reference '" + reference + "', is missing any adapter here?");
                 }
@@ -420,7 +418,7 @@ abstract class SerializingType {
                 }
 
                 // Start deserialize
-                @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(super.json, reference, element, father != null ? generics(father.getField().getAnnotatedType()) : new HashMap<>());
+                @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(super.json, reference, element, father != null ? father.getField().getAnnotatedType() : null);
                 @Nullable Object object = deserializer.invoke(null, context);
 
                 // Finish

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import utilities.ArrayUtils;
 
 import java.time.*;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -16,7 +15,7 @@ import java.util.UUID;
 public final class ObjectTest {
 
     private static final @NotNull JsonSerializer serializer = new JsonSerializer();
-    private static void match(@NotNull Object object) {
+    public static void match(@NotNull Object object) {
         @Nullable JsonElement json = serializer.serialize(object);
 
         System.out.print("Class: '" + object.getClass().getCanonicalName() + "'");
@@ -107,12 +106,6 @@ public final class ObjectTest {
         // Object without adapter
         @NotNull TestClass[] tests = new TestClass[] { new TestClass("Laivy", 19), new TestClass("Meruhz", 17) };
         match(tests);
-    }
-
-    @Test
-    @DisplayName("Collections")
-    public void collection() {
-        match(Arrays.asList("a", "b", "c", "d", "e", "f"));
     }
 
     // Classes
