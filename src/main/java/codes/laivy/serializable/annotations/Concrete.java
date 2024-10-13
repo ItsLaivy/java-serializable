@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 
 /**
  * Annotation used to specify the concrete class that should be used by the serializer when it cannot infer
- * the exact type of field. This situation arises when the field's reference type is either an interface or an
+ * the exact type of the field. This situation arises when the field's reference type is either an interface or an
  * abstract class, making it unclear which concrete implementation to use. By applying this annotation to such fields,
  * the developer explicitly indicates which concrete class the serializer should use.
  *
@@ -21,7 +21,12 @@ import java.lang.annotation.*;
  * concrete type for deserialization.
  * <p>
  * This annotation can also be applied multiple times to the same field, allowing the developer to specify multiple
- * possible concrete types. The serializer will attempt to deserialize the field using the first valid concrete type.
+ * possible concrete types. O serializador tentará desserializar o campo usando o primeiro tipo concreto válido.
+ * <p>
+ * Note: Using multiple @Concrete annotations can be problematic. The serializer will use the first concrete class
+ * that is compatible with the serialized value. As example, if there are two concrete values for a class, Dog and Cat,
+ * but the serializable value represents a Cat that is also compatible with Dog, the result could incorrectly be a Dog.
+ * </p>
  * <p>
  * Example usage:
  * <pre>
@@ -42,22 +47,40 @@ import java.lang.annotation.*;
  *
  * <pre>
  * {@code
- * // The address can have variations, so we include all of them into multiples @Concrete annotations
+ * // The address can have variations, so we include all of them into multiple @Concrete annotations
  * @Concrete(type = IPv4Address.class)
  * @Concrete(type = IPv6Address.class)
  * private final Address address;
- *
- * // Try out my java-address library, available on my (@itslaivy) github :)
  * }
  * </pre>
+ *
+ * <p>
+ * This annotation now supports type use, allowing it to be applied in generic type definitions. For example:
+ * <pre>
+ * {@code
+ * // Indicates that the element Animal in the list can be either Cat or Dog.
+ * @Concrete(type = ArrayList.class)
+ * List<@Concrete(type = Cat.class) @Concrete(type = Dog.class) Animal> list = new ArrayList<>();
+ * }
+ * </pre>
+ * In cases where non-concrete types are defined, it is MANDATORY to have at least one @Concrete annotation.
+ * </p>
+ *
+ * <p>
+ * Note: In some cases, annotations may be lost at runtime. This is evident in scenarios involving certain collection types
+ * (e.g., KeySetView from ConcurrentHashMap), where the annotations on generic parameters may not be accessible due
+ * to type erasure and the internal structure of these classes. This means that even if annotations are present in the
+ * source code, they might not be retrievable through reflection during runtime, particularly for internal or
+ * complex structures.
+ * </p>
  *
  * @author Daniel Meinicke (Laivy)
  * @since 1.1-SNAPSHOT
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(value = Concretes.Normal.class)
-@Target(ElementType.FIELD)
+@Repeatable(value = Concretes.class)
+@Target({ElementType.TYPE_USE, ElementType.FIELD})
 public @interface Concrete {
 
     /**
