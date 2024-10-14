@@ -1,5 +1,6 @@
 package annotations;
 
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.UsingSerializers;
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.context.SerializeOutputContext;
@@ -25,8 +26,8 @@ public final class UsingSerializersTest {
     @DisplayName("Test normally")
     public void normal() {
         @NotNull Normal normal = new Normal();
-        @NotNull JsonElement element = serializer.serialize(normal);
-        @UnknownNullability Normal deserialized = serializer.deserialize(normal.getClass(), element);
+        @NotNull JsonElement element = Serializer.toJson(normal);
+        @UnknownNullability Normal deserialized = Serializer.fromJson(normal.getClass(), element);
 
         Assertions.assertEquals(Normal.expected, element, "the expected element was '" + Normal.expected + "' but the current is '" + element + "'.");
         Assertions.assertEquals(normal, deserialized, "the expected object was '" + normal + "' but the current is '" + deserialized + "'");
@@ -35,8 +36,8 @@ public final class UsingSerializersTest {
     @DisplayName("Using custom serializer")
     public void custom() {
         @NotNull Custom custom = new Custom();
-        @NotNull JsonElement element = serializer.serialize(custom);
-        @UnknownNullability Custom deserialized = serializer.deserialize(custom.getClass(), element);
+        @NotNull JsonElement element = Serializer.toJson(custom);
+        @UnknownNullability Custom deserialized = Serializer.fromJson(custom.getClass(), element);
 
         Assertions.assertEquals(Custom.expected, element, "the expected element was '" + Normal.expected + "' but the current is '" + element + "'.");
         Assertions.assertEquals(custom, deserialized, "the expected object was '" + custom + "' but the current is '" + deserialized + "'");
@@ -45,8 +46,8 @@ public final class UsingSerializersTest {
     @DisplayName("Using custom serializer from different class")
     public void customDifferentClass() {
         @NotNull CustomDifferentClass different = new CustomDifferentClass();
-        @NotNull JsonElement element = serializer.serialize(different);
-        @UnknownNullability CustomDifferentClass deserialized = serializer.deserialize(different.getClass(), element);
+        @NotNull JsonElement element = Serializer.toJson(different);
+        @UnknownNullability CustomDifferentClass deserialized = Serializer.fromJson(different.getClass(), element);
 
         Assertions.assertEquals(CustomDifferentClass.expected, element, "the expected element was '" + Normal.expected + "' but the current is '" + element + "'.");
         Assertions.assertEquals(different, deserialized, "the expected object was '" + different + "' but the current is '" + deserialized + "'");
@@ -54,7 +55,7 @@ public final class UsingSerializersTest {
     @Test
     @DisplayName("Using the annotation on fields")
     public void usingFields() {
-        @NotNull UsingFields deserialized = Objects.requireNonNull(serializer.deserialize(UsingFields.class, serializer.serialize(new UsingFields())));
+        @NotNull UsingFields deserialized = Objects.requireNonNull(Serializer.fromJson(UsingFields.class, Serializer.toJson(new UsingFields())));
 
         Assertions.assertEquals(new Normal(), deserialized.normal, "the serializer from the field hasn't been used.");
         Assertions.assertEquals(new Custom(), deserialized.custom, "the serializer from the field hasn't been used.");
@@ -66,7 +67,7 @@ public final class UsingSerializersTest {
     public void failWithoutMethods() {
         try {
             @NotNull WithoutMethods without = new WithoutMethods();
-            serializer.serialize(without);
+            Serializer.toJson(without);
 
             Assertions.fail("The serializer didn't failed!");
         } catch (@NotNull MalformedSerializerException ignore) {
@@ -77,7 +78,7 @@ public final class UsingSerializersTest {
     public void failIncompatibleMethods() {
         try {
             @NotNull IncompatibleMethods incompatible = new IncompatibleMethods();
-            serializer.serialize(incompatible);
+            Serializer.toJson(incompatible);
 
             Assertions.fail("The serializer didn't failed!");
         } catch (@NotNull UnsupportedOperationException ignore) {

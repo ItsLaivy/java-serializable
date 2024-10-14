@@ -1,6 +1,7 @@
 package annotations;
 
 import codes.laivy.serializable.Allocator;
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.UseEmptyConstructor;
 import codes.laivy.serializable.json.JsonSerializer;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +19,7 @@ public final class UseEmptyConstructorTest {
     @DisplayName("Test normally")
     public void normal() {
         @NotNull EmptyConstructor object = new EmptyConstructor();
-        @NotNull EmptyConstructor deserialized = Objects.requireNonNull(serializer.deserialize(object.getClass(), serializer.serialize(object)));
+        @NotNull EmptyConstructor deserialized = Objects.requireNonNull(Serializer.fromJson(object.getClass(), Serializer.toJson(object)));
 
         Assertions.assertTrue(deserialized.constructed, "The empty constructor hasn't been used!");
     }
@@ -26,7 +27,7 @@ public final class UseEmptyConstructorTest {
     @DisplayName("Test using fields")
     public void usingFields() {
         @NotNull UsingFields object = new UsingFields();
-        @NotNull UsingFields deserialized = Objects.requireNonNull(serializer.deserialize(object.getClass(), serializer.serialize(object)));
+        @NotNull UsingFields deserialized = Objects.requireNonNull(Serializer.fromJson(object.getClass(), Serializer.toJson(object)));
 
         Assertions.assertTrue(deserialized.object.constructed, "The empty constructor hasn't been used!");
     }

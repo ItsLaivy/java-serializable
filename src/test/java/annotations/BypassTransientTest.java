@@ -1,5 +1,6 @@
 package annotations;
 
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.BypassTransient;
 import codes.laivy.serializable.json.JsonSerializer;
 import com.google.gson.JsonObject;
@@ -16,7 +17,7 @@ public class BypassTransientTest {
     @DisplayName("Test with transient fields")
     public void withTransients() {
         @NotNull TestWithTransient test = new TestWithTransient();
-        @NotNull JsonObject object = serializer.serialize(test).getAsJsonObject();
+        @NotNull JsonObject object = Serializer.toJson(test).getAsJsonObject();
         @NotNull JsonObject field = object.getAsJsonObject("field");
 
         Assertions.assertTrue(field.has("ignoreMe"), "cannot find transient field '" + object + "'");
@@ -25,7 +26,7 @@ public class BypassTransientTest {
     @DisplayName("Test without transient fields")
     public void withoutTransients() {
         @NotNull TestWithoutTransient test = new TestWithoutTransient();
-        @NotNull JsonObject object = serializer.serialize(test).getAsJsonObject();
+        @NotNull JsonObject object = Serializer.toJson(test).getAsJsonObject();
         @NotNull JsonObject field = object.getAsJsonObject("field");
 
         Assertions.assertFalse(field.has("ignoreMe"), "the transient field is here '" + object + "'");

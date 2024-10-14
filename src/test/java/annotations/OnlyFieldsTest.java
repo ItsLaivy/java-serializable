@@ -1,5 +1,6 @@
 package annotations;
 
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.ExcludeFields;
 import codes.laivy.serializable.annotations.OnlyFields;
 import codes.laivy.serializable.json.JsonSerializer;
@@ -24,7 +25,7 @@ public final class OnlyFieldsTest {
         @NotNull Normal object = new Normal();
         Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(object.color));
 
-        object = Objects.requireNonNull(serializer.deserialize(object.getClass(), serializer.serialize(object)));
+        object = Objects.requireNonNull(Serializer.fromJson(object.getClass(), Serializer.toJson(object)));
         Assertions.assertEquals(0.0f, getFAlpha(object.color), "The falpha field hasn't been excluded!");
     }
     @Test
@@ -33,7 +34,7 @@ public final class OnlyFieldsTest {
         @NotNull Without object = new Without();
         Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(object.color));
 
-        @NotNull Without deserialized = Objects.requireNonNull(serializer.deserialize(object.getClass(), serializer.serialize(object)));
+        @NotNull Without deserialized = Objects.requireNonNull(Serializer.fromJson(object.getClass(), Serializer.toJson(object)));
         Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(deserialized.color), "The falpha field hasn't been included!");
     }
     @Test
@@ -42,7 +43,7 @@ public final class OnlyFieldsTest {
         @NotNull Priority object = new Priority();
         Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(object.color));
 
-        @NotNull Priority deserialized = Objects.requireNonNull(serializer.deserialize(object.getClass(), serializer.serialize(object)));
+        @NotNull Priority deserialized = Objects.requireNonNull(Serializer.fromJson(object.getClass(), Serializer.toJson(object)));
         Assertions.assertEquals(DEFAULT_ALPHA, getFAlpha(deserialized.color));
     }
 

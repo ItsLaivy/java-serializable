@@ -1,7 +1,7 @@
 package annotations;
 
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.KnownAs;
-import codes.laivy.serializable.json.JsonSerializer;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -10,13 +10,11 @@ import org.junit.jupiter.api.Test;
 
 public final class KnownAsTest {
 
-    private static final @NotNull JsonSerializer serializer = new JsonSerializer();
-
     @Test
     @DisplayName("Test the @KnownAs annotation")
     public void normal() {
         @NotNull Cool cool = new Cool("Laivy", 19);
-        @NotNull JsonObject object = serializer.serialize(cool).getAsJsonObject();
+        @NotNull JsonObject object = Serializer.toJson(cool).getAsJsonObject();
 
         Assertions.assertTrue(object.has("name"), "missing 'name' field at the json object");
         Assertions.assertTrue(object.has("age"), "missing 'age' field at the json object");
@@ -28,7 +26,7 @@ public final class KnownAsTest {
     public void multiples() {
         try {
             @NotNull MultiplesWithSameName object = new MultiplesWithSameName("I'm", "Cool!");
-            serializer.serialize(object).getAsJsonObject();
+            Serializer.toJson(object).getAsJsonObject();
 
             Assertions.fail("Didn't failed even with two @KnownAs annotations with the same name");
         } catch (@NotNull IllegalStateException ignore) {

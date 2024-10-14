@@ -22,6 +22,15 @@ import java.util.*;
 // todo: gson adapter
 public class JsonSerializer implements TypeSerializer<JsonElement> {
 
+    // Static initializers
+
+    @SuppressWarnings("FieldMayBeFinal")
+    private static @NotNull JsonSerializer instance = new JsonSerializer();
+
+    public static @NotNull JsonSerializer getInstance() {
+        return instance;
+    }
+
     // Object
 
     final @NotNull Map<Class<?>, Adapter> adapterMap = new HashMap<>();

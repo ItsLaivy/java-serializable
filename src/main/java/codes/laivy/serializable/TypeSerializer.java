@@ -14,7 +14,7 @@ import java.util.Collection;
 
 // todo: #serialize(Object, OutputStream)
 //       #deserialize(Class, InputStream)
-public interface TypeSerializer<T> {
+public interface TypeSerializer<T> extends Serializer {
 
     // Adapters
 

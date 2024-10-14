@@ -1,5 +1,6 @@
 package annotations;
 
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.Concrete;
 import codes.laivy.serializable.exception.NullConcreteClassException;
 import codes.laivy.serializable.json.JsonSerializer;
@@ -22,17 +23,17 @@ public final class ConcreteTest {
     @DisplayName("Test normally")
     public void normal() {
         @NotNull Normal normal = new Normal();
-        @NotNull JsonElement element = serializer.serialize(normal);
+        @NotNull JsonElement element = Serializer.toJson(normal);
 
-        Assertions.assertEquals(normal, serializer.deserialize(normal.getClass(), element));
+        Assertions.assertEquals(normal, Serializer.fromJson(normal.getClass(), element));
     }
     @Test
     @DisplayName("Test generic")
     public void generic() {
         @NotNull Generic generic = new Generic();
-        @NotNull JsonElement element = serializer.serialize(generic);
+        @NotNull JsonElement element = Serializer.toJson(generic);
 
-        Assertions.assertEquals(generic, serializer.deserialize(generic.getClass(), element));
+        Assertions.assertEquals(generic, Serializer.fromJson(generic.getClass(), element));
     }
 
     @Test
@@ -40,9 +41,9 @@ public final class ConcreteTest {
     public void failMissingGeneric() {
         try {
             @NotNull FailWithoutConcrete generic = new FailWithoutConcrete();
-            @NotNull JsonElement element = serializer.serialize(generic);
+            @NotNull JsonElement element = Serializer.toJson(generic);
 
-            Assertions.assertEquals(generic, serializer.deserialize(generic.getClass(), element));
+            Assertions.assertEquals(generic, Serializer.fromJson(generic.getClass(), element));
             Assertions.fail("Didn't failed with the missing @Concrete annotation");
         } catch (@NotNull NullConcreteClassException ignore) {
         }

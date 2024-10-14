@@ -1,4 +1,4 @@
-import codes.laivy.serializable.json.JsonSerializer;
+import codes.laivy.serializable.Serializer;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,15 +14,14 @@ import java.util.UUID;
 
 public final class ObjectTest {
 
-    private static final @NotNull JsonSerializer serializer = new JsonSerializer();
     public static void match(@NotNull Object object) {
-        @Nullable JsonElement json = serializer.serialize(object);
+        @Nullable JsonElement json = Serializer.toJson(object);
 
         System.out.print("Class: '" + object.getClass().getCanonicalName() + "'");
         System.out.print(", Object: '" + object + "'");
         System.out.print(", Json: " + json + "\n");
 
-        @Nullable Object deserialized = serializer.deserialize(object.getClass(), json);
+        @Nullable Object deserialized = Serializer.fromJson(object.getClass(), json);
 
         if (object.getClass().isArray()) {
             assert deserialized != null;
