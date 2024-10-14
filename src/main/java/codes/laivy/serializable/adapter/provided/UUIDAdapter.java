@@ -20,7 +20,7 @@ public class UUIDAdapter implements Adapter {
         context.write(((UUID) object).toString());
     }
     @Override
-    public @NotNull Object deserialize(@NotNull SerializeInputContext<?> context) throws EOFException {
+    public @NotNull Object deserialize(@NotNull SerializeInputContext context) throws EOFException {
         return UUID.fromString(context.readLine());
     }
 

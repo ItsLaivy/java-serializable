@@ -47,7 +47,7 @@ public class CharacterArrayAdapter implements Adapter {
         }
     }
     @Override
-    public @NotNull Object deserialize(@NotNull SerializeInputContext<?> context) throws EOFException {
+    public @NotNull Object deserialize(@NotNull SerializeInputContext context) throws EOFException {
         if (context.getReference() == char[].class) {
             @NotNull StringBuilder builder = new StringBuilder();
 
@@ -67,8 +67,8 @@ public class CharacterArrayAdapter implements Adapter {
 
                     if (string == null) {
                         list.add(null);
-                    } else {
-                        list.add(string.charAt(0));
+                    } else for (char c : string.toCharArray()) {
+                        list.add(c);
                     }
                 } catch (@NotNull EOFException ignore) {
                     return list.toArray(new Character[0]);

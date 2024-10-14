@@ -2,6 +2,7 @@ package codes.laivy.serializable.annotations;
 
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.context.SerializeOutputContext;
+import codes.laivy.serializable.exception.MalformedSerializerException;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
@@ -68,6 +69,9 @@ import java.lang.annotation.*;
  * }
  * }
  * </pre>
+ *
+ * <p>If the serializer/deserializer methods is missing, an {@link MalformedSerializerException} exception will be thrown</p>
+ * <p>If the serializer/deserializer doesn't supports the object (the parameter of the serialize or the return of deserialize not assignable), an {@link UnsupportedOperationException} exception will be thrown</p>
  *
  * @author Daniel Meinicke (Laivy)
  * @since 1.1-SNAPSHOT

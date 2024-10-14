@@ -3,6 +3,7 @@ package codes.laivy.serializable.json;
 import codes.laivy.serializable.TypeSerializer;
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.adapter.provided.CharacterArrayAdapter;
+import codes.laivy.serializable.adapter.provided.CollectionAdapter;
 import codes.laivy.serializable.adapter.provided.TemporalAdapter;
 import codes.laivy.serializable.adapter.provided.UUIDAdapter;
 import codes.laivy.serializable.exception.MalformedClassException;
@@ -13,7 +14,9 @@ import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.EOFException;
 import java.io.Serializable;
+import java.lang.reflect.AnnotatedType;
 import java.util.*;
 
 // todo: gson adapter
@@ -27,7 +30,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         @NotNull Adapter[] adapters = new Adapter[]{
                 new TemporalAdapter(),
                 new CharacterArrayAdapter(),
-                new UUIDAdapter()
+                new UUIDAdapter(),
+                new CollectionAdapter()
         };
 
         for (@NotNull Adapter adapter : adapters) {
@@ -47,16 +51,16 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
     // Serializers and Deserializers
 
     @Override
-    public @Nullable JsonElement serialize(@Nullable Serializable object) throws MalformedClassException {
+    public @NotNull JsonElement serialize(@Nullable Serializable object) throws MalformedClassException {
         return this.serialize((Object) object);
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Object object) throws MalformedClassException {
+    public @NotNull JsonElement serialize(@Nullable Object object) throws MalformedClassException {
         if (object == null) {
-            return null;
+            return JsonNull.INSTANCE;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(this, object.getClass());
+        @NotNull SerializingProcess process = new SerializingProcess(this, object.getClass(), null);
         return process.serialize(object);
     }
 
@@ -89,8 +93,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
     }
 
     @Override
-    public @Nullable JsonElement serialize(@Nullable Enum<?> e) {
-        return e != null ? new JsonPrimitive(e.name()) : null;
+    public @NotNull JsonElement serialize(@Nullable Enum<?> e) {
+        return e != null ? new JsonPrimitive(e.name()) : JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Enum<?> @NotNull ... array) {
@@ -103,8 +107,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Boolean b) {
-        return b != null ? new JsonPrimitive(b) : null;
+    public @NotNull JsonElement serialize(@Nullable Boolean b) {
+        return b != null ? new JsonPrimitive(b): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Boolean @NotNull ... array) {
@@ -117,8 +121,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Short s) {
-        return s != null ? new JsonPrimitive(s) : null;
+    public @NotNull JsonElement serialize(@Nullable Short s) {
+        return s != null ? new JsonPrimitive(s): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Short @NotNull ... array) {
@@ -131,8 +135,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Integer i) {
-        return i != null ? new JsonPrimitive(i) : null;
+    public @NotNull JsonElement serialize(@Nullable Integer i) {
+        return i != null ? new JsonPrimitive(i): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Integer @NotNull ... array) {
@@ -145,8 +149,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Long l) {
-        return l != null ? new JsonPrimitive(l) : null;
+    public @NotNull JsonElement serialize(@Nullable Long l) {
+        return l != null ? new JsonPrimitive(l): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Long @NotNull ... array) {
@@ -159,8 +163,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Float f) {
-        return f != null ? new JsonPrimitive(f) : null;
+    public @NotNull JsonElement serialize(@Nullable Float f) {
+        return f != null ? new JsonPrimitive(f): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Float @NotNull ... array) {
@@ -173,8 +177,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Double d) {
-        return d != null ? new JsonPrimitive(d) : null;
+    public @NotNull JsonElement serialize(@Nullable Double d) {
+        return d != null ? new JsonPrimitive(d): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Double @NotNull ... array) {
@@ -187,8 +191,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Character c) {
-        return c != null ? new JsonPrimitive(c) : null;
+    public @NotNull JsonElement serialize(@Nullable Character c) {
+        return c != null ? new JsonPrimitive(c): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Character @NotNull ... array) {
@@ -201,8 +205,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable Byte b) {
-        return b != null ? new JsonPrimitive(b) : null;
+    public @NotNull JsonElement serialize(@Nullable Byte b) {
+        return b != null ? new JsonPrimitive(b): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable Byte @NotNull ... array) {
@@ -215,8 +219,8 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
     @Override
-    public @Nullable JsonElement serialize(@Nullable String string) {
-        return string != null ? new JsonPrimitive(string) : null;
+    public @NotNull JsonElement serialize(@Nullable String string) {
+        return string != null ? new JsonPrimitive(string): JsonNull.INSTANCE;
     }
     @Override
     public @NotNull JsonArray serialize(@Nullable String @NotNull ... array) {
@@ -326,7 +330,7 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
             return null;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(this, reference);
+        @NotNull SerializingProcess process = new SerializingProcess(this, reference, null);
         return (E) process.deserialize(object);
     }
     @Override
@@ -347,6 +351,26 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         }
 
         return list;
+    }
+
+    // Utilities
+
+    @NotNull Object usingAdapter(@NotNull Class<?> reference, @NotNull JsonElement element, @Nullable AnnotatedType annotatedType) {
+        @NotNull Object object;
+
+        try {
+            @NotNull Adapter adapter = adapterMap.get(reference);
+            @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(this, reference, element, annotatedType);
+            object = adapter.deserialize(context);
+        } catch (@NotNull EOFException e) {
+            throw new RuntimeException("cannot proceed adapter deserialization '" + reference + "': " + element, e);
+        }
+
+        if (!reference.isAssignableFrom(object.getClass())) {
+            throw new IllegalStateException("the adapter returned '" + object.getClass() + "' that isn't assignable from '" + reference + "'");
+        }
+
+        return object;
     }
 
 }

@@ -5,39 +5,31 @@ import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.exception.NullConcreteClassException;
 import codes.laivy.serializable.json.SerializingType.Methods;
 import codes.laivy.serializable.json.SerializingType.Normal;
+import codes.laivy.serializable.utilities.Classes;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.EOFException;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import static codes.laivy.serializable.json.SerializingType.Normal.getFields;
+import static codes.laivy.serializable.utilities.Classes.isConcrete;
 
 final class SerializingProcess {
-
-    // Static initializers
-
-    public static boolean isConcrete(@NotNull Class<?> reference) {
-        if (reference.isArray()) {
-            return isConcrete(reference.getComponentType());
-        } else if (reference.isPrimitive()) {
-            return true;
-        }
-
-        return !Modifier.isInterface(reference.getModifiers()) && !Modifier.isAbstract(reference.getModifiers());
-    }
-
-    // Object
 
     private final @NotNull JsonSerializer serializer;
 
     private final @Nullable Father father;
     private final @NotNull Class<?> reference;
+    private final @Nullable AnnotatedType annotatedType;
 
-    public SerializingProcess(@NotNull JsonSerializer serializer, @NotNull Class<?> reference) {
+    public SerializingProcess(@NotNull JsonSerializer serializer, @NotNull Class<?> reference, @Nullable AnnotatedType annotatedType) {
         if (!isConcrete(reference)) {
             throw new NullConcreteClassException("the class '" + reference + "' cannot be deserialized since it's not concrete.");
         }
@@ -45,15 +37,18 @@ final class SerializingProcess {
         this.serializer = serializer;
         this.father = null;
         this.reference = reference;
+        this.annotatedType = annotatedType;
     }
-    public SerializingProcess(@NotNull JsonSerializer serializer, @NotNull Father father) {
+    public SerializingProcess(@NotNull JsonSerializer serializer, @NotNull Father father, @Nullable AnnotatedType annotatedType) {
         this.serializer = serializer;
         this.father = father;
-        this.reference = checkConcrete(father);
+        this.reference = father.getField().getType();
+        this.annotatedType = annotatedType;
     }
 
     // Getters
 
+    // todo: javadocs
     /**
      * Esse getter retorna o field e a instância (desse field, para usar no Field#get) pai dessa operação, caso o objeto que deve ser deserializado não veio de uma chamada interna de um campo
      * (caso não queira deserializar o valor de um campo) esse método retornará nulo
@@ -61,19 +56,21 @@ final class SerializingProcess {
     public @Nullable Father getFather() {
         return father;
     }
-
     public @NotNull Class<?> getReference() {
         return reference;
+    }
+    public @Nullable AnnotatedType getAnnotatedType() {
+        return annotatedType;
     }
 
     // Modules
 
-    public @Nullable JsonElement serialize(@Nullable Object instance) {
+    public @NotNull JsonElement serialize(@Nullable Object instance) {
         if (instance == null) {
-            return null;
-        } else if (reference != instance.getClass()) {
-            throw new IllegalArgumentException();
+            return JsonNull.INSTANCE;
         }
+
+        @NotNull Class<?> reference = instance.getClass();
 
         // Get fields
         @NotNull Collection<Field> fields = getFields(father, reference).values();
@@ -82,7 +79,9 @@ final class SerializingProcess {
         boolean bypassTransients = false;
         @NotNull SerializingType serializing = new Normal(serializer, father);
 
-        if (reference.isAnnotationPresent(UsingSerializers.class)) {
+        if (father != null && father.getField().isAnnotationPresent(UsingSerializers.class)) {
+            serializing = new Methods(serializer, father, father.getField().getDeclaringClass(), father.getField().getAnnotation(UsingSerializers.class));
+        } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
             serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
         } else if (serializer.adapterMap.containsKey(reference)) {
             @NotNull JsonSerializeOutputContext context = new JsonSerializeOutputContext(serializer, instance.getClass());
@@ -153,23 +152,18 @@ final class SerializingProcess {
             return null;
         }
 
+        @NotNull Class<?>[] references = father != null ? checkConcrete(father) : new Class[] { this.reference };
+        @NotNull Class<?> reference = Arrays.stream(references).filter(r -> checkCompatible(serializer, father, r, element, annotatedType)).findFirst().orElseThrow(() -> new IllegalArgumentException("there's no compatible reference to deserialize the object '" + element + "'"));
+
         // Deserialize
         @NotNull SerializingType serializing = new Normal(serializer, father);
 
-        if (reference.isAnnotationPresent(UsingSerializers.class)) {
+        if (father != null && father.getField().isAnnotationPresent(UsingSerializers.class)) {
+            serializing = new Methods(serializer, father, father.getField().getDeclaringClass(), father.getField().getAnnotation(UsingSerializers.class));
+        } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
             serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
-        } else if (serializer.adapterMap.containsKey(reference)) try {
-            @NotNull Adapter adapter = serializer.adapterMap.get(reference);
-            @NotNull JsonSerializeInputContext<?> context = new JsonSerializeInputContext<>(serializer, reference, element);
-            @NotNull Object object = adapter.deserialize(context);
-
-            if (!reference.isAssignableFrom(object.getClass())) {
-                throw new IllegalStateException("the adapter returned '" + object.getClass() + "' that isn't assignable from '" + reference + "'");
-            }
-
-            return object;
-        } catch (@NotNull EOFException e) {
-            throw new RuntimeException("cannot proceed adapter deserialization '" + reference + "': " + element, e);
+        } else if (serializer.adapterMap.containsKey(reference)) {
+            return serializer.usingAdapter(reference, element, annotatedType);
         } else if (JavaSerializableUtils.usesJavaSerialization(reference)) {
             return JavaSerializableUtils.javaDeserializeObject(reference, element);
         }
@@ -180,7 +174,7 @@ final class SerializingProcess {
 
     // Utilities
 
-    public static @NotNull Class<?> checkConcrete(@NotNull Father father) {
+    public static @NotNull Class<?> @NotNull [] checkConcrete(@NotNull Father father) {
         @NotNull Field field = father.getField();
         @NotNull Object instance = father.getInstance();
 
@@ -188,6 +182,9 @@ final class SerializingProcess {
         @Nullable OnlyFields only = field.isAnnotationPresent(OnlyFields.class) ? field.getAnnotation(OnlyFields.class) : null;
         @Nullable ExcludeFields exclude = field.isAnnotationPresent(ExcludeFields.class) ? field.getAnnotation(ExcludeFields.class) : null;
         @Nullable BypassTransient bypassTransient = field.isAnnotationPresent(BypassTransient.class) ? field.getAnnotation(BypassTransient.class) : null;
+
+        // Allow module
+        Classes.allowModule(field.getDeclaringClass(), SerializingProcess.class);
 
         // Check for concrete annotations
         boolean accessible = field.isAccessible();
@@ -199,35 +196,55 @@ final class SerializingProcess {
 
                 for (@NotNull Concrete concrete : concretes) {
                     if (!isConcrete(concrete.type())) {
-                        throw new IllegalArgumentException("the @Concrete argument must be a valid concrete class!");
-                    }
-
-                    if (checkCompatible()) {
-                        return concrete.type();
+                        throw new IllegalArgumentException("the @Concrete argument must include only concrete classes! ('" + concrete.type() + "')");
                     }
                 }
 
-                throw new IllegalArgumentException("cannot find a valid compatible concrete type for field '" + field + "'");
+                return Arrays.stream(concretes).map(Concrete::type).toArray(Class[]::new);
             } else {
-                try {
-                    @Nullable Object temp = field.get(instance);
-
-                    if (temp == null) {
-                        throw new NullConcreteClassException("cannot retrieve concrete class from field '" + field + "'. Try to use @Concrete of a default value for the field.");
-                    } else {
-                        return temp.getClass();
-                    }
-                } catch (@NotNull IllegalAccessException e) {
-                    throw new RuntimeException("cannot access field value for concrete check", e);
-                } finally {
-                    field.setAccessible(accessible);
-                }
+                throw new NullConcreteClassException("cannot retrieve concrete class from field '" + field + "'. Try to use @Concrete of a default value for the field.");
             }
         } else {
-            return field.getType();
+            return new Class[] { field.getType() };
         }
     }
-    public static boolean checkCompatible() {
+    public static boolean checkCompatible(@NotNull JsonSerializer serializer, @Nullable Father father, @NotNull Class<?> reference, @NotNull JsonElement element, @Nullable AnnotatedType type) {
+        if (!isConcrete(reference)) {
+            throw new NullConcreteClassException("the class '" + reference + "' it's not concrete.");
+        } else if (element.isJsonNull()) {
+            return true;
+        }
+
+        @NotNull Map<String, Field> fields = getFields(father, reference);
+
+        if (father != null && father.getField().isAnnotationPresent(UsingSerializers.class)) {
+            return true;
+        } else if (serializer.adapterMap.containsKey(reference)) {
+            try {
+                @NotNull Adapter adapter = serializer.adapterMap.get(reference);
+                serializer.usingAdapter(reference, element, type);
+
+                return true;
+            } catch (@NotNull Throwable throwable) {
+                return false;
+            }
+        } else if (JavaSerializableUtils.usesJavaSerialization(reference)) {
+            return true;
+        } else if (element.isJsonObject()) {
+            @NotNull JsonObject object = element.getAsJsonObject();
+
+            for (@NotNull String key : object.keySet()) {
+                if (!fields.containsKey(key)) {
+                    return false;
+                }
+            }
+
+            return true;
+        } else if (element.isJsonPrimitive() && reference == Class.class) {
+            return true;
+        }
+
+        // todo: check if is concrete also
         return true;
     }
 

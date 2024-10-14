@@ -11,6 +11,6 @@ public interface Adapter {
     @NotNull Class<?> @NotNull [] getReferences();
 
     void serialize(@NotNull Object object, @NotNull SerializeOutputContext context);
-    @NotNull Object deserialize(@NotNull SerializeInputContext<?> context) throws EOFException;
+    @NotNull Object deserialize(@NotNull SerializeInputContext context) throws EOFException;
 
 }

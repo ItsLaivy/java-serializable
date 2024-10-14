@@ -22,7 +22,7 @@ final class JavaSerializableUtils {
         boolean methods = false;
         @NotNull Class<?> copy = c;
 
-        while (copy != Object.class) {
+        while (copy != Object.class && copy != null) {
             @NotNull Method method;
 
             try {
@@ -89,7 +89,7 @@ final class JavaSerializableUtils {
         }
     }
 
-    public static @Nullable JsonElement javaSerializeObject(@Nullable Object object) {
+    public static @NotNull JsonElement javaSerializeObject(@Nullable Object object) {
         try {
             @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);
@@ -104,7 +104,7 @@ final class JavaSerializableUtils {
 
             return array;
         } catch (@NotNull IOException e) {
-            throw new RuntimeException("cannot serialize", e);
+            throw new RuntimeException("cannot serialize java object '" + object + "' from class '" + (object != null ? object.getClass().getName() : null) + "'", e);
         }
     }
 

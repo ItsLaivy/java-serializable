@@ -4,7 +4,11 @@ import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.context.SerializeOutputContext;
+import codes.laivy.serializable.exception.MalformedSerializerException;
+import codes.laivy.serializable.utilities.Classes;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +31,7 @@ abstract class SerializingType {
 
     // Serializers
 
-    public abstract @Nullable JsonElement serialize(@Nullable Object object);
+    public abstract @NotNull JsonElement serialize(@Nullable Object object);
     public abstract <T> @Nullable T deserialize(@NotNull Class<T> reference, @NotNull JsonElement element);
 
     // Classes
@@ -36,12 +40,12 @@ abstract class SerializingType {
 
         // Static initializers
 
-        static @NotNull Map<String, Field> getFields(@Nullable Father father, final @NotNull Class<?> type) {
+        static @NotNull Map<String, Field> getFields(@Nullable Father father, final @NotNull Class<?> reference) {
             @NotNull Map<String, Field> map = new LinkedHashMap<>();
             @NotNull Map<String, Integer> repeat = new HashMap<>();
 
-            @NotNull Class<?> temp = type;
-            while (temp != Object.class) {
+            @NotNull Class<?> temp = reference;
+            while (temp != Object.class && temp != null) {
                 @NotNull Set<Field> fields = Arrays.stream(temp.getDeclaredFields()).collect(Collectors.toSet());
 
                 for (@NotNull Field field : fields) {
@@ -61,7 +65,7 @@ abstract class SerializingType {
                         name = known.name();
 
                         if (map.containsKey(name)) {
-                            throw new IllegalStateException("there's two or more fields with the same @KnownAs name at the class '" + type + "', check it's super classes.");
+                            throw new IllegalStateException("there's two or more fields with the same @KnownAs name at the class '" + reference + "', check it's super classes.");
                         } else {
                             map.put(name, field);
                         }
@@ -74,7 +78,7 @@ abstract class SerializingType {
                         } else if (!map.containsKey("$" + name + "_" + repeat.get(name))) {
                             map.put(name + "_" + repeat.get(name), field);
                         } else {
-                            throw new IllegalStateException("cannot reserve a custom name for field '" + name + "' from class '" + type + "'");
+                            throw new IllegalStateException("cannot reserve a custom name for field '" + name + "' from class '" + reference + "'");
                         }
 
                         repeat.putIfAbsent(name, 0);
@@ -95,9 +99,9 @@ abstract class SerializingType {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@Nullable Object object) {
+        public @NotNull JsonElement serialize(@Nullable Object object) {
             if (object == null) {
-                return null;
+                return JsonNull.INSTANCE;
             }
 
             @NotNull Class<?> type = object.getClass();
@@ -131,9 +135,13 @@ abstract class SerializingType {
                 @NotNull Field field = entry.getValue();
 
                 try {
+                    // Allow module
+                    Classes.allowModule(field.getDeclaringClass(), SerializingType.class);
+
+                    // Access field
                     field.setAccessible(true);
 
-                    @NotNull SerializingProcess serialization = new SerializingProcess(this.json, new Father(field, object));
+                    @NotNull SerializingProcess serialization = new SerializingProcess(this.json, new Father(field, object), field.getAnnotatedType());
                     json.add(name, serialization.serialize(field.get(object)));
                 } catch (@NotNull IllegalAccessException e) {
                     throw new RuntimeException("cannot access field '" + field.getName() + "'", e);
@@ -160,13 +168,17 @@ abstract class SerializingType {
                 @NotNull Object instance;
 
                 if ((father != null && father.getField().isAnnotationPresent(UseEmptyConstructor.class)) || reference.isAnnotationPresent(UseEmptyConstructor.class)) try {
-                    @NotNull Constructor<?> constructor = reference.getConstructor();
+                    // Allow module
+                    Classes.allowModule(reference, SerializingType.class);
+
+                    // Generate instance
+                    @NotNull Constructor<?> constructor = reference.getDeclaredConstructor();
                     constructor.setAccessible(true);
 
                     instance = constructor.newInstance();
                 } catch (@NotNull NoSuchMethodException e) {
-                    throw new RuntimeException("cannot find empty constructor at class '" + reference + "'", e);
-                } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+                    throw new RuntimeException("cannot find empty constructor at class '" + reference + "'");
+                } catch (@NotNull InvocationTargetException | @NotNull InstantiationException | @NotNull IllegalAccessException e) {
                     throw new RuntimeException("cannot generate empty constructor instance at class '" + reference + "'", e);
                 } else {
                     instance = Allocator.allocate(reference);
@@ -190,10 +202,10 @@ abstract class SerializingType {
                         } catch (@NotNull ClassNotFoundException e) {
                             throw new InvalidClassException("there's no class '" + value.getAsString() + "' to deserialize at runtime");
                         } else {
-                            @NotNull SerializingProcess process = new SerializingProcess(super.json, new Father(field, instance));
+                            @NotNull SerializingProcess process = new SerializingProcess(super.json, new Father(field, instance), field.getAnnotatedType());
                             object = process.deserialize(value);
                         }
-
+                        
                         Allocator.setFieldValue(field, instance, object);
                     }
                 }
@@ -218,8 +230,89 @@ abstract class SerializingType {
                     return element.getAsFloat();
                 } else if (reference == Double.class || reference == double.class) {
                     return element.getAsDouble();
+                } else if (json.adapterMap.containsKey(reference)) {
+                    return json.usingAdapter(reference, element, father != null ? father.getField().getAnnotatedType() : null);
                 } else {
                     throw new UnsupportedOperationException("there's no primitive type with reference '" + reference + "', is missing any adapter here?");
+                }
+            } else if (element.isJsonArray()) {
+                @NotNull JsonArray array = element.getAsJsonArray();
+
+                if (reference == boolean[].class) {
+                    boolean[] booleans = new boolean[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        booleans[row] = array.get(row).getAsBoolean();
+                    }
+
+                    return booleans;
+                } else if (reference == char[].class) {
+                    char[] chars = new char[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        chars[row] = array.get(row).getAsString().charAt(0);
+                    }
+
+                    return chars;
+                } else if (reference == byte[].class) {
+                    byte[] bytes = new byte[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        bytes[row] = array.get(row).getAsByte();
+                    }
+
+                    return bytes;
+                } else if (reference == short[].class) {
+                    short[] shorts = new short[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        shorts[row] = array.get(row).getAsShort();
+                    }
+
+                    return shorts;
+                } else if (reference == int[].class) {
+                    int[] integers = new int[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        integers[row] = array.get(row).getAsShort();
+                    }
+
+                    return integers;
+                } else if (reference == long[].class) {
+                    long[] longs = new long[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        longs[row] = array.get(row).getAsShort();
+                    }
+
+                    return longs;
+                } else if (reference == float[].class) {
+                    float[] floats = new float[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        floats[row] = array.get(row).getAsFloat();
+                    }
+
+                    return floats;
+                } else if (reference == double[].class) {
+                    double[] floats = new double[array.size()];
+
+                    for (int row = 0; row < array.size(); row++) {
+                        floats[row] = array.get(row).getAsDouble();
+                    }
+
+                    return floats;
+                } else if (reference.isArray()) {
+                    @NotNull Class<?> component = reference.getComponentType();
+                    @NotNull Object object = Array.newInstance(component, array.size());
+
+                    for (int row = 0; row < array.size(); row++) {
+                        Array.set(object, row, deserialize(component, array.get(row)));
+                    }
+
+                    return object;
+                } else {
+                    throw new IllegalArgumentException("the passed object is an array but the reference isn't an array class");
                 }
             } else {
                 throw new UnsupportedOperationException("cannot deserialize '" + element + "' into a valid '" + reference + "' object");
@@ -227,6 +320,7 @@ abstract class SerializingType {
         }
 
     }
+
     public static final class Methods extends SerializingType {
 
         // Static initializers
@@ -250,13 +344,17 @@ abstract class SerializingType {
                 name = parts[0];
             }
 
+            // Allow module
+            Classes.allowModule(reference, SerializingType.class);
+
+            // Get methods
             for (@NotNull Method method : reference.getDeclaredMethods()) {
                 if (method.getName().equals(name) && Modifier.isStatic(method.getModifiers()) && method.getParameterCount() == 2 && method.getParameters()[1].getType() == SerializeOutputContext.class) {
                     return method;
                 }
             }
 
-            throw new RuntimeException("there's no valid serialize method named '" + name + "' at class '" + reference + "'");
+            throw new MalformedSerializerException("there's no valid serialize method named '" + name + "' at class '" + reference + "'");
         }
         private static @NotNull Method getDeserializerMethod(@NotNull Class<?> reference, @NotNull UsingSerializers annotation) {
             @NotNull String string = annotation.deserialization();
@@ -277,13 +375,17 @@ abstract class SerializingType {
                 name = parts[0];
             }
 
+            // Allow module
+            Classes.allowModule(reference, SerializingType.class);
+
+            // Get methods
             for (@NotNull Method method : reference.getDeclaredMethods()) {
                 if (method.getName().equals(name) && Modifier.isStatic(method.getModifiers()) && method.getReturnType() != void.class && method.getParameterCount() == 1 && method.getParameters()[0].getType() == SerializeInputContext.class) {
                     return method;
                 }
             }
 
-            throw new RuntimeException("there's no valid deserialize method named '" + name + "' at class '" + reference + "'");
+            throw new MalformedSerializerException("there's no valid deserialize method named '" + name + "' at class '" + reference + "'");
         }
 
         // Object
@@ -299,16 +401,16 @@ abstract class SerializingType {
         }
 
         @Override
-        public @Nullable JsonElement serialize(@Nullable Object object) {
+        public @NotNull JsonElement serialize(@Nullable Object object) {
             try {
                 if (object == null) {
-                    return null;
+                    return JsonNull.INSTANCE;
                 }
 
                 serializer.setAccessible(true);
 
                 if (!serializer.getParameters()[0].getType().isAssignableFrom(object.getClass())) {
-                    throw new RuntimeException("the serializer cannot be used by reference '" + object.getClass() + "' because it's not a subclass/implementation from '" + serializer.getParameters()[0].getType() + "' parameter class");
+                    throw new UnsupportedOperationException("the serializer cannot be used by reference '" + object.getClass() + "' because it's not a subclass/implementation from '" + serializer.getParameters()[0].getType() + "' parameter class");
                 }
 
                 // Write into output context
@@ -329,11 +431,11 @@ abstract class SerializingType {
                 deserializer.setAccessible(true);
 
                 if (!deserializer.getReturnType().isAssignableFrom(reference)) {
-                    throw new RuntimeException("the deserializer cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + deserializer.getReturnType() + "' return class");
+                    throw new UnsupportedOperationException("the deserializer cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + deserializer.getReturnType() + "' return class");
                 }
 
                 // Start deserialize
-                @NotNull JsonSerializeInputContext<?> context = new JsonSerializeInputContext<>(super.json, reference, element);
+                @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(super.json, reference, element, father != null ? father.getField().getAnnotatedType() : null);
                 @Nullable Object object = deserializer.invoke(null, context);
 
                 // Finish

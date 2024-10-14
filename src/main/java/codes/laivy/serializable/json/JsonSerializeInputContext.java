@@ -4,36 +4,33 @@ import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.exception.NullConcreteClassException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.io.EOFException;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.AnnotatedType;
+import java.util.*;
 
-import static codes.laivy.serializable.json.SerializingProcess.isConcrete;
+import static codes.laivy.serializable.json.SerializingProcess.checkCompatible;
+import static codes.laivy.serializable.utilities.Classes.isConcrete;
 
-final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
+final class JsonSerializeInputContext implements SerializeInputContext {
 
     private final @NotNull JsonSerializer serializer;
 
-    private final @NotNull Class<T> reference;
+    private final @NotNull Class<?> reference;
     private final @NotNull Object lock = new Object();
 
     private int index = 0;
-    private final @NotNull List<@Nullable JsonPrimitive> objects = new LinkedList<>();
+    private final @NotNull List<@Nullable JsonElement> objects = new LinkedList<>();
     private final @NotNull Map<String, @Nullable JsonElement> fields = new LinkedHashMap<>();
-
-    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<T> reference) {
+    private final @Nullable AnnotatedType annotatedType;
+    
+    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<?> reference, @NotNull JsonElement element, @Nullable AnnotatedType annotatedType) {
         this.reference = reference;
         this.serializer = serializer;
-    }
-    public JsonSerializeInputContext(@NotNull JsonSerializer serializer, @NotNull Class<T> reference, @NotNull JsonElement element) {
-        this.reference = reference;
-        this.serializer = serializer;
+        this.annotatedType = annotatedType;
 
         if (element.isJsonObject()) {
             @NotNull JsonObject object = element.getAsJsonObject();
@@ -44,15 +41,16 @@ final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
         } else if (element.isJsonArray()) {
             for (@NotNull JsonElement data : element.getAsJsonArray()) {
                 if (data.isJsonObject()) {
-                    if (!fields.isEmpty()) {
-                        throw new IllegalArgumentException("invalid element data '" + element + "' (multiples json objects)");
-                    }
+                    @NotNull JsonObject object = data.getAsJsonObject();
 
-                    @NotNull JsonObject fields = data.getAsJsonObject();
+                    for (@NotNull String name : object.keySet()) {
+                        @NotNull JsonElement value =  object.get(name);
 
-                    for (@NotNull String name : fields.keySet()) {
-                        @NotNull JsonElement value =  fields.get(name);
-                        this.fields.put(name, value);
+                        if (name.startsWith("!")) {
+                            this.fields.put(name, value);
+                        } else {
+                            this.objects.add(data);
+                        }
                     }
                 } else if (data.isJsonPrimitive()) {
                     objects.add(data.getAsJsonPrimitive());
@@ -70,7 +68,7 @@ final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
     // Getters
 
     @Override
-    public @NotNull Class<T> getReference() {
+    public @NotNull Class<?> getReference() {
         return reference;
     }
 
@@ -78,146 +76,146 @@ final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
 
     @Override
     public boolean readBoolean() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsBoolean();
+        return element.getAsBoolean();
     }
 
     @Override
     public byte readByte() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsByte();
+        return element.getAsByte();
     }
 
     @Override
     public short readShort() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsShort();
+        return element.getAsShort();
     }
 
     @Override
     public char readChar() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsString().charAt(0);
+        return element.getAsString().charAt(0);
     }
 
     @Override
     public int readInt() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsInt();
+        return element.getAsInt();
     }
 
     @Override
     public long readLong() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsLong();
+        return element.getAsLong();
     }
 
     @Override
     public float readFloat() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsFloat();
+        return element.getAsFloat();
     }
 
     @Override
     public double readDouble() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             throw new NullPointerException();
         }
 
-        return primitive.getAsDouble();
+        return element.getAsDouble();
     }
 
     @Override
     public @Nullable String readLine() throws EOFException {
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             return null;
         }
 
-        return primitive.getAsString();
+        return element.getAsString();
     }
 
     @SuppressWarnings("unchecked")
@@ -227,19 +225,49 @@ final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
             throw new NullConcreteClassException("the reference class '" + reference + "' isn't concrete");
         }
 
-        @Nullable JsonPrimitive primitive;
+        @Nullable JsonElement element;
         synchronized (lock) {
             if (index >= objects.size()) throw new EOFException();
-            primitive = objects.get(index);
+            element = objects.get(index);
             index++;
         }
 
-        if (primitive == null) {
+        if (element == null) {
             return null;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference);
-        return (E) process.deserialize(primitive);
+        @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference, annotatedType);
+        return (E) process.deserialize(element);
+    }
+
+    @Override
+    public @UnknownNullability Object readObject(@NotNull Class<?> @NotNull [] references) throws EOFException {
+        if (references.length == 0) {
+            throw new IllegalStateException("the references array must not be empty");
+        }
+
+        @Nullable JsonElement element;
+        synchronized (lock) {
+            if (index >= objects.size()) throw new EOFException();
+            element = objects.get(index);
+        }
+
+        if (element == null) {
+            return null;
+        }
+
+        for (@NotNull Class<?> reference : references) {
+            if (!isConcrete(reference)) {
+                throw new NullConcreteClassException("the reference class '" + reference + "' isn't concrete");
+            } else if (checkCompatible(serializer, null, reference, element, annotatedType)) {
+                index++;
+
+                @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference, annotatedType);
+                return process.deserialize(element);
+            }
+        }
+
+        throw new IllegalArgumentException("cannot deserialize object with the references references '" + Arrays.toString(references) + "'");
     }
 
     @SuppressWarnings("unchecked")
@@ -251,7 +279,7 @@ final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
             throw new NullConcreteClassException("the reference class '" + reference + "' isn't concrete");
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference);
+        @NotNull SerializingProcess process = new SerializingProcess(getSerializer(), reference, annotatedType);
         return (E) process.deserialize(fields.get(name));
     }
     @Override
@@ -260,8 +288,25 @@ final class JsonSerializeInputContext<T> implements SerializeInputContext<T> {
     }
 
     @Override
+    public @Nullable AnnotatedType getAnnotatedType() {
+        return annotatedType;
+    }
+
+    @Override
     public @NotNull JsonSerializer getSerializer() {
         return serializer;
+    }
+
+    // Implementations
+
+    @Override
+    public @NotNull String toString() {
+        return "JsonSerializeInputContext{" +
+                "reference=" + reference +
+                ", index=" + index +
+                ", objects=" + objects +
+                ", fields=" + fields +
+                '}';
     }
 
 }

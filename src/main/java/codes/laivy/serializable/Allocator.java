@@ -15,6 +15,9 @@ public final class Allocator {
 
     // Static initializers
 
+    public static void main(String[] args) {
+    }
+
     private static final @NotNull String VERSION;
     private static final @NotNull Map<Class<?>, Class<?>> WRAPPERS = new HashMap<Class<?>, Class<?>>() {{
         put(boolean.class, Boolean.class);
@@ -130,7 +133,11 @@ public final class Allocator {
     @ApiStatus.Internal
     public static native void setFieldValue(@NotNull Field field, @Nullable Object instance, @Nullable Object object);
 
-    private static boolean isAssignableFromIncludingPrimitive(@NotNull Class<?> c1, @NotNull Class<?> c2) {
+    @ApiStatus.Internal
+    public static boolean isAssignableFromIncludingPrimitive(@NotNull Class<?> c1, @NotNull Class<?> c2) {
+        // Debug
+        //System.out.println("'" + c1 + "' - '" + c2 + "': " + ((c1 == c2) || (c1.isAssignableFrom(c2)) || WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2)) + " | '" + (c1 == c2) + "' - '" + c1.isAssignableFrom(c2) + "' - '" + (WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2)) + "'");
+
         if (c1 == c2) {
             return true;
         } else if (c1.isAssignableFrom(c2)) {
