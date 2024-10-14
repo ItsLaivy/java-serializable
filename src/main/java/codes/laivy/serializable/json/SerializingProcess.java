@@ -5,6 +5,7 @@ import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.exception.NullConcreteClassException;
 import codes.laivy.serializable.json.SerializingType.Methods;
 import codes.laivy.serializable.json.SerializingType.Normal;
+import codes.laivy.serializable.utilities.Classes;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -181,6 +182,9 @@ final class SerializingProcess {
         @Nullable OnlyFields only = field.isAnnotationPresent(OnlyFields.class) ? field.getAnnotation(OnlyFields.class) : null;
         @Nullable ExcludeFields exclude = field.isAnnotationPresent(ExcludeFields.class) ? field.getAnnotation(ExcludeFields.class) : null;
         @Nullable BypassTransient bypassTransient = field.isAnnotationPresent(BypassTransient.class) ? field.getAnnotation(BypassTransient.class) : null;
+
+        // Allow module
+        Classes.allowModule(field.getDeclaringClass(), SerializingProcess.class);
 
         // Check for concrete annotations
         boolean accessible = field.isAccessible();

@@ -5,6 +5,7 @@ import codes.laivy.serializable.annotations.*;
 import codes.laivy.serializable.context.SerializeInputContext;
 import codes.laivy.serializable.context.SerializeOutputContext;
 import codes.laivy.serializable.exception.MalformedSerializerException;
+import codes.laivy.serializable.utilities.Classes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -134,6 +135,10 @@ abstract class SerializingType {
                 @NotNull Field field = entry.getValue();
 
                 try {
+                    // Allow module
+                    Classes.allowModule(field.getDeclaringClass(), SerializingType.class);
+
+                    // Access field
                     field.setAccessible(true);
 
                     @NotNull SerializingProcess serialization = new SerializingProcess(this.json, new Father(field, object), field.getAnnotatedType());
@@ -163,6 +168,10 @@ abstract class SerializingType {
                 @NotNull Object instance;
 
                 if ((father != null && father.getField().isAnnotationPresent(UseEmptyConstructor.class)) || reference.isAnnotationPresent(UseEmptyConstructor.class)) try {
+                    // Allow module
+                    Classes.allowModule(reference, SerializingType.class);
+
+                    // Generate instance
                     @NotNull Constructor<?> constructor = reference.getDeclaredConstructor();
                     constructor.setAccessible(true);
 
@@ -335,6 +344,10 @@ abstract class SerializingType {
                 name = parts[0];
             }
 
+            // Allow module
+            Classes.allowModule(reference, SerializingType.class);
+
+            // Get methods
             for (@NotNull Method method : reference.getDeclaredMethods()) {
                 if (method.getName().equals(name) && Modifier.isStatic(method.getModifiers()) && method.getParameterCount() == 2 && method.getParameters()[1].getType() == SerializeOutputContext.class) {
                     return method;
@@ -362,6 +375,10 @@ abstract class SerializingType {
                 name = parts[0];
             }
 
+            // Allow module
+            Classes.allowModule(reference, SerializingType.class);
+
+            // Get methods
             for (@NotNull Method method : reference.getDeclaredMethods()) {
                 if (method.getName().equals(name) && Modifier.isStatic(method.getModifiers()) && method.getReturnType() != void.class && method.getParameterCount() == 1 && method.getParameters()[0].getType() == SerializeInputContext.class) {
                     return method;
