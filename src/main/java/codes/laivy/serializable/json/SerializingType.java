@@ -134,18 +134,15 @@ abstract class SerializingType {
                 @NotNull String name = entry.getKey();
                 @NotNull Field field = entry.getValue();
 
-                try {
-                    // Allow module
-                    Classes.allowModule(field.getDeclaringClass(), SerializingType.class);
-
-                    // Access field
-                    field.setAccessible(true);
-
-                    @NotNull SerializingProcess serialization = new SerializingProcess(this.json, new Father(field, object), field.getAnnotatedType());
-                    json.add(name, serialization.serialize(field.get(object)));
-                } catch (@NotNull IllegalAccessException e) {
-                    throw new RuntimeException("cannot access field '" + field.getName() + "'", e);
+                if (field.getName().equals("this$0")) {
+                    continue;
                 }
+
+                // Allow module
+                Classes.allowModule(field.getDeclaringClass(), SerializingType.class);
+
+                @NotNull SerializingProcess serialization = new SerializingProcess(this.json, new Father(field, object), field.getAnnotatedType());
+                json.add(name, serialization.serialize(Allocator.getFieldValue(field, object)));
             }
 
             return json;
@@ -190,6 +187,9 @@ abstract class SerializingType {
 
                     if (field == null) {
                         throw new InvalidClassException("there's no field with name '" + key + "'");
+                    } else if (father != null && field.getName().startsWith("this$0") && field.isSynthetic()) {
+                        // todo: father required
+                        Allocator.setFieldValue(field, instance, father.getInstance());
                     }
 
                     if (value.isJsonNull()) {
