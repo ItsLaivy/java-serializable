@@ -1,5 +1,6 @@
 package annotations;
 
+import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.ExcludeFields;
 import codes.laivy.serializable.annotations.OnlyFields;
@@ -88,10 +89,10 @@ public final class OnlyFieldsTest {
             Classes.allowModule(color.getClass(), OnlyFields.class);
 
             @NotNull Field field = color.getClass().getDeclaredField("falpha");
-            field.setAccessible(true);
 
-            return field.getFloat(color);
-        } catch (@NotNull NoSuchFieldException | @NotNull IllegalAccessException e) {
+            //noinspection DataFlowIssue
+            return (float) Allocator.getFieldValue(field, color);
+        } catch (@NotNull NoSuchFieldException e) {
             throw new RuntimeException("cannot retrieve falpha field from color", e);
         }
     }

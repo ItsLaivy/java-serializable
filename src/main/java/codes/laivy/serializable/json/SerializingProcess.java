@@ -187,9 +187,6 @@ final class SerializingProcess {
         Classes.allowModule(field.getDeclaringClass(), SerializingProcess.class);
 
         // Check for concrete annotations
-        boolean accessible = field.isAccessible();
-        field.setAccessible(true);
-
         if (!isConcrete(field.getType())) {
             if (field.isAnnotationPresent(Concrete.class)) {
                 @NotNull Concrete[] concretes = field.getAnnotationsByType(Concrete.class);
