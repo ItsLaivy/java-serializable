@@ -47,10 +47,10 @@ public final class AllocatorTest {
 
         for (@NotNull Field field : AdvancedCool.class.getDeclaredFields()) {
             @NotNull Object expected = expectedMap.get(field.getType());
-            Assertions.assertNotEquals(expected, field.get(cool));
+            Assertions.assertNotEquals(expected, Allocator.getFieldValue(field, cool));
 
             Allocator.setFieldValue(field, cool, expected);
-            Assertions.assertEquals(expected, field.get(cool), "cannot set field type '" + field.getType().getSimpleName() + "' value");
+            Assertions.assertEquals(expected, Allocator.getFieldValue(field, cool), "cannot set field type '" + field.getType().getSimpleName() + "' value");
         }
     }
 

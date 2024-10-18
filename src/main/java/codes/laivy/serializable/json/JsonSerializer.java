@@ -18,6 +18,7 @@ import java.io.EOFException;
 import java.io.Serializable;
 import java.lang.reflect.AnnotatedType;
 import java.util.*;
+import java.util.Map.Entry;
 
 // todo: gson adapter
 public class JsonSerializer implements TypeSerializer<JsonElement> {
@@ -54,7 +55,7 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
 
     @Override
     public @NotNull Collection<Adapter> getAdapters() {
-        return adapterMap.values();
+        return new AdapterMapList();
     }
 
     // Serializers and Deserializers
@@ -360,6 +361,42 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         }
 
         return list;
+    }
+
+    // Classes
+
+    private final class AdapterMapList extends AbstractList<Adapter> {
+        @Override
+        public @NotNull Adapter get(int index) {
+            return adapterMap.values().stream().skip(index).findFirst().orElseThrow(IndexOutOfBoundsException::new);
+        }
+        @Override
+        public int size() {
+            return adapterMap.size();
+        }
+
+        @Override
+        public void add(int index, @Nullable Adapter adapter) {
+            if (adapter == null) {
+                throw new IllegalArgumentException("cannot add a null adapter");
+            }
+
+            for (@NotNull Class<?> reference : adapter.getReferences()) {
+                adapterMap.put(reference, adapter);
+            }
+        }
+        @Override
+        public @NotNull Adapter remove(int index) {
+            @NotNull Adapter adapter = get(index);
+
+            for (@NotNull Entry<Class<?>, Adapter> entry : new HashMap<>(adapterMap).entrySet()) {
+                if (entry.getValue() == adapter) {
+                    adapterMap.remove(entry.getKey());
+                }
+            }
+
+            return adapter;
+        }
     }
 
     // Utilities

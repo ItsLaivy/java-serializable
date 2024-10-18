@@ -1,6 +1,6 @@
 package codes.laivy.serializable;
 
-import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +15,7 @@ public final class Allocator {
 
     // Static initializers
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoSuchFieldException {
     }
 
     private static final @NotNull String VERSION;
@@ -112,7 +112,7 @@ public final class Allocator {
      * @throws NullPointerException if {@code type} is {@code null}.
      * @throws IllegalArgumentException if the class cannot be instantiated, such as for interfaces, abstract classes, or primitives.
      */
-    @ApiStatus.Internal
+    @Internal
     public static native <T> @NotNull T allocate(@NotNull Class<T> type);
 
     /**
@@ -130,10 +130,13 @@ public final class Allocator {
      * @param instance the instance containing the field to modify, or {@code null} if the field is static.
      * @param object the new value to set for the field; can be {@code null} if the field type allows it.
      */
-    @ApiStatus.Internal
+    @Internal
     public static native void setFieldValue(@NotNull Field field, @Nullable Object instance, @Nullable Object object);
 
-    @ApiStatus.Internal
+    @Internal
+    public static native @Nullable Object getFieldValue(@NotNull Field field, @Nullable Object instance);
+
+    @Internal
     public static boolean isAssignableFromIncludingPrimitive(@NotNull Class<?> c1, @NotNull Class<?> c2) {
         // Debug
         //System.out.println("'" + c1 + "' - '" + c2 + "': " + ((c1 == c2) || (c1.isAssignableFrom(c2)) || WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2)) + " | '" + (c1 == c2) + "' - '" + c1.isAssignableFrom(c2) + "' - '" + (WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2)) + "'");

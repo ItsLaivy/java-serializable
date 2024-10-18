@@ -1,7 +1,6 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.json.JsonSerializer;
-import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -9,7 +8,6 @@ import org.jetbrains.annotations.UnknownNullability;
 import java.io.EOFException;
 import java.lang.reflect.AnnotatedType;
 
-@Experimental
 public interface SerializeInputContext {
 
     @NotNull Class<?> getReference();

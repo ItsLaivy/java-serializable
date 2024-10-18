@@ -61,7 +61,7 @@ import java.lang.annotation.*;
  *         // Serialization process here
  *         // return context.serialize(object); // <- The default serializer
  *     }
- *     public static @NotNull CustomObject deserialize(@NotNull SerializeInputContext<CustomObject> context) throws EOFException {
+ *     public static @NotNull CustomObject deserialize(@NotNull SerializeInputContext context) throws EOFException {
  *         // Deserialization process here
  *         // return context.deserialize(); // <- The default deserializer
  *     }

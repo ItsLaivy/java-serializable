@@ -25,6 +25,14 @@ JNIEXPORT jobject JNICALL Java_codes_laivy_serializable_Allocator_allocate
 JNIEXPORT void JNICALL Java_codes_laivy_serializable_Allocator_setFieldValue
   (JNIEnv *, jclass, jobject, jobject, jobject);
 
+/*
+ * Class:     codes_laivy_serializable_Allocator
+ * Method:    getFieldValue
+ * Signature: (Ljava/lang/reflect/Field;Ljava/lang/Object;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_codes_laivy_serializable_Allocator_getFieldValue
+  (JNIEnv *, jclass, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif
