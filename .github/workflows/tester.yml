@@ -25,10 +25,6 @@ jobs:
 
       - name: Compile and test with Maven
         run: mvn clean verify -e -X
-
-      - name: Display logs
-        if: failure()
-        run: cat target/surefire-reports/*.txt || type target\surefire-reports\*.txt || true
   windows:
     runs-on: ${{ matrix.os }}
 
@@ -51,10 +47,6 @@ jobs:
 
       - name: Compile and test with Maven
         run: mvn clean verify -e -X
-
-      - name: Display logs
-        if: failure()
-        run: cat target/surefire-reports/*.txt || type target\surefire-reports\*.txt || true
   macos:
     runs-on: ${{ matrix.os }}
 
@@ -77,12 +69,3 @@ jobs:
 
       - name: Compile and test with Maven
         run: mvn clean verify -e -X
-
-      - name: Display logs
-        if: failure()
-        run: |
-          if ls target/surefire-reports/*.txt 1> /dev/null 2>&1; then
-             cat target/surefire-reports/*.txt
-          else
-            echo "No surefire reports found."
-          fi
