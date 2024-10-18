@@ -70,27 +70,8 @@ final class SerializingProcess {
             return JsonNull.INSTANCE;
         }
 
-        @NotNull Class<?> reference = instance.getClass();
-
-        // Get fields
-        @NotNull Collection<Field> fields = getFields(father, reference).values();
-
-        // Start
-        boolean bypassTransients = false;
-        @NotNull SerializingType serializing = new Normal(serializer, father);
-
-        if (father != null && father.getField().isAnnotationPresent(UsingSerializers.class)) {
-            serializing = new Methods(serializer, father, father.getField().getDeclaringClass(), father.getField().getAnnotation(UsingSerializers.class));
-        } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
-            serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
-        } else if (serializer.adapterMap.containsKey(reference)) {
-            @NotNull JsonSerializeOutputContext context = new JsonSerializeOutputContext(serializer, instance.getClass());
-            serializer.adapterMap.get(reference).serialize(instance, context);
-
-            return context.serialize();
-        } else if (JavaSerializableUtils.usesJavaSerialization(reference)) {
-            return JavaSerializableUtils.javaSerializeObject(instance);
-        } else if (instance instanceof Enum<?>) {
+        // Check if serializing method already exists
+        if (instance instanceof Enum<?>) {
             return serializer.serialize((Enum<?>) instance);
         } else if (instance instanceof Enum<?>[]) {
             return serializer.serialize((Enum<?>[]) instance);
@@ -142,6 +123,29 @@ final class SerializingProcess {
             return serializer.serialize((String[]) instance);
         } else if (instance instanceof Object[]) {
             return serializer.serialize((Object[]) instance);
+        }
+
+        // Proceed
+        @NotNull Class<?> reference = instance.getClass();
+
+        // Get fields
+        @NotNull Collection<Field> fields = getFields(father, reference).values();
+
+        // Start
+        boolean bypassTransients = false;
+        @NotNull SerializingType serializing = new Normal(serializer, father);
+
+        if (father != null && father.getField().isAnnotationPresent(UsingSerializers.class)) {
+            serializing = new Methods(serializer, father, father.getField().getDeclaringClass(), father.getField().getAnnotation(UsingSerializers.class));
+        } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
+            serializing = new Methods(serializer, father, reference, reference.getAnnotation(UsingSerializers.class));
+        } else if (serializer.adapterMap.containsKey(reference)) {
+            @NotNull JsonSerializeOutputContext context = new JsonSerializeOutputContext(serializer, instance.getClass());
+            serializer.adapterMap.get(reference).serialize(instance, context);
+
+            return context.serialize();
+        } else if (JavaSerializableUtils.usesJavaSerialization(reference)) {
+            return JavaSerializableUtils.javaSerializeObject(instance);
         }
 
         // Finish

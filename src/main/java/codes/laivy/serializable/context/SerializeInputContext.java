@@ -114,6 +114,7 @@ public interface SerializeInputContext {
 
     <E> @UnknownNullability E readField(@NotNull Class<E> reference, @NotNull String name);
     @NotNull String @NotNull [] getFields();
+    boolean hasField(@NotNull String name);
 
     @Nullable AnnotatedType getAnnotatedType();
 

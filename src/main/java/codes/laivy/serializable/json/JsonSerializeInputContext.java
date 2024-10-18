@@ -270,7 +270,6 @@ final class JsonSerializeInputContext implements SerializeInputContext {
         throw new IllegalArgumentException("cannot deserialize object with the references references '" + Arrays.toString(references) + "'");
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <E> @Nullable E readField(@NotNull Class<E> reference, @NotNull String name) {
         if (fields.containsKey(name)) {
@@ -285,6 +284,10 @@ final class JsonSerializeInputContext implements SerializeInputContext {
     @Override
     public @NotNull String @NotNull [] getFields() {
         return fields.keySet().toArray(new String[0]);
+    }
+    @Override
+    public boolean hasField(@NotNull String name) {
+        return fields.containsKey(name);
     }
 
     @Override
