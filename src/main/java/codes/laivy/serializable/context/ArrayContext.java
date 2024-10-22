@@ -1,5 +1,7 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.Serializer;
+import codes.laivy.serializable.properties.SerializationProperties;
 import codes.laivy.serializable.reference.References;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,10 +12,21 @@ import java.util.Objects;
 
 public interface ArrayContext extends Context, Collection<Context> {
 
+    // Static initializers
+
+    static @NotNull ArrayContext create(@NotNull Serializer serializer) {
+        return create(serializer, null);
+    }
+    static @NotNull ArrayContext create(@NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+        return new ArrayContextImpl(serializer, properties);
+    }
+
     // Object
 
+    @NotNull Serializer getSerializer();
+
     default <E> @Nullable E readObject(@NotNull Class<E> reference) throws EOFException {
-        @Nullable Object object = readObject(reference);
+        @Nullable Object object = readObject(References.of(reference));
 
         if (object != null && reference.isAssignableFrom(object.getClass())) {
             throw new ClassCastException("cannot retrieve object from type '" + object.getClass().getName() + "' using '" + reference.getName() + "' reference");

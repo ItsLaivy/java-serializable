@@ -1,5 +1,7 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.Serializer;
+import codes.laivy.serializable.properties.SerializationProperties;
 import codes.laivy.serializable.reference.References;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,7 +10,18 @@ import java.util.Set;
 
 public interface MapContext extends Context {
 
+    // Static initializers
+
+    static @NotNull MapContext create(@NotNull Serializer serializer) {
+        return create(serializer, null);
+    }
+    static @NotNull MapContext create(@NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+        return new MapContextImpl(serializer, properties);
+    }
+
     // Object
+
+    @NotNull Serializer getSerializer();
 
     void setObject(@NotNull String name, @Nullable Object object);
     void setContext(@NotNull String name, @NotNull Context context);
