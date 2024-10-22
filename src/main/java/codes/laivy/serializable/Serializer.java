@@ -146,9 +146,7 @@ public interface Serializer {
 
     @Nullable Object serialize(@Nullable String string, @Nullable SerializationProperties properties);
 
-    default @Nullable Object serialize(@Nullable String string) {
-        return serialize(string, null);
-    }
+    @Nullable Object serialize(@Nullable String string);
     @NotNull Iterable<?> serialize(@Nullable String @NotNull ... array);
 
     // Pure
@@ -158,28 +156,13 @@ public interface Serializer {
 
     // Context
 
-    default <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) {
-        return deserialize(reference, context, null);
-    }
-    default <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @Nullable SerializationProperties properties) {
-        @Nullable Object object = deserialize(References.of(reference), context, properties);
+    <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context);
+    <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @Nullable SerializationProperties properties);
 
-        if (object != null && !reference.isAssignableFrom(object.getClass())) {
-            throw new ClassCastException("unexpected object reference '" + object.getClass().getName() + "', expected '" + reference.getName() + "': " + object);
-        }
-
-        //noinspection unchecked
-        return (E) object;
-    }
-
-    default @Nullable Object deserialize(@NotNull References references, @NotNull Context context) {
-        return deserialize(references, context, null);
-    }
+    @Nullable Object deserialize(@NotNull References references, @NotNull Context context);
     @Nullable Object deserialize(@NotNull References references, @NotNull Context context, @Nullable SerializationProperties properties);
 
-    default @NotNull Context toContext(@Nullable Object object) {
-        return toContext(object, null);
-    }
+    @NotNull Context toContext(@Nullable Object object);
     @NotNull Context toContext(@Nullable Object object, @Nullable SerializationProperties properties);
 
 }
