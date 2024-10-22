@@ -1,9 +1,12 @@
 package codes.laivy.serializable.adapter.provided;
 
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
-import codes.laivy.serializable.context.SerializeInputContext;
-import codes.laivy.serializable.context.SerializeOutputContext;
+import codes.laivy.serializable.context.Context;
+import codes.laivy.serializable.context.PrimitiveContext;
+import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
 import java.time.*;
@@ -31,43 +34,46 @@ public class TemporalAdapter implements Adapter {
     }
 
     @Override
-    public void serialize(@NotNull Object object, @NotNull SerializeOutputContext context) {
-        if (context.getReference() == Date.class) {
-            context.write(((Date) object).getTime());
+    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+        if (object.getClass() == Date.class) {
+            return PrimitiveContext.create(((Date) object).getTime());
         } else {
-            context.write(object.toString());
+            return PrimitiveContext.create(object.toString());
         }
     }
+
     @Override
-    public @NotNull Object deserialize(@NotNull SerializeInputContext context) throws EOFException {
-        if (context.getReference() == Date.class) {
-            return new Date(context.readLong());
-        } else if (context.getReference() == Duration.class) {
-            return Duration.parse(context.readLine());
-        } else if (context.getReference() == Instant.class) {
-            return Instant.parse(context.readLine());
-        } else if (context.getReference() == LocalDate.class) {
-            return LocalDate.parse(context.readLine());
-        } else if (context.getReference() == LocalDateTime.class) {
-            return LocalDateTime.parse(context.readLine());
-        } else if (context.getReference() == MonthDay.class) {
-            return MonthDay.parse(context.readLine());
-        } else if (context.getReference() == OffsetDateTime.class) {
-            return OffsetDateTime.parse(context.readLine());
-        } else if (context.getReference() == OffsetTime.class) {
-            return OffsetTime.parse(context.readLine());
-        } else if (context.getReference() == Period.class) {
-            return Period.parse(context.readLine());
-        } else if (context.getReference() == Year.class) {
-            return Year.parse(context.readLine());
-        } else if (context.getReference() == YearMonth.class) {
-            return YearMonth.parse(context.readLine());
-        } else if (context.getReference() == ZoneId.class) {
-            return ZoneId.of(context.readLine());
-        } else if (context.getReference() == ZoneOffset.class) {
-            return ZoneOffset.of(context.readLine());
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
+        @NotNull PrimitiveContext object = context.getAsObjectContext();
+
+        if (reference == Date.class) {
+            return new Date(object.getAsLong());
+        } else if (reference == Duration.class) {
+            return Duration.parse(object.getAsString());
+        } else if (reference == Instant.class) {
+            return Instant.parse(object.getAsString());
+        } else if (reference == LocalDate.class) {
+            return LocalDate.parse(object.getAsString());
+        } else if (reference == LocalDateTime.class) {
+            return LocalDateTime.parse(object.getAsString());
+        } else if (reference == MonthDay.class) {
+            return MonthDay.parse(object.getAsString());
+        } else if (reference == OffsetDateTime.class) {
+            return OffsetDateTime.parse(object.getAsString());
+        } else if (reference == OffsetTime.class) {
+            return OffsetTime.parse(object.getAsString());
+        } else if (reference == Period.class) {
+            return Period.parse(object.getAsString());
+        } else if (reference == Year.class) {
+            return Year.parse(object.getAsString());
+        } else if (reference == YearMonth.class) {
+            return YearMonth.parse(object.getAsString());
+        } else if (reference == ZoneId.class) {
+            return ZoneId.of(object.getAsString());
+        } else if (reference == ZoneOffset.class) {
+            return ZoneOffset.of(object.getAsString());
         } else {
-            throw new UnsupportedOperationException("the reference '" + context.getReference() + "' cannot be used at the temporal adapter");
+            throw new UnsupportedOperationException("the reference '" + reference + "' cannot be used at the temporal adapter");
         }
     }
 
