@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 
 // todo: In the java-serializable 1.2, all these Iterable methods will be changed to java.util.Collection
 //       the only reason to still use that, is because the GSON JsonArray class only implements Iterable, but
@@ -19,61 +21,312 @@ public interface TypeSerializer<T> extends Serializer {
 
     // Serializable
 
-    @Nullable T serialize(@Nullable Serializable object) throws MalformedClassException;
-    @NotNull Iterable<? extends T> serialize(@Nullable Serializable @NotNull ... array) throws MalformedClassException;
-    @NotNull Iterable<? extends T> serialize(@NotNull Iterable<@Nullable Serializable> iterable) throws MalformedClassException;
+    @Nullable T serialize(@Nullable Serializable object, @Nullable SerializationProperties properties) throws MalformedClassException;
+    default @Nullable T serialize(@Nullable Serializable object) throws MalformedClassException {
+        return serialize(object, null);
+    }
 
-    // Primitive
+    default @NotNull Iterable<T> serialize(@Nullable Serializable @NotNull ... array) throws MalformedClassException {
+        @NotNull List<T> list = new LinkedList<>();
 
-    @NotNull Iterable<T> serialize(@Nullable Object @NotNull ... array) throws MalformedClassException;
+        for (@Nullable Serializable object : array) {
+            list.add(serialize(object));
+        }
 
-    @Nullable T serialize(@Nullable Enum<?> e);
-    @NotNull Iterable<T> serialize(@Nullable Enum<?> @NotNull ... array);
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(@NotNull Iterable<@Nullable Serializable> iterable) throws MalformedClassException {
+        @NotNull List<T> list = new LinkedList<>();
 
-    @Nullable T serialize(@Nullable Boolean b);
-    @NotNull Iterable<T> serialize(@Nullable Boolean @NotNull ... array);
+        for (@Nullable Serializable object : iterable) {
+            list.add(serialize(object));
+        }
 
-    @Nullable T serialize(@Nullable Short s);
-    @NotNull Iterable<T> serialize(@Nullable Short @NotNull ... array);
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(@Nullable Object @NotNull ... array) throws MalformedClassException {
+        @NotNull List<T> list = new LinkedList<>();
 
-    @Nullable T serialize(@Nullable Integer i);
-    @NotNull Iterable<T> serialize(@Nullable Integer @NotNull ... array);
+        for (@Nullable Object object : array) {
+            list.add(serialize(object));
+        }
 
-    @Nullable T serialize(@Nullable Long l);
-    @NotNull Iterable<T> serialize(@Nullable Long @NotNull ... array);
+        return list;
+    }
 
-    @Nullable T serialize(@Nullable Float f);
-    @NotNull Iterable<T> serialize(@Nullable Float @NotNull ... array);
+    // Enum
 
-    @Nullable T serialize(@Nullable Double d);
-    @NotNull Iterable<T> serialize(@Nullable Double @NotNull ... array);
+    @Nullable T serialize(@Nullable Enum<?> e, @Nullable SerializationProperties properties);
 
-    @Nullable T serialize(@Nullable Character c);
-    @NotNull Iterable<T> serialize(@Nullable Character @NotNull ... array);
+    default @Nullable T serialize(@Nullable Enum<?> e) {
+        return serialize(e, null);
+    }
+    default @NotNull Iterable<T> serialize(@Nullable Enum<?> @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
 
-    @Nullable T serialize(@Nullable Byte b);
-    @NotNull Iterable<T> serialize(@Nullable Byte @NotNull ... array);
+        for (@Nullable Enum<?> e : array) {
+            list.add(serialize(e));
+        }
 
-    @Nullable T serialize(@Nullable String string);
+        return list;
+    }
+
+    // Boolean
+
+    @Nullable T serialize(@Nullable Boolean b, @Nullable SerializationProperties properties);
+    @NotNull T serialize(boolean b, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable Boolean b) {
+        return serialize(b, null);
+    }
+    default @NotNull T serialize(boolean b) {
+        return serialize(b, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Boolean @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Boolean bool : array) {
+            list.add(serialize(bool));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(boolean @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (boolean bool : array) {
+            list.add(serialize(bool));
+        }
+
+        return list;
+    }
+
+    // Short
+
+    @Nullable T serialize(@Nullable Short s, @Nullable SerializationProperties properties);
+    @NotNull T serialize(short s, @Nullable SerializationProperties properties);
+
+    default @NotNull T serialize(short s) {
+        return serialize(s, null);
+    }
+    default @Nullable T serialize(@Nullable Short s) {
+        return serialize(s, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Short @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Short s : array) {
+            list.add(serialize(s));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(short @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (short s : array) {
+            list.add(serialize(s));
+        }
+
+        return list;
+    }
+
+    // Integer
+
+    @Nullable T serialize(@Nullable Integer i, @Nullable SerializationProperties properties);
+    @NotNull T serialize(int i, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable Integer i) {
+        return serialize(i, null);
+    }
+    default @NotNull T serialize(int i) {
+        return serialize(i, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Integer @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Integer i : array) {
+            list.add(serialize(i));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(int @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (int i : array) {
+            list.add(serialize(i));
+        }
+
+        return list;
+    }
+
+    // Long
+
+    @Nullable T serialize(@Nullable Long l, @Nullable SerializationProperties properties);
+    @NotNull T serialize(long l, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable Long l) {
+        return serialize(l, null);
+    }
+    default @NotNull T serialize(long l) {
+        return serialize(l, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Long @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Long l : array) {
+            list.add(serialize(l));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(long @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (long l : array) {
+            list.add(serialize(l));
+        }
+
+        return list;
+    }
+
+    // Float
+
+    @Nullable T serialize(@Nullable Float f, @Nullable SerializationProperties properties);
+    @NotNull T serialize(float f, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable Float f) {
+        return serialize(f, null);
+    }
+    default @NotNull T serialize(float f) {
+        return serialize(f, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Float @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Float f : array) {
+            list.add(serialize(f));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(float @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (float f : array) {
+            list.add(serialize(f));
+        }
+
+        return list;
+    }
+
+    // Double
+
+    @Nullable T serialize(@Nullable Double d, @Nullable SerializationProperties properties);
+    @NotNull T serialize(double d, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable Double d) {
+        return serialize(d, null);
+    }
+    default @NotNull T serialize(double d) {
+        return serialize(d, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Double @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Double d : array) {
+            list.add(serialize(d));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(double @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (double d : array) {
+            list.add(serialize(d));
+        }
+
+        return list;
+    }
+
+    // Character
+
+    @Nullable T serialize(@Nullable Character c, @Nullable SerializationProperties properties);
+    @NotNull T serialize(char c, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable Character c) {
+        return serialize(c, null);
+    }
+    default @NotNull T serialize(char c) {
+        return serialize(c, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Character @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Character c : array) {
+            list.add(serialize(c));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(char @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (char c : array) {
+            list.add(serialize(c));
+        }
+
+        return list;
+    }
+
+    // Byte
+
+    @Nullable T serialize(@Nullable Byte b, @Nullable SerializationProperties properties);
+    @NotNull T serialize(byte b, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable Byte b) {
+        return serialize(b, null);
+    }
+    default @NotNull T serialize(byte b) {
+        return serialize(b, null);
+    }
+
+    default @NotNull Iterable<T> serialize(@Nullable Byte @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Byte b : array) {
+            list.add(serialize(b));
+        }
+
+        return list;
+    }
+    default @NotNull Iterable<T> serialize(byte @NotNull ... array) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (byte b : array) {
+            list.add(serialize(b));
+        }
+
+        return list;
+    }
+
+    // String
+
+    @Nullable T serialize(@Nullable String string, @Nullable SerializationProperties properties);
+
+    default @Nullable T serialize(@Nullable String string) {
+        return serialize(string, null);
+    }
     @NotNull Iterable<T> serialize(@Nullable String @NotNull ... array);
-
-    @NotNull T serialize(boolean b);
-    @NotNull T serialize(char c);
-    @NotNull T serialize(byte b);
-    @NotNull T serialize(short s);
-    @NotNull T serialize(int i);
-    @NotNull T serialize(long l);
-    @NotNull T serialize(float f);
-    @NotNull T serialize(double d);
-
-    @NotNull Iterable<T> serialize(boolean @NotNull ... array);
-    @NotNull Iterable<T> serialize(char @NotNull ... array);
-    @NotNull Iterable<T> serialize(byte @NotNull ... array);
-    @NotNull Iterable<T> serialize(short @NotNull ... array);
-    @NotNull Iterable<T> serialize(int @NotNull ... array);
-    @NotNull Iterable<T> serialize(long @NotNull ... array);
-    @NotNull Iterable<T> serialize(float @NotNull ... array);
-    @NotNull Iterable<T> serialize(double @NotNull ... array);
 
     // Objects pure serialization
 
