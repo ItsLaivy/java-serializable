@@ -1,8 +1,8 @@
 package codes.laivy.serializable.annotations;
 
-import codes.laivy.serializable.context.SerializeInputContext;
-import codes.laivy.serializable.context.SerializeOutputContext;
+import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.exception.MalformedSerializerException;
+import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
@@ -14,16 +14,18 @@ import java.lang.annotation.*;
  * The serialization method must adhere to the following strict rules:
  * <ol>
  *     <li>It can have any access modifier (public, private, etc.).</li>
- *     <li>It must accept two parameters in this exact order:
+ *     <li>It must accepts only one parameter:
  *         <ul>
  *             <li>{@link Object}: This can be any type of object. However, if the object passed during
  *             serialization is not compatible with the type expected by the method, an exception will
  *             be thrown during deserialization.</li>
- *             <li>{@link SerializeOutputContext}: The context in which the serialization process occurs,
- *             containing necessary metadata and utilities for writing the serialized data.</li>
+ *         </ul>
+ *         <ul>
+ *             <li>{@link SerializationProperties} <strong>(Optional)</strong>: This parameter is optional, and is used to retrieve some
+ *             essential configurations about the serialization process properties</li>
  *         </ul>
  *     </li>
- *     <li>It must return {@link Void}, signifying no return value.</li>
+ *     <li>It must return {@link Context}, with the serialized data inside.</li>
  *     <li>It must be static, meaning it is not bound to a particular instance of the class where it is declared.</li>
  *     <li>The method can throw anything (Runtime or not exceptions).</li>
  * </ol>
@@ -31,9 +33,9 @@ import java.lang.annotation.*;
  * The deserialization method must follow these specific rules:
  * <ol>
  *     <li>It can have any access modifier.</li>
- *     <li>It must accept only one parameter:
+ *     <li>It must accepts only one parameter:
  *         <ul>
- *             <li>{@link SerializeInputContext}: The context that contains the necessary information and
+ *             <li>{@link Context}: The context that contains the necessary information and
  *             utilities for reading the serialized data.</li>
  *         </ul>
  *     </li>
@@ -50,18 +52,36 @@ import java.lang.annotation.*;
  * compatible with the serialization and deserialization methods, as improper configurations can lead
  * to exceptions and potential data corruption during the deserialization process.</p>
  *
- * Example usage:
+ * Example usages:
  * <pre>
  * {@code
  * @UsingSerializers
  * public class CustomObject {
  *     // Fields and methods
  *
- *     public static void serialize(@NotNull CustomObject object, @NotNull SerializeOutputContext context) {
+ *     public static @NotNull Context serialize(@NotNull CustomObject object) {
  *         // Serialization process here
  *         // return context.serialize(object); // <- The default serializer
  *     }
- *     public static @NotNull CustomObject deserialize(@NotNull SerializeInputContext context) throws EOFException {
+ *     public static @NotNull CustomObject deserialize(@NotNull Context context) throws EOFException {
+ *         // Deserialization process here
+ *         // return context.deserialize(); // <- The default deserializer
+ *     }
+ *
+ * }
+ * }
+ * </pre>
+ * <pre>
+ * {@code
+ * @UsingSerializers
+ * public class CustomObject {
+ *     // Fields and methods
+ *
+ *     public static @NotNull Context serialize(@NotNull CustomObject object, @Nullable SerializationProperties properties) {
+ *         // Serialization process here
+ *         // return context.serialize(object); // <- The default serializer
+ *     }
+ *     public static @NotNull CustomObject deserialize(@NotNull Context context) throws EOFException {
  *         // Deserialization process here
  *         // return context.deserialize(); // <- The default deserializer
  *     }
@@ -76,6 +96,7 @@ import java.lang.annotation.*;
  * @author Daniel Meinicke (Laivy)
  * @since 1.1-SNAPSHOT
  */
+// todo: serialization can return any type
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD})

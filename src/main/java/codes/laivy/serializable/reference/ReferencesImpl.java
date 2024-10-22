@@ -3,10 +3,7 @@ package codes.laivy.serializable.reference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 final class ReferencesImpl implements References {
 
@@ -78,6 +75,25 @@ final class ReferencesImpl implements References {
     @Override
     public void clear() {
         classes.clear();
+    }
+
+    // Implementations
+
+    @Override
+    public boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (!(object instanceof ReferencesImpl)) return false;
+        @NotNull ReferencesImpl classes1 = (ReferencesImpl) object;
+        return Objects.equals(classes, classes1.classes);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(classes);
+    }
+
+    @Override
+    public @NotNull String toString() {
+        return classes.toString();
     }
 
 }

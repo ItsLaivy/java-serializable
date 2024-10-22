@@ -111,6 +111,9 @@ public final class Allocator {
      * @return a new instance of the specified class, never {@code null}.
      * @throws NullPointerException if {@code type} is {@code null}.
      * @throws IllegalArgumentException if the class cannot be instantiated, such as for interfaces, abstract classes, or primitives.
+     *
+     * @since 1.1-SNAPSHOT
+     * @author Daniel Meinicke (Laivy)
      */
     @Internal
     public static native <T> @NotNull T allocate(@NotNull Class<T> type);
@@ -129,10 +132,43 @@ public final class Allocator {
      * @param field the field to modify; must not be {@code null}.
      * @param instance the instance containing the field to modify, or {@code null} if the field is static.
      * @param object the new value to set for the field; can be {@code null} if the field type allows it.
+     *
+     * @since 1.1-SNAPSHOT
+     * @author Daniel Meinicke (Laivy)
      */
     @Internal
     public static native void setFieldValue(@NotNull Field field, @Nullable Object instance, @Nullable Object object);
 
+    /**
+     * Retrieves the value of a field, bypassing access control checks and module boundaries.
+     * <p>
+     * This method allows obtaining the value of a field, regardless of its visibility (private, protected, etc.)
+     * or accessibility restrictions. It is particularly useful in situations where deep reflection is required,
+     * such as in frameworks for testing, dependency injection, or mocking, as well as in cases where Java's
+     * module system (introduced in Java 9) imposes additional access limitations.
+     * <p>
+     * When using this method, it is important to note that it overrides any encapsulation guarantees
+     * provided by the Java language. This can have unintended consequences, such as exposing sensitive data
+     * or violating security policies, especially in environments where strong encapsulation or module boundaries
+     * are expected.
+     * <p>
+     * If the field is static, the {@code instance} parameter should be {@code null}. If the field is non-static,
+     * an instance of the class containing the field must be provided.
+     *
+     * <p><b>Security Note:</b> This method circumvents Java's access checks and module security, which may
+     * compromise the integrity and safety of your code. Ensure that this is only used in trusted environments
+     * or for internal purposes where security risks are minimal.
+     *
+     * @param field the {@link Field} object representing the field whose value is to be retrieved;
+     *              must not be {@code null}.
+     * @param instance the object instance from which the field value should be extracted; may be {@code null}
+     *                 if the field is static.
+     * @return the value of the field, or {@code null} if the field has no value assigned or if the field type
+     *         permits {@code null}.
+     *
+     * @since 1.10.1
+     * @author Daniel Meinicke (Laivy)
+     */
     @Internal
     public static native @Nullable Object getFieldValue(@NotNull Field field, @Nullable Object instance);
 

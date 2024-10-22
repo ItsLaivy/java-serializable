@@ -6,17 +6,16 @@ import codes.laivy.serializable.adapter.provided.CharacterArrayAdapter;
 import codes.laivy.serializable.adapter.provided.CollectionAdapter;
 import codes.laivy.serializable.adapter.provided.TemporalAdapter;
 import codes.laivy.serializable.adapter.provided.UUIDAdapter;
+import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.MalformedClassException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonPrimitive;
+import codes.laivy.serializable.factory.context.ContextFactory;
+import codes.laivy.serializable.properties.SerializationProperties;
+import codes.laivy.serializable.reference.References;
+import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.EOFException;
 import java.io.Serializable;
-import java.lang.reflect.AnnotatedType;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -34,7 +33,7 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
 
     // Object
 
-    final @NotNull Map<Class<?>, Adapter> adapterMap = new HashMap<>();
+    private final @NotNull AdapterMapList adapterMapList = new AdapterMapList();
 
     public JsonSerializer() {
         @NotNull Adapter[] adapters = new Adapter[]{
@@ -46,7 +45,7 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
 
         for (@NotNull Adapter adapter : adapters) {
             for (@NotNull Class<?> reference : adapter.getReferences()) {
-                adapterMap.put(reference, adapter);
+                adapterMapList.adapterMap.put(reference, adapter);
             }
         }
     }
@@ -55,7 +54,11 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
 
     @Override
     public @NotNull Collection<Adapter> getAdapters() {
-        return new AdapterMapList();
+        return adapterMapList;
+    }
+    @Override
+    public @NotNull Optional<Adapter> getAdapter(@NotNull Class<?> reference) {
+        return Optional.ofNullable(adapterMapList.adapterMap.getOrDefault(reference, null));
     }
 
     // Serializers and Deserializers
@@ -70,8 +73,31 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
             return JsonNull.INSTANCE;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(this, object.getClass(), null);
-        return process.serialize(object);
+        if (object instanceof Context) {
+            return serialize((Context) object);
+        }
+
+        return serialize(object, null);
+    }
+
+    @Override
+    public @NotNull JsonElement serialize(@Nullable Object object, @Nullable SerializationProperties properties) {
+        // Check nullability
+        if (object == null) {
+            return JsonNull.INSTANCE;
+        }
+
+        // Context factories
+        @NotNull ContextFactory factory;
+
+        if (properties == null) {
+            factory = ContextFactory.field();
+        } else {
+            factory = properties.getContextFactory();
+        }
+
+        // Serialize
+        return serialize(factory.write(object, this, properties));
     }
 
     @Override
@@ -83,6 +109,7 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
 
         return json;
     }
+
     @Override
     public @NotNull JsonArray serialize(@Nullable Serializable @NotNull ... array) throws MalformedClassException {
         @NotNull JsonArray json = new JsonArray();
@@ -333,25 +360,32 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return json;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable JsonElement object) throws MalformedClassException {
-        if (object == null) {
+    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable JsonElement element) throws MalformedClassException {
+        return deserialize(reference, element, null);
+    }
+
+    @Override
+    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable JsonElement element, @Nullable SerializationProperties properties) throws MalformedClassException {
+        if (element == null || element.isJsonNull()) {
             return null;
         }
 
-        @NotNull SerializingProcess process = new SerializingProcess(this, reference, null);
-        return (E) process.deserialize(object);
+        return deserialize(reference, toContext(element, properties));
+    }
+
+    @Override
+    public @Nullable Object deserialize(@NotNull References references, @NotNull Context context, @Nullable SerializationProperties properties) {
+        return null;
     }
     @Override
-    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable JsonElement @NotNull ... array) throws MalformedClassException {
-        @NotNull List<E> list = new LinkedList<>();
+    public @Nullable Object deserialize(@NotNull References references, @Nullable JsonElement object, @Nullable SerializationProperties properties) throws MalformedClassException {
+        return null;
+    }
 
-        for (@Nullable JsonElement element : array) {
-            list.add(deserialize(reference, element));
-        }
-
-        return list;
+    @Override
+    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable JsonElement @NotNull [] array) throws MalformedClassException {
+        return deserialize(reference, array, null);
     }
     public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull JsonArray array) throws MalformedClassException {
         @NotNull List<E> list = new LinkedList<>();
@@ -363,9 +397,122 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
         return list;
     }
 
+    @Override
+    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable JsonElement @NotNull [] array, @Nullable SerializationProperties properties) throws MalformedClassException {
+        @NotNull List<E> list = new LinkedList<>();
+
+        for (@Nullable JsonElement element : array) {
+            list.add(deserialize(reference, element, properties));
+        }
+
+        return list;
+    }
+
+    // Context
+
+    @Override
+    public @NotNull JsonElement serialize(@NotNull Context context) {
+        if (context.isNullContext()) {
+            return JsonNull.INSTANCE;
+        } else if (context instanceof PrimitiveContext) {
+            @NotNull PrimitiveContext primitive = (PrimitiveContext) context;
+
+            if (primitive.isString()) {
+                return serialize(primitive.getAsString());
+            } else if (primitive.isBoolean()) {
+                return serialize(primitive.getAsBoolean());
+            } else if (primitive.isNumber()) {
+                return serialize(primitive.getAsNumber());
+            } else if (primitive.isCharacter()) {
+                return serialize(primitive.getAsCharacter());
+            } else {
+                return serialize(primitive.getAsString());
+            }
+        } else if (context instanceof ArrayContext) {
+            @NotNull ArrayContext array = ((ArrayContext) context);
+            @NotNull JsonArray json = new JsonArray();
+
+            for (@NotNull Context object : array) {
+                json.add(serialize(object));
+            }
+
+            return json;
+        } else if (context instanceof MapContext) {
+            @NotNull MapContext map = ((MapContext) context);
+            @NotNull JsonObject json = new JsonObject();
+
+            for (@NotNull String name : map.keySet()) {
+                json.add(name, serialize(map.getContext(name)));
+            }
+
+            return json;
+        } else {
+            throw new UnsupportedOperationException("this context isn't supported by json serializer '" + context + "'");
+        }
+    }
+
+    @Override
+    public @NotNull Context toContext(@Nullable Object object, @Nullable SerializationProperties properties) {
+        if (object == null) {
+            return NullContext.create(properties);
+        } else if (object instanceof JsonElement) {
+            @NotNull JsonElement element = (JsonElement) object;
+
+            if (element.isJsonNull()) {
+                return NullContext.create(properties);
+            } else if (element.isJsonPrimitive()) {
+                @NotNull JsonPrimitive primitive = element.getAsJsonPrimitive();
+
+                if (primitive.isBoolean()) {
+                    return PrimitiveContext.create(primitive.getAsBoolean(), properties);
+                } else if (primitive.isNumber()) {
+                    return PrimitiveContext.create(primitive.getAsNumber(), properties);
+                } else {
+                    return PrimitiveContext.create(primitive.getAsString(), properties);
+                }
+            } else if (element.isJsonObject()) {
+                @NotNull MapContext context = MapContext.create(this, properties);
+                @NotNull JsonObject json = element.getAsJsonObject();
+
+                for (@NotNull String key : json.keySet()) {
+                    @Nullable Context deserialized = toContext(json.get(key));
+                    context.setContext(key, deserialized);
+                }
+
+                return context;
+            } else if (element.isJsonArray()) {
+                @NotNull ArrayContext context = ArrayContext.create(this, properties);
+                @NotNull JsonArray json = element.getAsJsonArray();
+
+                for (@NotNull JsonElement e : json) {
+                    context.write(toContext(e));
+                }
+
+                return context;
+            } else {
+                throw new UnsupportedOperationException("this json element type isn't supported by json serializer '" + element.getClass().getName() + "': " + element);
+            }
+        } else if (object instanceof Context) {
+            return (Context) object;
+        } else {
+            @Nullable ContextFactory factory;
+
+            if (properties != null) {
+                factory = properties.getContextFactory();
+            } else {
+                factory = ContextFactory.field();
+            }
+
+            return factory.write(object, this, properties);
+        }
+    }
+
     // Classes
 
-    private final class AdapterMapList extends AbstractList<Adapter> {
+    private static final class AdapterMapList extends AbstractList<Adapter> {
+
+        final @NotNull Map<Class<?>, Adapter> adapterMap = new HashMap<>();
+
         @Override
         public @NotNull Adapter get(int index) {
             return adapterMap.values().stream().skip(index).findFirst().orElseThrow(IndexOutOfBoundsException::new);
@@ -400,23 +547,5 @@ public class JsonSerializer implements TypeSerializer<JsonElement> {
     }
 
     // Utilities
-
-    @NotNull Object usingAdapter(@NotNull Class<?> reference, @NotNull JsonElement element, @Nullable AnnotatedType annotatedType) {
-        @NotNull Object object;
-
-        try {
-            @NotNull Adapter adapter = adapterMap.get(reference);
-            @NotNull JsonSerializeInputContext context = new JsonSerializeInputContext(this, reference, element, annotatedType);
-            object = adapter.deserialize(context);
-        } catch (@NotNull EOFException e) {
-            throw new RuntimeException("cannot proceed adapter deserialization '" + reference + "': " + element, e);
-        }
-
-        if (!reference.isAssignableFrom(object.getClass())) {
-            throw new IllegalStateException("the adapter returned '" + object.getClass() + "' that isn't assignable from '" + reference + "'");
-        }
-
-        return object;
-    }
 
 }

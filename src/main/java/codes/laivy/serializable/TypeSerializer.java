@@ -1,12 +1,13 @@
 package codes.laivy.serializable;
 
-import codes.laivy.serializable.adapter.Adapter;
+import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.exception.MalformedClassException;
+import codes.laivy.serializable.properties.SerializationProperties;
+import codes.laivy.serializable.reference.References;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
-import java.util.Collection;
 
 // todo: In the java-serializable 1.2, all these Iterable methods will be changed to java.util.Collection
 //       the only reason to still use that, is because the GSON JsonArray class only implements Iterable, but
@@ -16,10 +17,6 @@ import java.util.Collection;
 //       #deserialize(Class, InputStream)
 public interface TypeSerializer<T> extends Serializer {
 
-    // Adapters
-
-    @NotNull Collection<Adapter> getAdapters();
-
     // Serializable
 
     @Nullable T serialize(@Nullable Serializable object) throws MalformedClassException;
@@ -27,6 +24,8 @@ public interface TypeSerializer<T> extends Serializer {
     @NotNull Iterable<? extends T> serialize(@NotNull Iterable<@Nullable Serializable> iterable) throws MalformedClassException;
 
     // Primitive
+
+    @NotNull Iterable<T> serialize(@Nullable Object @NotNull ... array) throws MalformedClassException;
 
     @Nullable T serialize(@Nullable Enum<?> e);
     @NotNull Iterable<T> serialize(@Nullable Enum<?> @NotNull ... array);
@@ -79,11 +78,27 @@ public interface TypeSerializer<T> extends Serializer {
     // Objects pure serialization
 
     @Nullable T serialize(@Nullable Object object) throws MalformedClassException;
-    @NotNull Iterable<T> serialize(@Nullable Object @NotNull ... array) throws MalformedClassException;
+    @Nullable T serialize(@Nullable Object object, @Nullable SerializationProperties properties);
 
     // Deserialization
 
-    <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T object) throws MalformedClassException;
-    <E> @NotNull Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable T @NotNull ... array) throws MalformedClassException;
+    default <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T object) throws MalformedClassException {
+        return deserialize(reference, object, null);
+    }
+    <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T object, @Nullable SerializationProperties properties) throws MalformedClassException;
+
+    default @Nullable Object deserialize(@NotNull References references, @Nullable T object) throws MalformedClassException {
+        return deserialize(references, object, null);
+    }
+    @Nullable Object deserialize(@NotNull References references, @Nullable T object, @Nullable SerializationProperties properties) throws MalformedClassException;
+
+    default <E> @NotNull Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable T @NotNull [] array) throws MalformedClassException {
+        return deserialize(reference, array, null);
+    }
+    <E> @NotNull Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable T @NotNull [] array, @Nullable SerializationProperties properties) throws MalformedClassException;
+
+    // Context
+
+    @Nullable T serialize(@NotNull Context context);
 
 }
