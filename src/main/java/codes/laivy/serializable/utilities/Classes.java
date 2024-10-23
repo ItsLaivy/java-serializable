@@ -1,16 +1,21 @@
 package codes.laivy.serializable.utilities;
 
+import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.BypassTransient;
 import codes.laivy.serializable.annotations.Concrete;
 import codes.laivy.serializable.annotations.Concretes;
 import codes.laivy.serializable.annotations.KnownAs;
+import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.MapContext;
+import codes.laivy.serializable.exception.MalformedClassException;
 import codes.laivy.serializable.properties.SerializationProperties;
 import codes.laivy.serializable.reference.References;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -125,6 +130,81 @@ public final class Classes {
         }
 
         return !Modifier.isInterface(reference.getModifiers()) && !Modifier.isAbstract(reference.getModifiers());
+    }
+
+    public static boolean usesJavaSerialization(@NotNull Class<?> reference) {
+        if (Externalizable.class.isAssignableFrom(reference)) {
+            return true;
+        }
+
+        boolean methods = false;
+        @NotNull Class<?> copy = reference;
+
+        while (copy != Object.class && copy != null) {
+            @NotNull Method method;
+
+            try {
+                method = copy.getDeclaredMethod("writeObject", ObjectOutputStream.class);
+                if (!Modifier.isStatic(method.getModifiers())) methods = true;
+            } catch (@NotNull NoSuchMethodException ignore) {
+            } try {
+                method = copy.getDeclaredMethod("readObject", ObjectInputStream.class);
+                if (!Modifier.isStatic(method.getModifiers())) methods = true;
+            } catch (@NotNull NoSuchMethodException ignore) {
+            } try {
+                method = copy.getDeclaredMethod("readObjectNoData");
+                if (!Modifier.isStatic(method.getModifiers())) methods = true;
+            } catch (@NotNull NoSuchMethodException ignore) {
+            }
+
+            // todo: #writeReplace and #readResolve methods
+
+            copy = copy.getSuperclass();
+        }
+
+        if (methods && !Serializable.class.isAssignableFrom(reference)) {
+            throw new IllegalStateException("the class '" + reference + "' has serialization methods but doesn't implement Serializable interface");
+        }
+
+        return methods;
+    }
+    public static <E> @Nullable E javaDeserializeObject(@NotNull Class<?> reference, @NotNull ArrayContext context) throws MalformedClassException, IOException, ClassNotFoundException {
+        if (context.isNullContext()) {
+            return null;
+        }
+
+        // Byte array
+        byte[] bytes;
+
+        bytes = new byte[context.size()];
+
+        for (int row = 0; row < bytes.length; row++) {
+            bytes[row] = context.readByte();
+            row++;
+        }
+
+        // Deserialize using object input stream
+        @NotNull ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(bytes));
+        //noinspection unchecked
+        return (E) stream.readObject();
+    }
+    public static @NotNull ArrayContext javaSerializeObject(@NotNull Serializer serializer, @Nullable SerializationProperties properties, @NotNull Object object) {
+        try {
+            @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);
+            stream.writeObject(object);
+
+            // Byte array adapter
+            @NotNull ArrayContext context = ArrayContext.create(serializer, properties);
+
+            for (byte b : bytes.toByteArray()) {
+                context.write(b);
+            }
+
+            return context;
+        } catch (@NotNull IOException e) {
+            throw new RuntimeException("cannot serialize java object '" + object + "' from class '" + object.getClass().getName() + "'", e);
+        }
     }
 
     // Object

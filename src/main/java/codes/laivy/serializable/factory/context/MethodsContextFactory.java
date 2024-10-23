@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Objects;
 
-final class MethodsContextFactory implements ContextFactory {
+public final class MethodsContextFactory implements ContextFactory {
 
     // Static initializers
 
@@ -133,7 +133,7 @@ final class MethodsContextFactory implements ContextFactory {
         }
     }
     @Override
-    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException, InstantiationException {
+    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context) throws EOFException, InstantiationException {
         try {
             if (!deserializer.getReturnType().isAssignableFrom(reference)) {
                 throw new UnsupportedOperationException("the deserializer cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + deserializer.getReturnType() + "' return class");

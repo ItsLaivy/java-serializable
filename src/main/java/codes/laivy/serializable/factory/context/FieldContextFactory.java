@@ -2,19 +2,17 @@ package codes.laivy.serializable.factory.context;
 
 import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.context.MapContext;
-import codes.laivy.serializable.exception.MalformedClassException;
 import codes.laivy.serializable.factory.instance.InstanceFactory;
 import codes.laivy.serializable.properties.SerializationProperties;
 import codes.laivy.serializable.utilities.Classes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.InvalidClassException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,106 +20,11 @@ import java.util.Map.Entry;
 import static codes.laivy.serializable.properties.SerializationProperties.Father;
 import static codes.laivy.serializable.utilities.Classes.getFields;
 
-final class FieldContextFactory implements ContextFactory {
-
-    // Static initializers
-
-    public static boolean usesJavaSerialization(@NotNull Class<?> reference) {
-        if (Externalizable.class.isAssignableFrom(reference)) {
-            return true;
-        }
-
-        boolean methods = false;
-        @NotNull Class<?> copy = reference;
-
-        while (copy != Object.class && copy != null) {
-            @NotNull Method method;
-
-            try {
-                method = copy.getDeclaredMethod("writeObject", ObjectOutputStream.class);
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            } try {
-                method = copy.getDeclaredMethod("readObject", ObjectInputStream.class);
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            } try {
-                method = copy.getDeclaredMethod("readObjectNoData");
-                if (!Modifier.isStatic(method.getModifiers())) methods = true;
-            } catch (@NotNull NoSuchMethodException ignore) {
-            }
-
-            // todo: #writeReplace and #readResolve methods
-
-            copy = copy.getSuperclass();
-        }
-
-        if (methods && !Serializable.class.isAssignableFrom(reference)) {
-            throw new IllegalStateException("the class '" + reference + "' has serialization methods but doesn't implement Serializable interface");
-        }
-
-        return methods;
-    }
-
-    public static <E> @Nullable E javaDeserializeObject(@NotNull Class<?> reference, @NotNull ArrayContext context) throws MalformedClassException, EOFException {
-        if (context.isNullContext()) {
-            return null;
-        }
-
-        // Byte array
-        byte[] bytes;
-
-        bytes = new byte[context.size()];
-
-        for (int row = 0; row < bytes.length; row++) {
-            bytes[row] = context.readByte();
-            row++;
-        }
-
-        // Deserialize using object input stream
-        try {
-            // Read input stream
-            @NotNull ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(bytes));
-            //noinspection unchecked
-            return (E) stream.readObject();
-        } catch (@NotNull IOException | @NotNull ClassNotFoundException e) {
-            throw new RuntimeException("an unknown error occurred trying to deserialize reference '" + reference + "' with json data '" + context + "'", e);
-        }
-    }
-    public static @NotNull ArrayContext javaSerializeObject(@NotNull Serializer serializer, @Nullable SerializationProperties properties, @NotNull Object object) {
-        try {
-            @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);
-            stream.writeObject(object);
-
-            // Byte array adapter
-            @NotNull ArrayContext context = ArrayContext.create(serializer, properties);
-
-            for (byte b : bytes.toByteArray()) {
-                context.write(b);
-            }
-
-            return context;
-        } catch (@NotNull IOException e) {
-            throw new RuntimeException("cannot serialize java object '" + object + "' from class '" + object.getClass().getName() + "'", e);
-        }
-    }
-
-    // Object
+public final class FieldContextFactory implements ContextFactory {
 
     @Override
     public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @Nullable SerializationProperties properties) {
         @NotNull Class<?> reference = object.getClass();
-
-        // Using adapter
-        if (properties != null && properties.getAdapter() != null) {
-            return properties.getAdapter().write(object, serializer, properties);
-        }
-
-        // Check if this class should be serialized using Java's Serializer
-        if (usesJavaSerialization(reference)) {
-            return javaSerializeObject(serializer, properties, object);
-        }
 
         // Retrieve fields
         @NotNull Map<String, Field> fields;
@@ -152,30 +55,23 @@ final class FieldContextFactory implements ContextFactory {
                 continue;
             }
 
-            context.setObject(name, Allocator.getFieldValue(field, object));
+            // todo: esse objeto precisa ter seu próprio properties
+            @NotNull SerializationProperties fieldProperties = SerializationProperties.create(serializer, field, object);
+            @NotNull Context t = serializer.toContext(Allocator.getFieldValue(field, object), fieldProperties);
+
+            context.setContext(name, t);
         }
 
         // Finish
         return context;
     }
     @Override
-    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException, InstantiationException, InvalidClassException {
+    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context) throws EOFException, InstantiationException, InvalidClassException {
         @Nullable SerializationProperties properties = context.getProperties();
-
-        // Using adapter
-        if (properties != null && properties.getAdapter() != null) {
-            return properties.getAdapter().read(reference, context);
-        }
 
         // Deserialize normally
         if (context.isNullContext()) {
             return null;
-        } else if (usesJavaSerialization(reference)) {
-            if (!context.isArrayContext()) {
-                throw new IllegalStateException("the reference '" + reference.getName() + "' uses java native serialization, but the context isn't iterable. Is missing any adapter?");
-            }
-
-            return javaDeserializeObject(reference, context.getAsArrayContext());
         } else if (context.isMapContext()) {
             // Variables
             @NotNull InstanceFactory instanceFactory = properties != null ? properties.getInstanceFactory() : InstanceFactory.allocator();
