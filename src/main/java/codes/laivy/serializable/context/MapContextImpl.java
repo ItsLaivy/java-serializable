@@ -37,7 +37,11 @@ final class MapContextImpl implements MapContext {
     @Override
     public void setObject(@NotNull String name, @Nullable Object object) {
         synchronized (lock) {
-            contextMap.put(name, serializer.toContext(object, properties));
+            if (object instanceof Context) {
+                setContext(name, (Context) object);
+            } else {
+                contextMap.put(name, serializer.toContext(object));
+            }
         }
     }
     @Override
@@ -50,7 +54,7 @@ final class MapContextImpl implements MapContext {
     @Override
     public @Nullable Object getObject(@NotNull References references, @NotNull String name) {
         synchronized (lock) {
-            return serializer.deserialize(references, getContext(name), properties);
+            return serializer.deserialize(references, getContext(name));
         }
     }
     @Override

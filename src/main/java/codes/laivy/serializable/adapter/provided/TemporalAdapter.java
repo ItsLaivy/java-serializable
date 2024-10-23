@@ -44,7 +44,7 @@ public class TemporalAdapter implements Adapter {
 
     @Override
     public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
-        @NotNull PrimitiveContext object = context.getAsObjectContext();
+        @NotNull PrimitiveContext object = context.getAsPrimitiveContext();
 
         if (reference == Date.class) {
             return new Date(object.getAsLong());

@@ -6,9 +6,9 @@ import org.jetbrains.annotations.Nullable;
 
 public interface Context {
 
-    @Nullable SerializationProperties getProperties();
-
     // Object
+
+    @Nullable SerializationProperties getProperties();
 
     default @NotNull ArrayContext getAsArrayContext() {
         if (this instanceof ArrayContext) {
@@ -21,14 +21,14 @@ public interface Context {
         return this instanceof ArrayContext;
     }
 
-    default @NotNull PrimitiveContext getAsObjectContext() {
+    default @NotNull PrimitiveContext getAsPrimitiveContext() {
         if (this instanceof PrimitiveContext) {
             return (PrimitiveContext) this;
         } else {
-            throw new IllegalStateException("this instance isn't an object context");
+            throw new IllegalStateException("this instance isn't a primitive context");
         }
     }
-    default boolean isObjectContext() {
+    default boolean isPrimitiveContext() {
         return this instanceof PrimitiveContext;
     }
 

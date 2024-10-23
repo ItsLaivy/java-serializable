@@ -38,16 +38,39 @@ public interface PrimitiveContext extends Context {
 
     // Object
 
-    boolean getAsBoolean();
-    byte getAsByte();
-    short getAsShort();
-    char getAsCharacter();
-    int getAsInteger();
-    long getAsLong();
-    float getAsFloat();
-    double getAsDouble();
-    @NotNull String getAsString();
-    @NotNull Number getAsNumber();
+    default boolean getAsBoolean() {
+        if (getObject() instanceof String && (getAsString().equalsIgnoreCase("true") || getAsString().equalsIgnoreCase("false"))) {
+            return getAsString().equalsIgnoreCase("true");
+        } else if (getObject() instanceof Boolean) {
+            return (boolean) getObject();
+        } else {
+            throw new IllegalStateException("this primitive context isn't a boolean!");
+        }
+    }
+    default byte getAsByte() {
+        return (byte) getObject();
+    }
+    default short getAsShort() {
+        return (short) getObject();
+    }
+    default char getAsCharacter() {
+        return getObject() instanceof Character ? (char) getObject() : getAsString().charAt(0);
+    }
+    default int getAsInteger() {
+        return (int) getObject();
+    }
+    default long getAsLong() {
+        return (long) getObject();
+    }
+    default float getAsFloat() {
+        return (float) getObject();
+    }
+    default double getAsDouble() {
+        return (double) getObject();
+    }
+    default @NotNull String getAsString() {
+        return getObject() instanceof String ? (String) getObject() : String.valueOf(getObject());
+    }
 
     void setAsBoolean(boolean b);
     void setAsByte(byte b);
@@ -59,9 +82,16 @@ public interface PrimitiveContext extends Context {
     void setAsDouble(double d);
     void setAsString(@NotNull String string);
 
-    boolean isNumber();
-    boolean isCharacter();
-    boolean isString();
-    boolean isBoolean();
+    @NotNull Object getObject();
+
+    default boolean isNumber() {
+        return getObject() instanceof Number;
+    }
+    default boolean isBoolean() {
+        return getObject() instanceof Boolean;
+    }
+    default boolean isString() {
+        return getObject() instanceof String;
+    }
 
 }

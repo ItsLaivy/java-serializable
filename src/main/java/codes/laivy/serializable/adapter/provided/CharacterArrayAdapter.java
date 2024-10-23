@@ -55,8 +55,8 @@ public class CharacterArrayAdapter implements Adapter {
     @Override
     public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
         if (reference == char[].class) {
-            if (context.isObjectContext()) {
-                return context.getAsObjectContext().getAsString().toCharArray();
+            if (context.isPrimitiveContext()) {
+                return context.getAsPrimitiveContext().getAsString().toCharArray();
             } else if (context.isArrayContext()) {
                 @NotNull ArrayContext iterable = context.getAsArrayContext();
                 @NotNull StringBuilder builder = new StringBuilder();
@@ -72,8 +72,8 @@ public class CharacterArrayAdapter implements Adapter {
                 throw new UnsupportedOperationException("context not supported by char[] adapter '" + context + "'");
             }
         } else if (reference == Character[].class) {
-            if (context.isObjectContext()) {
-                return context.getAsObjectContext().getAsString().toCharArray();
+            if (context.isPrimitiveContext()) {
+                return context.getAsPrimitiveContext().getAsString().toCharArray();
             } else if (context.isArrayContext()) {
                 @NotNull ArrayContext iterable = context.getAsArrayContext();
                 @NotNull StringBuilder builder = new StringBuilder();

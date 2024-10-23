@@ -24,7 +24,7 @@ public class UUIDAdapter implements Adapter {
     }
     @Override
     public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
-        return UUID.fromString(context.getAsObjectContext().getAsString());
+        return UUID.fromString(context.getAsPrimitiveContext().getAsString());
     }
 
 }

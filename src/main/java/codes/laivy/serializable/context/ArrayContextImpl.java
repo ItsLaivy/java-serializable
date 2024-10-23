@@ -46,48 +46,48 @@ final class ArrayContextImpl implements ArrayContext {
 
     @Override
     public boolean readBoolean() throws EOFException {
-        return poll().getAsObjectContext().getAsBoolean();
+        return poll().getAsPrimitiveContext().getAsBoolean();
     }
     @Override
     public byte readByte() throws EOFException {
-        return poll().getAsObjectContext().getAsByte();
+        return poll().getAsPrimitiveContext().getAsByte();
     }
     @Override
     public short readShort() throws EOFException {
-        return poll().getAsObjectContext().getAsShort();
+        return poll().getAsPrimitiveContext().getAsShort();
     }
     @Override
     public char readChar() throws EOFException {
-        return poll().getAsObjectContext().getAsString().charAt(0);
+        return poll().getAsPrimitiveContext().getAsString().charAt(0);
     }
     @Override
     public int readInt() throws EOFException {
-        return poll().getAsObjectContext().getAsInteger();
+        return poll().getAsPrimitiveContext().getAsInteger();
     }
     @Override
     public long readLong() throws EOFException {
-        return poll().getAsObjectContext().getAsLong();
+        return poll().getAsPrimitiveContext().getAsLong();
     }
     @Override
     public float readFloat() throws EOFException {
-        return poll().getAsObjectContext().getAsFloat();
+        return poll().getAsPrimitiveContext().getAsFloat();
     }
     @Override
     public double readDouble() throws EOFException {
-        return poll().getAsObjectContext().getAsDouble();
+        return poll().getAsPrimitiveContext().getAsDouble();
     }
     @Override
     public @NotNull String readString() throws EOFException {
-        return poll().getAsObjectContext().getAsString();
+        return poll().getAsPrimitiveContext().getAsString();
     }
 
     @Override
     public void write(@Nullable Object object) {
-
+        add(serializer.toContext(object, properties));
     }
     @Override
     public void write(@NotNull Context context) {
-
+        add(context);
     }
 
     // Array
