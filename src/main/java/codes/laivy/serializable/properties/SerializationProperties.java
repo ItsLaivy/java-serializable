@@ -72,7 +72,10 @@ public interface SerializationProperties {
     @NotNull Collection<Field> getIncludedFields();
 
     @NotNull ContextFactory getContextFactory();
+    void setConextFactory(@NotNull ContextFactory contextFactory);
+
     @NotNull InstanceFactory getInstanceFactory();
+    void setInstancFactory(@NotNull InstanceFactory instanceFactory);
 
     @Nullable Adapter getAdapter();
     void setAdapter(@Nullable Adapter adapter);

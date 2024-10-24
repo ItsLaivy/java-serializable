@@ -13,14 +13,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
+// todo #getAllAdapters static method
 public interface Serializer {
 
     // Static initializers
 
     static @NotNull JsonElement toJson(@NotNull Object object) {
-        return JsonSerializer.getInstance().serialize(object);
+        return Objects.requireNonNull(JsonSerializer.getInstance().serialize(object));
     }
 
     static <T> @Nullable T fromJson(@NotNull Class<T> reference, @Nullable JsonElement element) {
@@ -30,7 +32,7 @@ public interface Serializer {
         return JsonSerializer.getInstance().deserialize(reference, array);
     }
     static <T> @NotNull Iterable<@Nullable T> fromJson(@NotNull Class<T> reference, @NotNull JsonArray array) {
-        return JsonSerializer.getInstance().deserialize(reference, array);
+        return JsonSerializer.getInstance().deserialize(reference, (Iterable<JsonElement>) array);
     }
 
     // Adapters
@@ -157,10 +159,7 @@ public interface Serializer {
     // Context
 
     <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context);
-    <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @Nullable SerializationProperties properties);
-
     @Nullable Object deserialize(@NotNull References references, @NotNull Context context);
-    @Nullable Object deserialize(@NotNull References references, @NotNull Context context, @Nullable SerializationProperties properties);
 
     @NotNull Context toContext(@Nullable Object object);
     @NotNull Context toContext(@Nullable Object object, @Nullable SerializationProperties properties);

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 
 final class SerializationPropertiesImpl implements SerializationProperties {
@@ -80,8 +81,17 @@ final class SerializationPropertiesImpl implements SerializationProperties {
         return contextFactory;
     }
     @Override
+    public void setConextFactory(@NotNull ContextFactory contextFactory) {
+        this.contextFactory = contextFactory;
+    }
+
+    @Override
     public @NotNull InstanceFactory getInstanceFactory() {
         return instanceFactory;
+    }
+    @Override
+    public void setInstancFactory(@NotNull InstanceFactory instanceFactory) {
+        this.instanceFactory = instanceFactory;
     }
 
     @Override
@@ -91,6 +101,35 @@ final class SerializationPropertiesImpl implements SerializationProperties {
     @Override
     public void setAdapter(@Nullable Adapter adapter) {
         this.adapter = adapter;
+    }
+
+    // Implementations
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof SerializationPropertiesImpl)) return false;
+        SerializationPropertiesImpl that = (SerializationPropertiesImpl) object;
+        return isBypassTransients() == that.isBypassTransients() && Objects.equals(getFather(), that.getFather()) && Objects.equals(getOuterInstance(), that.getOuterInstance()) && Objects.equals(getTypeConcretes(), that.getTypeConcretes()) && Objects.equals(genericConcretes, that.genericConcretes) && Objects.equals(getIncludedFields(), that.getIncludedFields()) && Objects.equals(getContextFactory(), that.getContextFactory()) && Objects.equals(getInstanceFactory(), that.getInstanceFactory()) && Objects.equals(getAdapter(), that.getAdapter());
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(getFather(), getOuterInstance(), getTypeConcretes(), genericConcretes, isBypassTransients(), getIncludedFields(), getContextFactory(), getInstanceFactory(), getAdapter());
+    }
+
+    @Override
+    public @NotNull String toString() {
+        return "SerializationPropertiesImpl{" +
+                "father=" + father +
+                ", outerInstance=" + outerInstance +
+                ", typeConcretes=" + typeConcretes +
+                ", genericConcretes=" + genericConcretes +
+                ", bypassTransients=" + bypassTransients +
+                ", includedFields=" + includedFields +
+                ", contextFactory=" + contextFactory +
+                ", instanceFactory=" + instanceFactory +
+                ", adapter=" + adapter +
+                '}';
     }
 
 }

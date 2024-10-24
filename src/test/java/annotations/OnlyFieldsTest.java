@@ -5,7 +5,6 @@ import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.ExcludeFields;
 import codes.laivy.serializable.annotations.OnlyFields;
 import codes.laivy.serializable.json.JsonSerializer;
-import codes.laivy.serializable.utilities.Classes;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -86,8 +85,6 @@ public final class OnlyFieldsTest {
 
     static float getFAlpha(@NotNull Color color) {
         try {
-            Classes.allowModule(color.getClass(), OnlyFields.class);
-
             @NotNull Field field = color.getClass().getDeclaredField("falpha");
 
             //noinspection DataFlowIssue

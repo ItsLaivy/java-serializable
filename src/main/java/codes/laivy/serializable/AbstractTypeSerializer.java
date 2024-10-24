@@ -19,7 +19,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     // Object
 
-    private final @NotNull AdapterMapList adapters = new AdapterMapList();
+    protected final @NotNull AdapterMapList adapters = new AdapterMapList();
 
     public AbstractTypeSerializer() {
         @NotNull Adapter[] adapters = new Adapter[]{
@@ -31,7 +31,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
         for (@NotNull Adapter adapter : adapters) {
             for (@NotNull Class<?> reference : adapter.getReferences()) {
-                this.adapters.adapterMap.put(reference, adapter);
+                this.adapters.map.put(reference, adapter);
             }
         }
     }
@@ -44,7 +44,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     }
     @Override
     public @NotNull Optional<Adapter> getAdapter(@NotNull Class<?> reference) {
-        return Optional.ofNullable(adapters.adapterMap.getOrDefault(reference, null));
+        return Optional.ofNullable(adapters.map.getOrDefault(reference, null));
     }
 
     // Serializable
@@ -509,19 +509,8 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
         return (E) object;
     }
     @Override
-    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @Nullable SerializationProperties properties) {
-        @Nullable Object object = deserialize(References.of(reference), context, properties);
-
-        if (object != null && !reference.isAssignableFrom(object.getClass())) {
-            throw new ClassCastException("unexpected object reference '" + object.getClass().getName() + "', expected '" + reference.getName() + "': " + object);
-        }
-
-        //noinspection unchecked
-        return (E) object;
-    }
-    @Override
     public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) {
-        @Nullable Object object = deserialize(References.of(reference), context, null);
+        @Nullable Object object = deserialize(References.of(reference), context);
 
         if (object != null && !reference.isAssignableFrom(object.getClass())) {
             throw new ClassCastException("unexpected object reference '" + object.getClass().getName() + "', expected '" + reference.getName() + "': " + object);
@@ -535,10 +524,6 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     public @Nullable Object deserialize(@NotNull References references, @Nullable T object) throws MalformedClassException {
         return deserialize(references, object, null);
     }
-    @Override
-    public @Nullable Object deserialize(@NotNull References references, @NotNull Context context) {
-        return deserialize(references, context, null);
-    }
 
     // Contexts
 
@@ -551,17 +536,17 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     // Classes
 
-    private static final class AdapterMapList extends AbstractList<Adapter> {
+    protected static final class AdapterMapList extends AbstractList<Adapter> {
 
-        final @NotNull Map<Class<?>, Adapter> adapterMap = new HashMap<>();
+        public final @NotNull Map<Class<?>, Adapter> map = new HashMap<>();
 
         @Override
         public @NotNull Adapter get(int index) {
-            return adapterMap.values().stream().skip(index).findFirst().orElseThrow(IndexOutOfBoundsException::new);
+            return map.values().stream().skip(index).findFirst().orElseThrow(IndexOutOfBoundsException::new);
         }
         @Override
         public int size() {
-            return adapterMap.size();
+            return map.size();
         }
 
         @Override
@@ -571,16 +556,16 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
             }
 
             for (@NotNull Class<?> reference : adapter.getReferences()) {
-                adapterMap.put(reference, adapter);
+                map.put(reference, adapter);
             }
         }
         @Override
         public @NotNull Adapter remove(int index) {
             @NotNull Adapter adapter = get(index);
 
-            for (@NotNull Map.Entry<Class<?>, Adapter> entry : new HashMap<>(adapterMap).entrySet()) {
+            for (@NotNull Map.Entry<Class<?>, Adapter> entry : new HashMap<>(map).entrySet()) {
                 if (entry.getValue() == adapter) {
-                    adapterMap.remove(entry.getKey());
+                    map.remove(entry.getKey());
                 }
             }
 
