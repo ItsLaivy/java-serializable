@@ -2,10 +2,10 @@ package codes.laivy.serializable.adapter.provided;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.context.PrimitiveContext;
-import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -25,7 +25,7 @@ public class CharacterArrayAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
         if (object instanceof Character[]) {
             @Nullable Character[] instance = (Character[]) object;
 
@@ -35,7 +35,7 @@ public class CharacterArrayAdapter implements Adapter {
                 @NotNull ArrayContext context = ArrayContext.create(serializer);
 
                 for (@Nullable Character c : instance) {
-                    context.write(c);
+                    context.write(c, Config.create(serializer, Character.class));
                 }
 
                 return context;
@@ -53,7 +53,7 @@ public class CharacterArrayAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException {
         if (reference == char[].class) {
             if (context.isPrimitiveContext()) {
                 return context.getAsPrimitiveContext().getAsString().toCharArray();
@@ -73,7 +73,14 @@ public class CharacterArrayAdapter implements Adapter {
             }
         } else if (reference == Character[].class) {
             if (context.isPrimitiveContext()) {
-                return context.getAsPrimitiveContext().getAsString().toCharArray();
+                char[] original = context.getAsPrimitiveContext().getAsString().toCharArray();
+                @NotNull Character[] characters = new Character[original.length];
+
+                for (int index = 0; index < original.length; index++) {
+                    characters[index] = original[index];
+                }
+
+                return characters;
             } else if (context.isArrayContext()) {
                 @NotNull ArrayContext iterable = context.getAsArrayContext();
                 @NotNull StringBuilder builder = new StringBuilder();

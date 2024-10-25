@@ -2,11 +2,10 @@ package codes.laivy.serializable.adapter.provided;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.context.PrimitiveContext;
-import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
 import java.time.*;
@@ -34,7 +33,7 @@ public class TemporalAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
         if (object.getClass() == Date.class) {
             return PrimitiveContext.create(((Date) object).getTime());
         } else {
@@ -43,7 +42,7 @@ public class TemporalAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException {
         @NotNull PrimitiveContext object = context.getAsPrimitiveContext();
 
         if (reference == Date.class) {

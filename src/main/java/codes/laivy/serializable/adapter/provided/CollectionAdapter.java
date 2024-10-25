@@ -2,17 +2,13 @@ package codes.laivy.serializable.adapter.provided;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
-import codes.laivy.serializable.annotations.Concrete;
-import codes.laivy.serializable.annotations.Concretes;
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
-import java.lang.reflect.AnnotatedType;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
@@ -20,9 +16,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import static codes.laivy.serializable.utilities.Classes.isConcrete;
 
 public class CollectionAdapter implements Adapter {
 
@@ -56,7 +49,7 @@ public class CollectionAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
         if (object instanceof Collection<?>) {
             // Start
             @NotNull Collection<?> collection = (Collection<?>) object;
@@ -64,7 +57,7 @@ public class CollectionAdapter implements Adapter {
 
             // Add elements to collection
             for (@Nullable Object element : collection) {
-                context.write(element);
+                context.write(element, element != null ? Config.create(serializer, element.getClass()) : Config.create());
             }
 
             // Finish
@@ -76,43 +69,23 @@ public class CollectionAdapter implements Adapter {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException {
         // Initialize variables
         @NotNull ArrayContext array = context.getAsArrayContext();
         @NotNull Collection<Class<?>> temp = new LinkedHashSet<>();
         @NotNull Collection collection;
 
         // Retrieve generic types
-        if (context.getProperties() == null) {
-            throw new UnsupportedOperationException("a collection requires a valid SerializingProperties data with the generic concrete elements");
-        } else {
-            @NotNull SerializationProperties properties = context.getProperties();
-            // Function to help add concrete types
-            @NotNull Consumer<AnnotatedType> addConcreteTypes = (t) -> {
-                if (t.getType() instanceof Class && isConcrete((Class<?>) t.getType())) {
-                    temp.add((Class<?>) t.getType());
-                }
-
-                temp.addAll(Arrays.stream(t.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toList()));
-                temp.addAll(Arrays.stream(t.getAnnotationsByType(Concretes.class)).flatMap(concretes -> Arrays.stream(concretes.value())).map(Concrete::type).collect(Collectors.toList()));
-            };
-
-            // Add generic concrete references
-            temp.addAll(properties.getGenericConcretes(reference.getGenericInterfaces()[0]));
-        }
-
-        // Functions
-        @NotNull References references = References.of(temp);
-
         @NotNull Consumer<Collection<Object>> adder = objects -> {
             while (true) {
                 try {
-                    @Nullable Object object = array.readObject(references);
+                    // todo: function to retrieve type generic
+                    @Nullable Object object = array.readObject(reference);
                     objects.add(object);
                 } catch (@NotNull EOFException ignore) {
                     break;
                 } catch (@NotNull Throwable throwable) {
-                    throw new RuntimeException("cannot deserialize object to collection '" + objects.getClass().getName() + "' using references " + references, throwable);
+                    throw new RuntimeException("cannot deserialize object to collection '" + objects.getClass().getName() + "' using references '" + reference.getName() + "'", throwable);
                 }
             }
         };
