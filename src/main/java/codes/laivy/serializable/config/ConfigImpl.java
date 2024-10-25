@@ -1,4 +1,4 @@
-package codes.laivy.serializable.properties;
+package codes.laivy.serializable.config;
 
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.factory.context.ContextFactory;
@@ -8,17 +8,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
-final class SerializationPropertiesImpl implements SerializationProperties {
+final class ConfigImpl implements Config {
 
     private final @Nullable Father father;
-    private final @Nullable Object outerInstance;
+    private @Nullable Object outerInstance;
 
     private final @NotNull Set<Class<?>> typeConcretes;
-    private final @NotNull Set<Class<?>> genericConcretes;
+    private final @NotNull Map<Type, Collection<Class<?>>> genericConcretes;
 
     public boolean bypassTransients;
 
@@ -29,7 +27,7 @@ final class SerializationPropertiesImpl implements SerializationProperties {
 
     private @Nullable Adapter adapter;
 
-    public SerializationPropertiesImpl(@Nullable Father father, @Nullable Object outerInstance, @NotNull Set<Class<?>> typeConcretes, @NotNull Set<Class<?>> genericConcretes, boolean bypassTransients, @NotNull Set<Field> includedFields, @NotNull ContextFactory contextFactory, @NotNull InstanceFactory instanceFactory, @Nullable Adapter adapter) {
+    public ConfigImpl(@Nullable Father father, @Nullable Object outerInstance, @NotNull Set<Class<?>> typeConcretes, @NotNull Map<Type, Collection<Class<?>>> genericConcretes, boolean bypassTransients, @NotNull Set<Field> includedFields, @NotNull ContextFactory contextFactory, @NotNull InstanceFactory instanceFactory, @Nullable Adapter adapter) {
         this.father = father;
         this.outerInstance = outerInstance;
         this.typeConcretes = typeConcretes;
@@ -52,6 +50,10 @@ final class SerializationPropertiesImpl implements SerializationProperties {
     public @Nullable Object getOuterInstance() {
         return outerInstance;
     }
+    @Override
+    public void setOuterInstance(@Nullable Object instance) {
+        this.outerInstance = instance;
+    }
 
     @Override
     public @NotNull Collection<Class<?>> getTypeConcretes() {
@@ -59,7 +61,7 @@ final class SerializationPropertiesImpl implements SerializationProperties {
     }
     @Override
     public @NotNull Collection<Class<?>> getGenericConcretes(@NotNull Type type) {
-        return genericConcretes;
+        return genericConcretes.getOrDefault(type, new ArrayList<>());
     }
 
     @Override
@@ -108,8 +110,8 @@ final class SerializationPropertiesImpl implements SerializationProperties {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof SerializationPropertiesImpl)) return false;
-        SerializationPropertiesImpl that = (SerializationPropertiesImpl) object;
+        if (!(object instanceof ConfigImpl)) return false;
+        ConfigImpl that = (ConfigImpl) object;
         return isBypassTransients() == that.isBypassTransients() && Objects.equals(getFather(), that.getFather()) && Objects.equals(getOuterInstance(), that.getOuterInstance()) && Objects.equals(getTypeConcretes(), that.getTypeConcretes()) && Objects.equals(genericConcretes, that.genericConcretes) && Objects.equals(getIncludedFields(), that.getIncludedFields()) && Objects.equals(getContextFactory(), that.getContextFactory()) && Objects.equals(getInstanceFactory(), that.getInstanceFactory()) && Objects.equals(getAdapter(), that.getAdapter());
     }
     @Override

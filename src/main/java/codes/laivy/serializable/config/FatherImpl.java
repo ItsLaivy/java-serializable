@@ -1,6 +1,6 @@
-package codes.laivy.serializable.properties;
+package codes.laivy.serializable.config;
 
-import codes.laivy.serializable.properties.SerializationProperties.Father;
+import codes.laivy.serializable.config.Config.Father;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
