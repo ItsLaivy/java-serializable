@@ -1,8 +1,7 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
+import codes.laivy.serializable.config.Config;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,15 +9,13 @@ import java.io.EOFException;
 import java.util.Collection;
 import java.util.Objects;
 
+// todo: writeAll
 public interface ArrayContext extends Context, Collection<Context> {
 
     // Static initializers
 
     static @NotNull ArrayContext create(@NotNull Serializer serializer) {
-        return create(serializer, null);
-    }
-    static @NotNull ArrayContext create(@NotNull Serializer serializer, @Nullable SerializationProperties properties) {
-        return new ArrayContextImpl(serializer, properties);
+        return new ArrayContextImpl(serializer);
     }
 
     // Object
@@ -26,16 +23,8 @@ public interface ArrayContext extends Context, Collection<Context> {
     @NotNull Serializer getSerializer();
 
     default <E> @Nullable E readObject(@NotNull Class<E> reference) throws EOFException {
-        @Nullable Object object = readObject(References.of(reference));
-
-        if (object != null && reference.isAssignableFrom(object.getClass())) {
-            throw new ClassCastException("cannot retrieve object from type '" + object.getClass().getName() + "' using '" + reference.getName() + "' reference");
-        }
-
-        //noinspection unchecked
-        return (E) object;
+        return getSerializer().deserialize(reference, readContext());
     }
-    @Nullable Object readObject(@NotNull References references) throws EOFException;
 
     @NotNull Context readContext() throws EOFException;
 
@@ -67,7 +56,13 @@ public interface ArrayContext extends Context, Collection<Context> {
         return readObject(String.class);
     }
 
-    void write(@Nullable Object object);
+    default void write(@Nullable Object object) {
+        write(object, object != null ? Config.create(getSerializer(), object.getClass()) : Config.create());
+    }
+    default void write(@Nullable Object object, @NotNull Config config) {
+        write(getSerializer().toContext(object, config));
+    }
+
     void write(@NotNull Context context);
 
     int size();

@@ -1,8 +1,6 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,13 +17,10 @@ final class ArrayContextImpl implements ArrayContext {
     private final @NotNull Object lock = new Object();
     private final @NotNull Serializer serializer;
 
-    private final @Nullable SerializationProperties properties;
-
     private final @NotNull LinkedList<Context> contexts = new LinkedList<>();
 
-    public ArrayContextImpl(@NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+    public ArrayContextImpl(@NotNull Serializer serializer) {
         this.serializer = serializer;
-        this.properties = properties;
     }
 
     // Modules
@@ -35,64 +30,10 @@ final class ArrayContextImpl implements ArrayContext {
         return serializer;
     }
 
-    @Override
-    public @Nullable Object readObject(@NotNull References references) throws EOFException {
-        return serializer.deserialize(references, poll());
-    }
+    // Writers
+
     @Override
     public @NotNull Context readContext() throws EOFException {
-        return poll();
-    }
-
-    @Override
-    public boolean readBoolean() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsBoolean();
-    }
-    @Override
-    public byte readByte() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsByte();
-    }
-    @Override
-    public short readShort() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsShort();
-    }
-    @Override
-    public char readChar() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsString().charAt(0);
-    }
-    @Override
-    public int readInt() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsInteger();
-    }
-    @Override
-    public long readLong() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsLong();
-    }
-    @Override
-    public float readFloat() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsFloat();
-    }
-    @Override
-    public double readDouble() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsDouble();
-    }
-    @Override
-    public @NotNull String readString() throws EOFException {
-        return poll().getAsPrimitiveContext().getAsString();
-    }
-
-    @Override
-    public void write(@Nullable Object object) {
-        add(serializer.toContext(object, properties));
-    }
-    @Override
-    public void write(@NotNull Context context) {
-        add(context);
-    }
-
-    // Array
-
-    private @NotNull Context poll() throws EOFException {
         synchronized (lock) {
             if (contexts.isEmpty()) {
                 throw new EOFException();
@@ -101,6 +42,12 @@ final class ArrayContextImpl implements ArrayContext {
             return contexts.poll();
         }
     }
+    @Override
+    public void write(@NotNull Context context) {
+        add(context);
+    }
+
+    // Array
 
     @Override
     public int size() {
@@ -161,13 +108,6 @@ final class ArrayContextImpl implements ArrayContext {
         contexts.clear();
     }
 
-    // Properties
-
-    @Override
-    public @Nullable SerializationProperties getProperties() {
-        return properties;
-    }
-
     // Implementations
 
     @Override
@@ -175,18 +115,17 @@ final class ArrayContextImpl implements ArrayContext {
         if (this == object) return true;
         if (!(object instanceof ArrayContextImpl)) return false;
         @NotNull ArrayContextImpl contexts1 = (ArrayContextImpl) object;
-        return Objects.equals(getSerializer(), contexts1.getSerializer()) && Objects.equals(getProperties(), contexts1.getProperties()) && Objects.equals(contexts, contexts1.contexts);
+        return Objects.equals(getSerializer(), contexts1.getSerializer()) && Objects.equals(contexts, contexts1.contexts);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getSerializer(), getProperties(), contexts);
+        return Objects.hash(getSerializer(), contexts);
     }
 
     @Override
     public @NotNull String toString() {
         return "ArrayContextImpl{" +
                 "serializer=" + serializer +
-                ", properties=" + properties +
                 ", contexts=" + contexts +
                 '}';
     }

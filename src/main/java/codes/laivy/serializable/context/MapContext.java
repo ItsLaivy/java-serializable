@@ -1,8 +1,7 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
+import codes.laivy.serializable.config.Config;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,32 +12,26 @@ public interface MapContext extends Context {
     // Static initializers
 
     static @NotNull MapContext create(@NotNull Serializer serializer) {
-        return create(serializer, null);
-    }
-    static @NotNull MapContext create(@NotNull Serializer serializer, @Nullable SerializationProperties properties) {
-        return new MapContextImpl(serializer, properties);
+        return new MapContextImpl(serializer);
     }
 
     // Object
 
     @NotNull Serializer getSerializer();
 
-    void setObject(@NotNull String name, @Nullable Object object);
     void setContext(@NotNull String name, @NotNull Context context);
-
-    default <E> @Nullable E getObject(@NotNull Class<E> reference, @NotNull String name) {
-        @Nullable Object object = getObject(References.of(reference), name);
-
-        if (object != null && reference.isAssignableFrom(object.getClass())) {
-            throw new ClassCastException("cannot retrieve object from type '" + object.getClass().getName() + "' using '" + reference.getName() + "' reference");
-        }
-
-        //noinspection unchecked
-        return (E) object;
-    }
-    @Nullable Object getObject(@NotNull References references, @NotNull String name);
-
     @NotNull Context getContext(@NotNull String name);
+
+    default void setObject(@NotNull String name, @Nullable Object object) {
+        setObject(name, object, object != null ? Config.create(getSerializer(), object.getClass()) : Config.create());
+    }
+    default void setObject(@NotNull String name, @Nullable Object object, @NotNull Config config) {
+        setObject(name, getSerializer().toContext(object, config));
+    }
+    // todo IncompatibleReferenceException
+    default <E> @Nullable E getObject(@NotNull Class<E> reference, @NotNull String name) {
+        return getSerializer().deserialize(reference, getContext(name));
+    }
 
     boolean contains(@NotNull String name);
 

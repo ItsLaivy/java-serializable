@@ -1,18 +1,17 @@
 package codes.laivy.serializable.context;
 
-import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 final class PrimitiveContextImpl implements PrimitiveContext {
 
     // Object
 
     public @NotNull Object object;
-    private final @Nullable SerializationProperties properties;
 
-    public PrimitiveContextImpl(@NotNull Object object, @Nullable SerializationProperties properties) {
-        this.properties = properties;
+    public PrimitiveContextImpl(@NotNull Object object) {
         this.object = object;
     }
 
@@ -60,11 +59,23 @@ final class PrimitiveContextImpl implements PrimitiveContext {
         return object;
     }
 
-    // Properties
+    // Implementations
 
     @Override
-    public @Nullable SerializationProperties getProperties() {
-        return properties;
+    public boolean equals(@Nullable Object object) {
+        if (this == object) return true;
+        if (!(object instanceof PrimitiveContextImpl)) return false;
+        @NotNull PrimitiveContextImpl that = (PrimitiveContextImpl) object;
+        return Objects.equals(getObject(), that.getObject());
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getObject());
+    }
+
+    @Override
+    public @NotNull String toString() {
+        return String.valueOf(object);
     }
 
 }

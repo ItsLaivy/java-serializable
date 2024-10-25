@@ -1,14 +1,10 @@
 package codes.laivy.serializable.context;
 
-import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface Context {
 
     // Object
-
-    @Nullable SerializationProperties getProperties();
 
     default @NotNull ArrayContext getAsArrayContext() {
         if (this instanceof ArrayContext) {

@@ -1,8 +1,6 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,13 +16,10 @@ final class MapContextImpl implements MapContext {
     private final @NotNull Object lock = new Object();
     private final @NotNull Serializer serializer;
 
-    private final @Nullable SerializationProperties properties;
-
     private final @NotNull Map<String, Context> contextMap = new HashMap<>();
 
-    public MapContextImpl(@NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+    public MapContextImpl(@NotNull Serializer serializer) {
         this.serializer = serializer;
-        this.properties = properties;
     }
 
     // Modules
@@ -35,26 +30,9 @@ final class MapContextImpl implements MapContext {
     }
 
     @Override
-    public void setObject(@NotNull String name, @Nullable Object object) {
-        synchronized (lock) {
-            if (object instanceof Context) {
-                setContext(name, (Context) object);
-            } else {
-                contextMap.put(name, serializer.toContext(object));
-            }
-        }
-    }
-    @Override
     public void setContext(@NotNull String name, @NotNull Context context) {
         synchronized (lock) {
             contextMap.put(name, context);
-        }
-    }
-
-    @Override
-    public @Nullable Object getObject(@NotNull References references, @NotNull String name) {
-        synchronized (lock) {
-            return serializer.deserialize(references, getContext(name));
         }
     }
     @Override
@@ -76,13 +54,6 @@ final class MapContextImpl implements MapContext {
         return contextMap.keySet();
     }
 
-    // Properties
-
-    @Override
-    public @Nullable SerializationProperties getProperties() {
-        return properties;
-    }
-
     // Implementations
 
     @Override
@@ -90,18 +61,17 @@ final class MapContextImpl implements MapContext {
         if (this == object) return true;
         if (!(object instanceof MapContextImpl)) return false;
         @NotNull MapContextImpl that = (MapContextImpl) object;
-        return Objects.equals(getSerializer(), that.getSerializer()) && Objects.equals(getProperties(), that.getProperties()) && Objects.equals(contextMap, that.contextMap);
+        return Objects.equals(getSerializer(), that.getSerializer()) && Objects.equals(contextMap, that.contextMap);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getSerializer(), getProperties(), contextMap);
+        return Objects.hash(getSerializer(), contextMap);
     }
 
     @Override
     public @NotNull String toString() {
         return "MapContextImpl{" +
                 "serializer=" + serializer +
-                ", properties=" + properties +
                 ", contextMap=" + contextMap +
                 '}';
     }
