@@ -181,8 +181,12 @@ public final class Allocator {
             return true;
         } else if (c1.isAssignableFrom(c2)) {
             return true;
+        } else if (WRAPPERS.containsKey(c1)) {
+            return WRAPPERS.get(c1).isAssignableFrom(c2);
+        } else if (WRAPPERS.containsKey(c2)) {
+            return c1.isAssignableFrom(WRAPPERS.get(c2));
         } else {
-            return WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2);
+            return false;
         }
     }
 
