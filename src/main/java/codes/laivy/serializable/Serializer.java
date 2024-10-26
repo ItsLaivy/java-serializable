@@ -1,11 +1,10 @@
 package codes.laivy.serializable;
 
 import codes.laivy.serializable.adapter.Adapter;
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
-import codes.laivy.serializable.exception.MalformedClassException;
+import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import codes.laivy.serializable.json.JsonSerializer;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
@@ -21,18 +20,25 @@ public interface Serializer {
 
     // Static initializers
 
-    static @NotNull JsonElement toJson(@NotNull Object object) {
+    static @NotNull JsonElement toJson(@Nullable Object object) {
         return Objects.requireNonNull(JsonSerializer.getInstance().serialize(object));
+    }
+    static @NotNull JsonElement toJson(@Nullable Object object, @NotNull Config config) {
+        return Objects.requireNonNull(JsonSerializer.getInstance().serialize(object, config));
     }
 
     static <T> @Nullable T fromJson(@NotNull Class<T> reference, @Nullable JsonElement element) {
         return JsonSerializer.getInstance().deserialize(reference, element);
     }
+    static <T> @Nullable T fromJson(@NotNull Class<T> reference, @Nullable JsonElement element, @NotNull Config config) {
+        return JsonSerializer.getInstance().deserialize(reference, element, config);
+    }
+
     static <T> @NotNull Iterable<@Nullable T> fromJson(@NotNull Class<T> reference, @Nullable JsonElement @NotNull ... array) {
         return JsonSerializer.getInstance().deserialize(reference, array);
     }
-    static <T> @NotNull Iterable<@Nullable T> fromJson(@NotNull Class<T> reference, @NotNull JsonArray array) {
-        return JsonSerializer.getInstance().deserialize(reference, (Iterable<JsonElement>) array);
+    static <T> @NotNull Iterable<@Nullable T> fromJson(@NotNull Class<T> reference, @NotNull JsonArray array, @NotNull Config config) {
+        return JsonSerializer.getInstance().deserialize(reference, (Iterable<JsonElement>) array, config);
     }
 
     // Adapters
@@ -42,24 +48,26 @@ public interface Serializer {
 
     // Serializable
 
-    @Nullable Object serialize(@Nullable Serializable object) throws MalformedClassException;
-    @Nullable Object serialize(@Nullable Serializable object, @Nullable SerializationProperties properties) throws MalformedClassException;
+    @Nullable Object serialize(@Nullable Serializable object, @NotNull Config config);
+    @Nullable Object serialize(@Nullable Serializable object);
 
     @NotNull Iterable<?> serialize(@Nullable Serializable @NotNull ... array);
-    @NotNull Iterable<?> serialize(@NotNull Iterable<@Nullable Serializable> iterable);
     @NotNull Iterable<?> serialize(@Nullable Object @NotNull ... array);
+
+    @NotNull Iterable<?> serialize(@NotNull Iterable<@Nullable Serializable> iterable);
+    @NotNull Iterable<?> serialize(@NotNull Iterable<@Nullable Serializable> iterable, Config config);
 
     // Enum
 
-    @Nullable Object serialize(@Nullable Enum<?> e, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Enum<?> e, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Enum<?> e);
     @NotNull Iterable<?> serialize(@Nullable Enum<?> @NotNull ... array);
 
     // Boolean
 
-    @Nullable Object serialize(@Nullable Boolean b, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(boolean b, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Boolean b, @NotNull Config config);
+    @NotNull Object serialize(boolean b, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Boolean b);
     @NotNull Object serialize(boolean b);
@@ -69,8 +77,8 @@ public interface Serializer {
 
     // Short
 
-    @Nullable Object serialize(@Nullable Short s, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(short s, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Short s, @NotNull Config config);
+    @NotNull Object serialize(short s, @NotNull Config config);
 
     @NotNull Object serialize(short s);
     @Nullable Object serialize(@Nullable Short s);
@@ -80,8 +88,8 @@ public interface Serializer {
 
     // Integer
 
-    @Nullable Object serialize(@Nullable Integer i, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(int i, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Integer i, @NotNull Config config);
+    @NotNull Object serialize(int i, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Integer i);
     @NotNull Object serialize(int i);
@@ -91,8 +99,8 @@ public interface Serializer {
 
     // Long
 
-    @Nullable Object serialize(@Nullable Long l, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(long l, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Long l, @NotNull Config config);
+    @NotNull Object serialize(long l, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Long l);
     @NotNull Object serialize(long l);
@@ -102,8 +110,8 @@ public interface Serializer {
 
     // Float
 
-    @Nullable Object serialize(@Nullable Float f, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(float f, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Float f, @NotNull Config config);
+    @NotNull Object serialize(float f, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Float f);
     @NotNull Object serialize(float f);
@@ -113,8 +121,8 @@ public interface Serializer {
 
     // Double
 
-    @Nullable Object serialize(@Nullable Double d, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(double d, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Double d, @NotNull Config config);
+    @NotNull Object serialize(double d, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Double d);
     @NotNull Object serialize(double d);
@@ -124,8 +132,8 @@ public interface Serializer {
 
     // Character
 
-    @Nullable Object serialize(@Nullable Character c, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(char c, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Character c, @NotNull Config config);
+    @NotNull Object serialize(char c, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Character c);
     @NotNull Object serialize(char c);
@@ -135,8 +143,8 @@ public interface Serializer {
 
     // Byte
 
-    @Nullable Object serialize(@Nullable Byte b, @Nullable SerializationProperties properties);
-    @NotNull Object serialize(byte b, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Byte b, @NotNull Config config);
+    @NotNull Object serialize(byte b, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Byte b);
     @NotNull Object serialize(byte b);
@@ -146,22 +154,22 @@ public interface Serializer {
 
     // String
 
-    @Nullable Object serialize(@Nullable String string, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable String string, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable String string);
     @NotNull Iterable<?> serialize(@Nullable String @NotNull ... array);
 
     // Pure
 
-    @Nullable Object serialize(@Nullable Object object) throws MalformedClassException;
-    @Nullable Object serialize(@Nullable Object object, @Nullable SerializationProperties properties);
+    @Nullable Object serialize(@Nullable Object object);
+    @Nullable Object serialize(@Nullable Object object, @NotNull Config config);
 
     // Context
 
-    <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context);
-    @Nullable Object deserialize(@NotNull References references, @NotNull Context context);
+    <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) throws IncompatibleReferenceException;
+    <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @NotNull Config config) throws IncompatibleReferenceException;
 
     @NotNull Context toContext(@Nullable Object object);
-    @NotNull Context toContext(@Nullable Object object, @Nullable SerializationProperties properties);
+    @NotNull Context toContext(@Nullable Object object, @NotNull Config config);
 
 }
