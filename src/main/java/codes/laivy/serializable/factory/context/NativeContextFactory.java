@@ -2,13 +2,13 @@ package codes.laivy.serializable.factory.context;
 
 import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.annotations.UseEmptyConstructor;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.context.MapContext;
 import codes.laivy.serializable.context.PrimitiveContext;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
+import codes.laivy.serializable.exception.NullConcreteClassException;
 import codes.laivy.serializable.factory.instance.InstanceFactory;
 import codes.laivy.serializable.utilities.Classes;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +42,7 @@ public final class NativeContextFactory implements ContextFactory {
                 int length = Array.getLength(object);
 
                 for (int index = 0; index < length; index++) {
-                    context.write(serializer.serialize(Array.get(object, index), config));
+                    context.write(serializer.serialize(Array.get(object, index)));
                 }
 
                 return context;
@@ -124,10 +124,6 @@ public final class NativeContextFactory implements ContextFactory {
             @NotNull InstanceFactory instanceFactory = config.getInstanceFactory();
             @Nullable Father father = config.getFather();
 
-            if (reference.isAnnotationPresent(UseEmptyConstructor.class)) {
-                instanceFactory = InstanceFactory.constructor();
-            }
-
             // Serialize
             @NotNull Object instance = instanceFactory.generate(reference);
 
@@ -140,7 +136,10 @@ public final class NativeContextFactory implements ContextFactory {
                 @Nullable Field field = fields.getOrDefault(name, null);
 
                 if (field == null) {
-                    throw new InvalidClassException("there's no field with name '" + name + "'");
+                    throw new IncompatibleReferenceException("there's no field with name '" + name + "' at class '" + reference.getName() + "'");
+                } else if (object.getContext(name).isNullContext()) {
+                    // Set outer field instance
+                    Allocator.setFieldValue(field, instance, null);
                 } else {
                     config = Config.create(serializer, Father.create(field, instance));
 
@@ -156,16 +155,20 @@ public final class NativeContextFactory implements ContextFactory {
                     } else {
                         @NotNull Class<?>[] references = Classes.getReferences(field);
 
+                        if (references.length == 0) {
+                            throw new NullConcreteClassException("there's no concrete references for field '" + field + "'");
+                        }
+
                         for (@NotNull Class<?> fieldReference : references) try {
                             // Set normal field instance
-                            @Nullable Object value = object.getObject(fieldReference, name);
+                            @Nullable Object value = object.getObject(fieldReference, name, Config.create(serializer, Father.create(field, instance)));
                             Allocator.setFieldValue(field, instance, value);
 
                             continue fields;
                         } catch (@NotNull IncompatibleReferenceException ignore) {
                         }
 
-                        throw new IncompatibleReferenceException("cannot deserialize field '" + field + "' because there's no compatible and concrete references for it: " + Arrays.toString(references));
+                        throw new IncompatibleReferenceException("cannot deserialize field '" + field + "' because there's no compatible references for it: " + Arrays.toString(references));
                     }
                 }
             }
