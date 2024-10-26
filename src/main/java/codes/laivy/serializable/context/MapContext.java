@@ -30,7 +30,10 @@ public interface MapContext extends Context {
     }
     // todo IncompatibleReferenceException
     default <E> @Nullable E getObject(@NotNull Class<E> reference, @NotNull String name) {
-        return getSerializer().deserialize(reference, getContext(name));
+        return getObject(reference, name, Config.create(getSerializer(), reference));
+    }
+    default <E> @Nullable E getObject(@NotNull Class<E> reference, @NotNull String name, @NotNull Config config) {
+        return getSerializer().deserialize(reference, getContext(name), config);
     }
 
     boolean contains(@NotNull String name);

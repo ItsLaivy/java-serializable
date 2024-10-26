@@ -23,7 +23,14 @@ public interface ArrayContext extends Context, Collection<Context> {
     @NotNull Serializer getSerializer();
 
     default <E> @Nullable E readObject(@NotNull Class<E> reference) throws EOFException {
-        return getSerializer().deserialize(reference, readContext());
+        return readObject(reference, Config.create(getSerializer(), reference));
+    }
+    default <E> @Nullable E readObject(@NotNull Class<E> reference, @NotNull Config config) throws EOFException {
+        @NotNull Context context = stream().findFirst().orElseThrow(EOFException::new);
+        @Nullable E object = getSerializer().deserialize(reference, context, config);
+        remove(context);
+
+        return object;
     }
 
     @NotNull Context readContext() throws EOFException;

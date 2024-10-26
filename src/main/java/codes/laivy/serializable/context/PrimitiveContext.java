@@ -22,12 +22,12 @@ public interface PrimitiveContext extends Context {
     // Object
 
     default boolean getAsBoolean() {
-        if (getObject() instanceof String && (getAsString().equalsIgnoreCase("true") || getAsString().equalsIgnoreCase("false"))) {
-            return getAsString().equalsIgnoreCase("true");
-        } else if (getObject() instanceof Boolean) {
+        if (getObject() instanceof Boolean) {
             return (boolean) getObject();
+        } else if (getObject() instanceof String && (getAsString().equalsIgnoreCase("true") || getAsString().equalsIgnoreCase("false"))) {
+            return getAsString().equalsIgnoreCase("true");
         } else {
-            throw new IllegalStateException("this primitive context isn't a boolean!");
+            throw new IllegalStateException("this primitive context isn't a boolean: " + getObject());
         }
     }
     default byte getAsByte() {
