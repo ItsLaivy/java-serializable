@@ -16,18 +16,33 @@ public final class ObjectTest {
 
     public static void match(@NotNull Object object) {
         @Nullable JsonElement json = Serializer.toJson(object);
+        @Nullable Throwable throwable = null;
 
-        System.out.print("Class: '" + object.getClass().getCanonicalName() + "'");
-        System.out.print(", Object: '" + object + "'");
-        System.out.print(", Json: " + json + "\n");
+        try {
+            @Nullable Object deserialized = Serializer.fromJson(object.getClass(), json);
 
-        @Nullable Object deserialized = Serializer.fromJson(object.getClass(), json);
+            if (object.getClass().isArray()) {
+                assert deserialized != null;
+                Assertions.assertTrue(ArrayUtils.equals(object, deserialized), "cannot match objects array with json '" + json + "', expected: '" + ArrayUtils.toString(object) + "', current: '" + ArrayUtils.toString(deserialized) + "'");
+            } else {
+                Assertions.assertEquals(object, deserialized, "cannot match objects with json '" + json + "'");
+            }
+        } catch (@NotNull Throwable t) {
+            throwable = t;
+        } finally {
+            if (throwable != null) {
+                System.out.print("\033[31mERROR:   \033[0m");
+            } else {
+                System.out.print("\033[32mSUCCESS: \033[0m");
+            }
 
-        if (object.getClass().isArray()) {
-            assert deserialized != null;
-            Assertions.assertTrue(ArrayUtils.equals(object, deserialized), "cannot match objects array with json '" + json + "', expected: '" + ArrayUtils.toString(object) + "', current: '" + ArrayUtils.toString(deserialized) + "'");
-        } else {
-            Assertions.assertEquals(object, deserialized, "cannot match objects with json '" + json + "'");
+            System.out.print("Class: '" + object.getClass().getCanonicalName() + "'");
+            System.out.print(", Object: '" + (object.getClass().isArray() ? ArrayUtils.toString(object) : object) + "'");
+            System.out.print(", Json: " + json + "\n");
+
+            if (throwable != null) {
+                Assertions.fail(throwable);
+            }
         }
     }
 

@@ -20,11 +20,11 @@ public final class Builder {
     private @Nullable Object outerInstance;
 
     private final @NotNull Set<Class<?>> typeConcretes = new LinkedHashSet<>();
-    private final @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new HashMap<>();
+    private final @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new LinkedHashMap<>();
 
     private boolean bypassTransients = false;
 
-    private final @NotNull Set<Field> includedFields = new HashSet<>();
+    private final @NotNull Set<Field> includedFields = new LinkedHashSet<>();
 
     private @NotNull ContextFactory contextFactory = ContextFactory.field();
     private @NotNull InstanceFactory instanceFactory = InstanceFactory.allocator();

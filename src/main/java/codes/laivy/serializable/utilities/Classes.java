@@ -6,10 +6,9 @@ import codes.laivy.serializable.annotations.Concrete;
 import codes.laivy.serializable.annotations.Concretes;
 import codes.laivy.serializable.annotations.KnownAs;
 import codes.laivy.serializable.context.ArrayContext;
+import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.context.MapContext;
-import codes.laivy.serializable.exception.MalformedClassException;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,11 +19,14 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static codes.laivy.serializable.config.Config.Father;
+
+@ApiStatus.Internal
 public final class Classes {
 
     // Static initializers
 
-    public static @NotNull References getReferences(@NotNull Field field) {
+    public static @NotNull Class<?> @NotNull [] getReferences(@NotNull Field field) {
         @NotNull List<Class<?>> classes = new LinkedList<>();
 
         if (isConcrete(field.getType())) {
@@ -43,9 +45,9 @@ public final class Classes {
             }
         }
 
-        return References.of(classes);
+        return classes.toArray(new Class[0]);
     }
-    public static @NotNull Map<String, Field> getFields(@Nullable SerializationProperties.Father father, final @NotNull Class<?> reference) {
+    public static @NotNull Map<String, Field> getFields(@Nullable Father father, final @NotNull Class<?> reference) {
         @NotNull Map<String, Field> map = new LinkedHashMap<>();
         @NotNull Map<String, Integer> repeat = new HashMap<>();
 
@@ -168,18 +170,17 @@ public final class Classes {
 
         return methods;
     }
-    public static <E> @Nullable E javaDeserializeObject(@NotNull Class<?> reference, @NotNull ArrayContext context) throws MalformedClassException, IOException, ClassNotFoundException {
+    public static <E> @Nullable E javaDeserializeObject(@NotNull Class<?> reference, @NotNull ArrayContext context) throws IOException, ClassNotFoundException {
         if (context.isNullContext()) {
             return null;
         }
 
         // Byte array
-        byte[] bytes;
+        byte[] bytes = new byte[context.size()];
 
-        bytes = new byte[context.size()];
-
-        for (int row = 0; row < bytes.length; row++) {
-            bytes[row] = context.readByte();
+        int row = 0;
+        for (@NotNull Context element : context) {
+            bytes[row] = element.getAsPrimitiveContext().getAsByte();
             row++;
         }
 
@@ -188,14 +189,14 @@ public final class Classes {
         //noinspection unchecked
         return (E) stream.readObject();
     }
-    public static @NotNull ArrayContext javaSerializeObject(@NotNull Serializer serializer, @Nullable SerializationProperties properties, @NotNull Object object) {
+    public static @NotNull ArrayContext javaSerializeObject(@NotNull Serializer serializer, @NotNull Object object) {
         try {
             @NotNull ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             @NotNull ObjectOutputStream stream = new ObjectOutputStream(bytes);
             stream.writeObject(object);
 
             // Byte array adapter
-            @NotNull ArrayContext context = ArrayContext.create(serializer, properties);
+            @NotNull ArrayContext context = ArrayContext.create(serializer);
 
             for (byte b : bytes.toByteArray()) {
                 context.write(b);

@@ -20,11 +20,11 @@ public interface Config {
     // Static initializers
 
     static @NotNull Config create() {
-        return new ConfigImpl(null, null, new LinkedHashSet<>(), new HashMap<>(), false, new LinkedHashSet<>(), ContextFactory.field(), InstanceFactory.allocator(), null);
+        return new ConfigImpl(null, null, new LinkedHashSet<>(), new LinkedHashMap<>(), false, new LinkedHashSet<>(), ContextFactory.field(), InstanceFactory.allocator(), null);
     }
     static @NotNull Config create(@NotNull Serializer serializer, @NotNull Class<?> reference) {
         // Concretes
-        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new HashMap<>();
+        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new LinkedHashMap<>();
 
         // Instance factories
         @NotNull InstanceFactory instanceFactory;
@@ -54,30 +54,47 @@ public interface Config {
         boolean bypassTransients = field.isAnnotationPresent(BypassTransient.class);
 
         // Concretes
-        @NotNull Set<Class<?>> typeConcretes = Arrays.stream(field.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toSet());
-        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new HashMap<>();
+        @NotNull Set<Class<?>> typeConcretes = new LinkedHashSet<>();
+        if (isConcrete(field.getType())) {
+            typeConcretes.add(field.getType());
+        }
+
+        typeConcretes.addAll(Arrays.stream(field.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toSet()));
+
+        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new LinkedHashMap<>();
 
         @NotNull LinkedList<AnnotatedElement> elements = new LinkedList<>();
         elements.add(field.getAnnotatedType());
 
-        while (!elements.isEmpty()) {
+        int count = 0;
+        while (!elements.isEmpty()) try {
             @NotNull AnnotatedElement element = elements.poll();
 
             if (element instanceof AnnotatedType) {
                 @NotNull AnnotatedType annotated = (AnnotatedType) element;
                 @NotNull Type type = annotated.getType();
 
-                genericConcretes.putIfAbsent(type, new LinkedHashSet<>());
-
-                if (type instanceof Class && isConcrete((Class<?>) type)) {
-                    genericConcretes.get(type).add((Class<?>) type);
-                }
-
                 if (element instanceof AnnotatedParameterizedType) {
                     @NotNull AnnotatedParameterizedType parameterized = (AnnotatedParameterizedType) element;
                     elements.addAll(Arrays.asList(parameterized.getAnnotatedActualTypeArguments()));
                 }
+
+                // Skip the first annotated element values to not catch field concretes
+                if (count == 0) {
+                    continue;
+                }
+
+                genericConcretes.putIfAbsent(type, new LinkedHashSet<>());
+                if (type instanceof Class && isConcrete((Class<?>) type)) {
+                    genericConcretes.get(type).add((Class<?>) type);
+                } if (annotated.isAnnotationPresent(Concrete.class)) {
+                    genericConcretes.get(type).add(annotated.getAnnotation(Concrete.class).type());
+                } if (annotated.isAnnotationPresent(Concretes.class)) {
+                    genericConcretes.get(type).addAll(Arrays.stream(annotated.getAnnotationsByType(Concretes.class)).flatMap(concretes -> Arrays.stream(concretes.value())).map(Concrete::type).collect(Collectors.toList()));
+                }
             }
+        } finally {
+            count++;
         }
 
         // Context factory
@@ -102,10 +119,16 @@ public interface Config {
         }
 
         // Adapter
-        @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
+        @Nullable Adapter adapter;
+
+        if (!typeConcretes.isEmpty()) {
+            adapter = serializer.getAdapter(typeConcretes.stream().findFirst().orElseThrow(NullPointerException::new)).orElse(null);
+        } else {
+            adapter = serializer.getAdapter(field.getType()).orElse(null);
+        }
 
         // Fields
-        @NotNull Set<Field> fields = new HashSet<>(getFields(father, reference).values());
+        @NotNull Set<Field> fields = new LinkedHashSet<>(getFields(father, reference).values());
 
         // @ExcludeFields and @OnlyFields annotation
         if (father.getField().isAnnotationPresent(OnlyFields.class)) {
@@ -131,6 +154,8 @@ public interface Config {
     void setOuterInstance(@Nullable Object instance);
 
     @NotNull Collection<Class<?>> getTypeConcretes();
+
+    @NotNull Collection<Class<?>> getGenericConcretes();
     @NotNull Collection<Class<?>> getGenericConcretes(@NotNull Type type);
 
     boolean isBypassTransients();

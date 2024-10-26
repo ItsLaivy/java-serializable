@@ -32,8 +32,9 @@ public final class ConcreteTest {
     public void generic() {
         @NotNull Generic generic = new Generic();
         @NotNull JsonElement element = Serializer.toJson(generic);
+        @Nullable Generic result = Serializer.fromJson(generic.getClass(), element);
 
-        Assertions.assertEquals(generic, Serializer.fromJson(generic.getClass(), element));
+        Assertions.assertEquals(generic, result, "Cannot deserialize '" + element + "' into expected generic: " + result);
     }
 
     @Test

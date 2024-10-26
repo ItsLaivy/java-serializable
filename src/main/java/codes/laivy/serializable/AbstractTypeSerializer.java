@@ -1,14 +1,10 @@
 package codes.laivy.serializable;
 
 import codes.laivy.serializable.adapter.Adapter;
-import codes.laivy.serializable.adapter.provided.CharacterArrayAdapter;
-import codes.laivy.serializable.adapter.provided.CollectionAdapter;
-import codes.laivy.serializable.adapter.provided.TemporalAdapter;
-import codes.laivy.serializable.adapter.provided.UUIDAdapter;
+import codes.laivy.serializable.adapter.provided.*;
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
-import codes.laivy.serializable.exception.MalformedClassException;
-import codes.laivy.serializable.properties.SerializationProperties;
-import codes.laivy.serializable.reference.References;
+import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +22,8 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
                 new TemporalAdapter(),
                 new CharacterArrayAdapter(),
                 new UUIDAdapter(),
-                new CollectionAdapter()
+                new CollectionAdapter(),
+                new GsonAdapter()
         };
 
         for (@NotNull Adapter adapter : adapters) {
@@ -50,27 +47,49 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Serializable
 
     @Override
-    public @Nullable T serialize(@Nullable Serializable object) throws MalformedClassException {
-        return serialize(object, null);
+    public @Nullable T serialize(@Nullable Serializable object) {
+        return serialize(object, object != null ? Config.create(this, object.getClass()) : Config.create());
     }
 
     @Override
-    public @NotNull Iterable<T> serialize(@Nullable Serializable @NotNull ... array) throws MalformedClassException {
+    public @NotNull Iterable<T> serialize(@Nullable Serializable @NotNull ... array) {
         @NotNull List<T> list = new LinkedList<>();
 
         for (@Nullable Serializable object : array) {
-            list.add(serialize(object));
+            if (object != null) {
+                list.add(serialize(object, Config.create(this, object.getClass())));
+            } else {
+                list.add(null);
+            }
         }
 
         return list;
     }
 
     @Override
-    public @NotNull Iterable<T> serialize(@NotNull Iterable<@Nullable Serializable> iterable) throws MalformedClassException {
+    public @NotNull Iterable<T> serialize(@NotNull Iterable<@Nullable Serializable> iterable) {
         @NotNull List<T> list = new LinkedList<>();
 
         for (@Nullable Serializable object : iterable) {
-            list.add(serialize(object));
+            if (object != null) {
+                list.add(serialize(object, Config.create(this, object.getClass())));
+            } else {
+                list.add(null);
+            }
+        }
+
+        return list;
+    }
+    @Override
+    public @NotNull Iterable<T> serialize(@NotNull Iterable<@Nullable Serializable> iterable, @NotNull Config config) {
+        @NotNull List<T> list = new LinkedList<>();
+
+        for (@Nullable Serializable object : iterable) {
+            if (object != null) {
+                list.add(serialize(object, config));
+            } else {
+                list.add(null);
+            }
         }
 
         return list;
@@ -80,14 +99,18 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Enum<?> e) {
-        return serialize(e, null);
+        return serialize(e, e != null ? Config.create(this, e.getClass()) : Config.create());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Enum<?> @NotNull ... array) {
         @NotNull List<T> list = new LinkedList<>();
 
         for (@Nullable Enum<?> e : array) {
-            list.add(serialize(e));
+            if (e != null) {
+                list.add(serialize(e, Config.create(this, e.getClass())));
+            } else {
+                list.add(null);
+            }
         }
 
         return list;
@@ -96,13 +119,13 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Boolean
 
     @Override
-    public @NotNull T serialize(boolean b, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Boolean) b, properties));
+    public @NotNull T serialize(boolean b, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Boolean) b, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Boolean b) {
-        return serialize(b, null);
+        return serialize(b, Config.create(this, Boolean.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Boolean @NotNull ... array) {
@@ -117,7 +140,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(boolean b) {
-        return serialize(b, null);
+        return Objects.requireNonNull(serialize(b, Config.create(this, boolean.class)));
     }
     @Override
     public @NotNull Iterable<T> serialize(boolean @NotNull ... array) {
@@ -133,13 +156,13 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Short
 
     @Override
-    public @NotNull T serialize(short s, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Short) s, properties));
+    public @NotNull T serialize(short s, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Short) s, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Short s) {
-        return serialize(s, null);
+        return serialize(s, Config.create(this, Short.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Short @NotNull ... array) {
@@ -154,7 +177,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(short s) {
-        return serialize(s, null);
+        return Objects.requireNonNull(serialize(s, Config.create(this, short.class)));
     }
     @Override
     public @NotNull Iterable<T> serialize(short @NotNull ... array) {
@@ -170,13 +193,13 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Integer
 
     @Override
-    public @NotNull T serialize(int i, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Integer) i, properties));
+    public @NotNull T serialize(int i, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Integer) i, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Integer i) {
-        return serialize(i, null);
+        return serialize(i, Config.create(this, Integer.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Integer @NotNull ... array) {
@@ -191,7 +214,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(int i) {
-        return serialize(i, null);
+        return Objects.requireNonNull(serialize(i, Config.create(this, int.class)));
     }
     @Override
     public @NotNull Iterable<T> serialize(int @NotNull ... array) {
@@ -207,13 +230,13 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Long
 
     @Override
-    public @NotNull T serialize(long l, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Long) l, properties));
+    public @NotNull T serialize(long l, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Long) l, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Long l) {
-        return serialize(l, null);
+        return serialize(l, Config.create(this, Long.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Long @NotNull ... array) {
@@ -228,7 +251,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(long l) {
-        return serialize(l, null);
+        return Objects.requireNonNull(serialize(l, Config.create(this, long.class)));
     }
     @Override
     public @NotNull Iterable<T> serialize(long @NotNull ... array) {
@@ -244,17 +267,17 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Float
 
     @Override
-    public @NotNull T serialize(float f, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Float) f, properties));
+    public @NotNull T serialize(float f, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Float) f, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Float f) {
-        return serialize(f, null);
+        return serialize(f, Config.create(this, Float.class));
     }
     @Override
     public @NotNull T serialize(float f) {
-        return serialize(f, null);
+        return Objects.requireNonNull(serialize(f, Config.create(this, float.class)));
     }
 
     @Override
@@ -281,13 +304,13 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Double
 
     @Override
-    public @NotNull T serialize(double d, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Double) d, properties));
+    public @NotNull T serialize(double d, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Double) d, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Double d) {
-        return serialize(d, null);
+        return serialize(d, Config.create(this, Double.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Double @NotNull ... array) {
@@ -302,7 +325,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(double d) {
-        return serialize(d, null);
+        return Objects.requireNonNull(serialize(d, Config.create(this, double.class)));
     }
     @Override
     public @NotNull Iterable<T> serialize(double @NotNull ... array) {
@@ -318,13 +341,13 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Character
 
     @Override
-    public @NotNull T serialize(char c, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Character) c, properties));
+    public @NotNull T serialize(char c, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Character) c, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Character c) {
-        return serialize(c, null);
+        return serialize(c, c != null ? Config.create(this, c.getClass()) : Config.create(this, Character.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Character @NotNull ... array) {
@@ -339,7 +362,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(char c) {
-        return serialize(c, null);
+        return serialize(c, Config.create(this, char.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(char @NotNull ... array) {
@@ -355,13 +378,13 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Byte
 
     @Override
-    public @NotNull T serialize(byte b, @Nullable SerializationProperties properties) {
-        return Objects.requireNonNull(serialize((Byte) b, properties));
+    public @NotNull T serialize(byte b, @NotNull Config config) {
+        return Objects.requireNonNull(serialize((Byte) b, config));
     }
 
     @Override
     public @Nullable T serialize(@Nullable Byte b) {
-        return serialize(b, null);
+        return serialize(b, Config.create(this, Byte.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Byte @NotNull ... array) {
@@ -376,7 +399,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(byte b) {
-        return serialize(b, null);
+        return serialize(b, Config.create(this, byte.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(byte @NotNull ... array) {
@@ -393,7 +416,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable String string) {
-        return serialize(string, null);
+        return serialize(string, Config.create(this, String.class));
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable String @NotNull ... array) {
@@ -409,15 +432,19 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Pure
 
     @Override
-    public @Nullable T serialize(@Nullable Object object) throws MalformedClassException {
-        return serialize(object, null);
+    public @Nullable T serialize(@Nullable Object object) {
+        return serialize(object, object != null ? Config.create(this, object.getClass()) : Config.create());
     }
     @Override
-    public @NotNull Iterable<T> serialize(@Nullable Object @NotNull ... array) throws MalformedClassException {
+    public @NotNull Iterable<T> serialize(@Nullable Object @NotNull ... array) {
         @NotNull List<T> list = new LinkedList<>();
 
         for (@Nullable Object object : array) {
-            list.add(serialize(object));
+            if (object != null) {
+                list.add(serialize(object));
+            } else {
+                list.add(null);
+            }
         }
 
         return list;
@@ -426,113 +453,98 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     // Redirect to the #serialize(Object, SerializationProperties) method
 
     @Override
-    public @Nullable T serialize(@Nullable Serializable object, @Nullable SerializationProperties properties) throws MalformedClassException {
-        return serialize((Object) object, properties);
+    public @Nullable T serialize(@Nullable Serializable object, @NotNull Config config) {
+        return serialize((Object) object, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Enum<?> e, @Nullable SerializationProperties properties) {
-        return serialize((Object) e, properties);
+    public @Nullable T serialize(@Nullable Enum<?> e, @NotNull Config config) {
+        return serialize((Object) e, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Boolean b, @Nullable SerializationProperties properties) {
-        return serialize((Object) b, properties);
+    public @Nullable T serialize(@Nullable Boolean b, @NotNull Config config) {
+        return serialize((Object) b, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Short s, @Nullable SerializationProperties properties) {
-        return serialize((Object) s, properties);
+    public @Nullable T serialize(@Nullable Short s, @NotNull Config config) {
+        return serialize((Object) s, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Integer i, @Nullable SerializationProperties properties) {
-        return serialize((Object) i, properties);
+    public @Nullable T serialize(@Nullable Integer i, @NotNull Config config) {
+        return serialize((Object) i, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Long l, @Nullable SerializationProperties properties) {
-        return serialize((Object) l, properties);
+    public @Nullable T serialize(@Nullable Long l, @NotNull Config config) {
+        return serialize((Object) l, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Float f, @Nullable SerializationProperties properties) {
-        return serialize((Object) f, properties);
+    public @Nullable T serialize(@Nullable Float f, @NotNull Config config) {
+        return serialize((Object) f, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Double d, @Nullable SerializationProperties properties) {
-        return serialize((Object) d, properties);
+    public @Nullable T serialize(@Nullable Double d, @NotNull Config config) {
+        return serialize((Object) d, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Character c, @Nullable SerializationProperties properties) {
-        return serialize((Object) c, properties);
+    public @Nullable T serialize(@Nullable Character c, @NotNull Config config) {
+        return serialize((Object) c, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable Byte b, @Nullable SerializationProperties properties) {
-        return serialize((Object) b, properties);
+    public @Nullable T serialize(@Nullable Byte b, @NotNull Config config) {
+        return serialize((Object) b, config);
     }
     @Override
-    public @Nullable T serialize(@Nullable String string, @Nullable SerializationProperties properties) {
-        return serialize((Object) string, properties);
+    public @Nullable T serialize(@Nullable String string, @NotNull Config config) {
+        return serialize((Object) string, config);
     }
 
     // Deserialization redirects
 
     @Override
-    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable T @NotNull [] array) throws MalformedClassException {
+    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @Nullable T @NotNull [] array) throws IncompatibleReferenceException {
         @NotNull List<E> list = new LinkedList<>();
-        @NotNull References references = References.of(reference);
 
         for (@Nullable T serialized : array) {
-            //noinspection unchecked
-            list.add((E) deserialize(references, serialized));
+            list.add(deserialize(reference, serialized));
         }
 
         return list;
     }
     @Override
-    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull Iterable<@Nullable T> array) throws MalformedClassException {
+    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull Iterable<@Nullable T> array) throws IncompatibleReferenceException {
         @NotNull List<E> list = new LinkedList<>();
-        @NotNull References references = References.of(reference);
 
         for (@Nullable T serialized : array) {
-            //noinspection unchecked
-            list.add((E) deserialize(references, serialized));
+            list.add(deserialize(reference, serialized));
         }
 
         return list;
     }
 
     @Override
-    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T element) throws MalformedClassException {
-        @Nullable Object object = deserialize(References.of(reference), element, null);
-
-        if (object != null && !reference.isAssignableFrom(object.getClass())) {
-            throw new ClassCastException("unexpected object reference '" + object.getClass().getName() + "', expected '" + reference.getName() + "': " + object);
-        }
-
-        //noinspection unchecked
-        return (E) object;
-    }
-    @Override
-    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) {
-        @Nullable Object object = deserialize(References.of(reference), context);
-
-        if (object != null && !reference.isAssignableFrom(object.getClass())) {
-            throw new ClassCastException("unexpected object reference '" + object.getClass().getName() + "', expected '" + reference.getName() + "': " + object);
-        }
-
-        //noinspection unchecked
-        return (E) object;
+    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T element) throws IncompatibleReferenceException {
+        return deserialize(reference, element, Config.create(this, reference));
     }
 
     @Override
-    public @Nullable Object deserialize(@NotNull References references, @Nullable T object) throws MalformedClassException {
-        return deserialize(references, object, null);
+    public @NotNull <E> Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull Iterable<@Nullable T> iterable, @NotNull Config config) throws IncompatibleReferenceException {
+        @NotNull List<E> list = new LinkedList<>();
+
+        for (@Nullable T serialized : iterable) {
+            list.add(deserialize(reference, serialized, config));
+        }
+
+        return list;
     }
 
-    // Contexts
+    @Override
+    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) throws IncompatibleReferenceException {
+        return deserialize(reference, context, Config.create(this, reference));
+    }
 
     @Override
     public @NotNull Context toContext(@Nullable Object object) {
-        return toContext(object, null);
+        return toContext(object, object != null ? Config.create(this, object.getClass()) : Config.create());
     }
-
-    // Classes
 
     // Classes
 

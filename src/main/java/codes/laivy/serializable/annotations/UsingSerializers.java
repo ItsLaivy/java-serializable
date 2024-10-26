@@ -1,8 +1,8 @@
 package codes.laivy.serializable.annotations;
 
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.exception.MalformedSerializerException;
-import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
@@ -21,7 +21,7 @@ import java.lang.annotation.*;
  *             be thrown during deserialization.</li>
  *         </ul>
  *         <ul>
- *             <li>{@link SerializationProperties} <strong>(Optional)</strong>: This parameter is optional, and is used to retrieve some
+ *             <li>{@link Config} <strong>(Optional)</strong>: This parameter is optional, and is used to retrieve some
  *             essential configurations about the serialization process properties</li>
  *         </ul>
  *     </li>
@@ -77,7 +77,7 @@ import java.lang.annotation.*;
  * public class CustomObject {
  *     // Fields and methods
  *
- *     public static @NotNull Context serialize(@NotNull CustomObject object, @Nullable SerializationProperties properties) {
+ *     public static @NotNull Context serialize(@NotNull CustomObject object, @NotNull SerializationProperties properties) {
  *         // Serialization process here
  *         // return context.serialize(object); // <- The default serializer
  *     }

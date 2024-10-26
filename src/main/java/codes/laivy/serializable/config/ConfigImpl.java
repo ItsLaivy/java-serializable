@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
 final class ConfigImpl implements Config {
 
@@ -59,6 +60,12 @@ final class ConfigImpl implements Config {
     public @NotNull Collection<Class<?>> getTypeConcretes() {
         return typeConcretes;
     }
+
+    @Override
+    public @NotNull Collection<Class<?>> getGenericConcretes() {
+        return genericConcretes.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
     @Override
     public @NotNull Collection<Class<?>> getGenericConcretes(@NotNull Type type) {
         return genericConcretes.getOrDefault(type, new ArrayList<>());
