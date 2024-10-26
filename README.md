@@ -45,6 +45,11 @@ public final class User {
     private final transient String data; // This data will be ignored, it's transient!
 
     // Constructors, getters, and setters
+    
+    public String toString() {
+        return "User{name='" + name + "',age=" + age + "}";
+    }
+    
 }
 ```
 
@@ -52,16 +57,19 @@ public final class User {
 Here's an example of how the serialization works with the `@KnownAs` annotation and without it:
 
 ```java
-import codes.laivy.serializable.json.JsonSerializer;
+import codes.laivy.serializable.Serializer;
 
 public class Main {
     public static void main(String[] args) {
         User user = new User("Alice", 30);
-        JsonSerializer serializer = new JsonSerializer();
 
-        JsonElement json = serializer.serialize(user);
+        JsonElement json = Serializer.toJson(user);
         System.out.println(json);
         // Output: {"user_name":"Alice","age":30}
+        
+        user = Serializer.fromJson(User.class, json);
+        System.out.println(user);
+        // Output: User{name='Alice',age=30}
     }
 }
 ```

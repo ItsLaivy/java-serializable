@@ -31,8 +31,10 @@ import static codes.laivy.serializable.utilities.Classes.getFields;
 public final class NativeContextFactory implements ContextFactory {
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
-        @NotNull Class<?> reference = object.getClass();
+    public @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
+        if (object == null) {
+            return null;
+        }
 
         // Array block
         {
@@ -117,9 +119,9 @@ public final class NativeContextFactory implements ContextFactory {
     @Override
     public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException, InstantiationException, InvalidClassException {
         // Deserialize normally
-        if (context.isNullContext()) {
+        if (context.isNull()) {
             return null;
-        } else if (context.isMapContext()) {
+        } else if (context.isMap()) {
             // Variables
             @NotNull InstanceFactory instanceFactory = config.getInstanceFactory();
             @Nullable Father father = config.getFather();
@@ -127,7 +129,7 @@ public final class NativeContextFactory implements ContextFactory {
             // Serialize
             @NotNull Object instance = instanceFactory.generate(reference);
 
-            @NotNull MapContext object = context.getAsMapContext();
+            @NotNull MapContext object = context.getAsMap();
             @NotNull Map<String, Field> fields = getFields(father, reference);
 
             // Process fields
@@ -137,7 +139,7 @@ public final class NativeContextFactory implements ContextFactory {
 
                 if (field == null) {
                     throw new IncompatibleReferenceException("there's no field with name '" + name + "' at class '" + reference.getName() + "'");
-                } else if (object.getContext(name).isNullContext()) {
+                } else if (object.getContext(name).isNull()) {
                     // Set outer field instance
                     Allocator.setFieldValue(field, instance, null);
                 } else {
@@ -145,7 +147,7 @@ public final class NativeContextFactory implements ContextFactory {
 
                     if (field.getName().startsWith("this$0") && field.isSynthetic()) {
                         if (config.getOuterInstance() == null) {
-                            throw new NullPointerException("this class is not static, the outer instance must be defined at the serializing properties!");
+                            throw new NullPointerException("this class is not static, the outer instance must be defined at the config!");
                         } else if (!field.getType().isAssignableFrom(config.getOuterInstance().getClass())) {
                             throw new IllegalArgumentException("this outer instance isn't the same outer class from this inner object");
                         }
@@ -175,11 +177,11 @@ public final class NativeContextFactory implements ContextFactory {
 
             // Finish
             return instance;
-        } else if (context.isArrayContext()) {
+        } else if (context.isArray()) {
             // Check if it uses java serialization
             if (Classes.usesJavaSerialization(reference)) {
-                if (context.isArrayContext()) try {
-                    return Classes.javaDeserializeObject(reference, context.getAsArrayContext());
+                if (context.isArray()) try {
+                    return Classes.javaDeserializeObject(reference, context.getAsArray());
                 } catch (@NotNull EOFException e) {
                     throw new RuntimeException("problems trying to deserialize using java native serialization. Is it missing any adapter?", e);
                 } catch (@NotNull StreamCorruptedException e) {
@@ -194,7 +196,7 @@ public final class NativeContextFactory implements ContextFactory {
             }
 
             // Create the array context
-            @NotNull ArrayContext array = context.getAsArrayContext();
+            @NotNull ArrayContext array = context.getAsArray();
             int size = array.size();
 
             if (!reference.isArray()) {
@@ -209,8 +211,8 @@ public final class NativeContextFactory implements ContextFactory {
 
                 return object;
             }
-        } else if (context.isPrimitiveContext()) {
-            @NotNull PrimitiveContext primitive = context.getAsPrimitiveContext();
+        } else if (context.isPrimitive()) {
+            @NotNull PrimitiveContext primitive = context.getAsPrimitive();
 
             if (reference.isEnum()) {
                 //noinspection rawtypes

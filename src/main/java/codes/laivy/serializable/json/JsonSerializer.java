@@ -48,8 +48,14 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
         }
 
         // Serialize
-        @NotNull Context context = contextFactory.write(object, this, config);
-        return serialize(context);
+        @Nullable Object response = contextFactory.write(reference, object, this, config);
+
+        if (response instanceof Context) {
+            return serialize((Context) response);
+        } else {
+            // Serialize again
+            return serialize(response);
+        }
     }
 
     // Deserialization
@@ -72,7 +78,7 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
             throw new RuntimeException(e);
         }
 
-        if (context.isNullContext()) {
+        if (context.isNull()) {
             return null;
         }
 
@@ -141,14 +147,21 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
                 return context;
             } else {
                 @Nullable ContextFactory factory = config.getContextFactory();
-                return factory.write(object, this, config);
+                @Nullable Object instance = factory.write(reference, object, this, config);
+
+                if (instance instanceof Context) {
+                    return (Context) instance;
+                } else {
+                    // Repeat recursively the serialization
+                    return toContext(instance);
+                }
             }
         }
     }
 
     @Override
     public @NotNull JsonElement serialize(@NotNull Context context) {
-        if (context.isNullContext()) {
+        if (context.isNull()) {
             return JsonNull.INSTANCE;
         } else if (context instanceof PrimitiveContext) {
             @NotNull PrimitiveContext primitive = (PrimitiveContext) context;

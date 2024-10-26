@@ -18,18 +18,68 @@ public final class MethodsContextFactory implements ContextFactory {
 
     // Static initializers
 
-    private static boolean checkSerializerMethod(@NotNull Method method, @NotNull String name) {
-        return method.getName().equals(name) &&
-                Modifier.isStatic(method.getModifiers()) &&
-                (method.getParameterCount() == 1 || (method.getParameterCount() == 2 && method.getParameters()[1].getType().isAssignableFrom(Config.class))) &&
-                Context.class.isAssignableFrom(method.getReturnType());
+    @SuppressWarnings("RedundantIfStatement")
+    private static boolean checkSerializerMethod(@NotNull Method method) {
+        if (!Modifier.isStatic(method.getModifiers())) {
+            return false; // Must be static
+        } else if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
+            return false; // Cannot return void
+        } else if (method.getParameterCount() == 2) {
+            // The first and second parameter must be (Class and Object (any type)) OR (Object (any type) and Config)
+            if (method.getParameters()[0].getType() == Class.class) {
+                return true;
+            } else if (method.getParameters()[1].getType() == Config.class) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (method.getParameterCount() == 3) {
+            // The parameters should be: Class, Object (any type) and Config
+            if (method.getParameters()[0].getType() != Class.class) {
+                return false;
+            } else if (method.getParameters()[2].getType() != Config.class) {
+                return false;
+            }
+        } else if (method.getParameterCount() != 1) {
+            return false;
+        }
+
+        return true;
     }
-    private static boolean checkDeserializerMethod(@NotNull Method method, @NotNull String name) {
-        return method.getName().equals(name) &&
-                Modifier.isStatic(method.getModifiers()) &&
-                method.getReturnType() != void.class &&
-                (method.getParameterCount() == 1 && method.getParameters()[0].getType().isAssignableFrom(Context.class)) &&
-                Context.class.isAssignableFrom(method.getParameters()[0].getType());
+    @SuppressWarnings("RedundantIfStatement")
+    private static boolean checkDeserializerMethod(@NotNull Method method) {
+        if (!Modifier.isStatic(method.getModifiers())) {
+            return false; // Must be static
+        } else if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
+            return false; // Cannot return void
+        } else if (method.getParameterCount() == 1) {
+            // The parameter must be a context here
+            if (method.getParameters()[0].getType() != Context.class) {
+                return false;
+            }
+        } else if (method.getParameterCount() == 2) {
+            // The first and second parameter must be (Class and Context) OR (Context and Config)
+            if (method.getParameters()[0].getType() == Class.class && method.getParameters()[1].getType() == Context.class) {
+                return true;
+            } else if (method.getParameters()[0].getType() == Context.class && method.getParameters()[1].getType() == Config.class) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (method.getParameterCount() == 3) {
+            // The parameters should be: Class, Context and Config
+            if (method.getParameters()[0].getType() != Class.class) {
+                return false;
+            } else if (method.getParameters()[1].getType() != Context.class) {
+                return false;
+            } else if (method.getParameters()[2].getType() != Config.class) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        return true;
     }
 
     public static @NotNull Method getSerializerMethod(@NotNull Class<?> declaringClass, @NotNull UsingSerializers annotation) {
@@ -53,7 +103,11 @@ public final class MethodsContextFactory implements ContextFactory {
 
         // Get methods
         for (@NotNull Method method : declaringClass.getDeclaredMethods()) {
-            if (checkSerializerMethod(method, name)) {
+            if (!method.getName().equals(name)) {
+                continue;
+            }
+
+            if (checkSerializerMethod(method)) {
                 return method;
             }
         }
@@ -81,7 +135,11 @@ public final class MethodsContextFactory implements ContextFactory {
 
         // Get methods
         for (@NotNull Method method : declaringClass.getDeclaredMethods()) {
-            if (checkDeserializerMethod(method, name)) {
+            if (!method.getName().equals(name)) {
+                continue;
+            }
+
+            if (checkDeserializerMethod(method)) {
                 return method;
             }
         }
@@ -91,58 +149,41 @@ public final class MethodsContextFactory implements ContextFactory {
 
     // Object
 
-    private final @NotNull Method serializer;
-    private final @NotNull Method deserializer;
+    private final @NotNull Serialization serialization;
+    private final @NotNull Deserialization deserialization;
 
-    MethodsContextFactory(@NotNull Method serializer, @NotNull Method deserializer, boolean verify) {
-        this.serializer = serializer;
-        this.deserializer = deserializer;
-
+    MethodsContextFactory(@NotNull Method serialization, @NotNull Method deserialization, boolean verify) {
         if (verify) {
             // Checks
-            if (!checkSerializerMethod(serializer, serializer.getName())) {
-                throw new IllegalArgumentException("this serializer method '" + serializer + "' is invalid!");
-            } else if (!checkSerializerMethod(deserializer, serializer.getName())) {
-                throw new IllegalArgumentException("this deserializer method '" + deserializer + "' is invalid!");
+            if (!checkSerializerMethod(serialization)) {
+                throw new IllegalArgumentException("this serializer method '" + serialization + "' is invalid!");
+            } else if (!checkSerializerMethod(deserialization)) {
+                throw new IllegalArgumentException("this deserializer method '" + deserialization + "' is invalid!");
             }
         }
+
+        this.serialization = new Serialization(serialization);
+        this.deserialization = new Deserialization(deserialization);
     }
-    public MethodsContextFactory(@NotNull Method serializer, @NotNull Method deserializer) {
-        this(serializer, deserializer, true);
+    public MethodsContextFactory(@NotNull Method serialization, @NotNull Method deserialization) {
+        this(serialization, deserialization, true);
     }
 
     // Modules
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
+    public @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
         try {
-            if (!this.serializer.getParameters()[0].getType().isAssignableFrom(object.getClass())) {
-                throw new UnsupportedOperationException("the serializer cannot be used by reference '" + object.getClass() + "' because it's not a subclass/implementation from '" + this.serializer.getParameters()[0].getType() + "' parameter class");
-            }
-
-            // Start serialize
-            this.serializer.setAccessible(true);
-
-            if (this.serializer.getParameterCount() == 1) {
-                return (Context) this.serializer.invoke(null, object);
-            } else {
-                return (Context) this.serializer.invoke(null, object, config);
-            }
-        } catch (@NotNull IllegalAccessException | @NotNull InvocationTargetException e) {
+            return serialization.call(reference, object, config);
+        } catch (@NotNull InvocationTargetException e) {
             throw new RuntimeException("cannot execute serialize method from @UsingSerializers annotation", e);
         }
     }
     @Override
     public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException, InstantiationException {
         try {
-            if (!deserializer.getReturnType().isAssignableFrom(reference)) {
-                throw new UnsupportedOperationException("the deserializer cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + deserializer.getReturnType() + "' return class");
-            }
-
-            // Start deserialize
-            deserializer.setAccessible(true);
-            return deserializer.invoke(null, context);
-        } catch (@NotNull IllegalAccessException | @NotNull InvocationTargetException e) {
+            return deserialization.call(reference, context, config);
+        } catch (@NotNull InvocationTargetException e) {
             throw new RuntimeException("cannot execute deserialize method from @UsingSerializers annotation", e);
         }
     }
@@ -154,11 +195,128 @@ public final class MethodsContextFactory implements ContextFactory {
         if (this == object) return true;
         if (!(object instanceof MethodsContextFactory)) return false;
         @NotNull MethodsContextFactory that = (MethodsContextFactory) object;
-        return Objects.equals(serializer, that.serializer) && Objects.equals(deserializer, that.deserializer);
+        return Objects.equals(serialization, that.serialization) && Objects.equals(deserialization, that.deserialization);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(serializer, deserializer);
+        return Objects.hash(serialization, deserialization);
+    }
+
+    // Classes
+
+    private static final class Serialization {
+
+        private final @NotNull Method method;
+
+        public Serialization(@NotNull Method method) {
+            this.method = method;
+        }
+
+        // Getters
+
+        public @NotNull Method getMethod() {
+            return method;
+        }
+
+        // Modules
+
+        private void verify(@NotNull Class<?> reference) {
+            int index;
+            if (method.getParameterCount() == 1) {
+                index = 0;
+            } else if (method.getParameterCount() == 2) {
+                if (method.getParameters()[0].getType() == Class.class) {
+                    index = 1;
+                } else {
+                    index = 0;
+                }
+            } else {
+                index = 1;
+            }
+
+            if (!method.getParameters()[index].getType().isAssignableFrom(reference)) {
+                throw new UnsupportedOperationException("the serializer method '" + method + "' cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + method.getParameters()[index].getType() + "' parameter class");
+            }
+        }
+        public @Nullable Object call(@NotNull Class<?> reference, @Nullable Object object, @NotNull Config config) throws InvocationTargetException {
+            // Verifications
+            verify(reference);
+
+            // Perform serialization
+            try {
+                boolean accessible = method.isAccessible();
+                method.setAccessible(true);
+
+                try {
+                    if (method.getParameterCount() == 1) {
+                        return method.invoke(null, object);
+                    } else if (method.getParameterCount() == 2) {
+                        if (method.getParameters()[0].getType() == Class.class) {
+                            return method.invoke(null, reference, object);
+                        } else {
+                            return method.invoke(null, object, config);
+                        }
+                    } else if (method.getParameterCount() == 3) {
+                        return method.invoke(null, reference, object, config);
+                    } else {
+                        throw new UnsupportedOperationException();
+                    }
+                } finally {
+                    method.setAccessible(accessible);
+                }
+            } catch (@NotNull IllegalAccessException e) {
+                throw new RuntimeException("cannot access serialization method '" + method + "'", e);
+            }
+        }
+
+    }
+    private static final class Deserialization {
+
+        private final @NotNull Method method;
+
+        public Deserialization(@NotNull Method method) {
+            this.method = method;
+        }
+
+        // Getters
+
+        public @NotNull Method getMethod() {
+            return method;
+        }
+
+        // Modules
+
+        public @Nullable Object call(@NotNull Class<?> reference, @Nullable Object object, @NotNull Config config) throws InvocationTargetException {
+            if (!method.getReturnType().isAssignableFrom(reference)) {
+                throw new UnsupportedOperationException("the deserializer method '" + method + "' cannot be used to deserialize reference '" + reference + "' because it's not a subclass/implementation from '" + method.getReturnType() + "' return class");
+            }
+
+            try {
+                boolean accessible = method.isAccessible();
+                method.setAccessible(true);
+
+                try {
+                    if (method.getParameterCount() == 1) {
+                        return method.invoke(null, object);
+                    } else if (method.getParameterCount() == 2) {
+                        if (method.getParameters()[0].getType() == Class.class) {
+                            return method.invoke(null, reference, object);
+                        } else {
+                            return method.invoke(null, object, config);
+                        }
+                    } else if (method.getParameterCount() == 3) {
+                        return method.invoke(null, reference, object, config);
+                    } else {
+                        throw new UnsupportedOperationException();
+                    }
+                } finally {
+                    method.setAccessible(accessible);
+                }
+            } catch (@NotNull IllegalAccessException e) {
+                throw new RuntimeException("cannot access serialization method '" + method + "'", e);
+            }
+        }
+
     }
 
 }

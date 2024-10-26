@@ -8,49 +8,65 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.annotation.*;
 
 /**
- * This annotation designates that the specified serialization and deserialization methods
+ * This annotation designates that specified serialization and deserialization methods
  * will be used to handle object serialization for the annotated class or field.
  * <p>
  * The serialization method must adhere to the following strict rules:
  * <ol>
  *     <li>It can have any access modifier (public, private, etc.).</li>
- *     <li>It must accepts only one parameter:
+ *     <li>It must accept up to three parameters in the following sequence:
  *         <ul>
- *             <li>{@link Object}: This can be any type of object. However, if the object passed during
- *             serialization is not compatible with the type expected by the method, an exception will
- *             be thrown during deserialization.</li>
+ *             <li>{@link Class} <strong>(Optional)</strong> (<span style="color:red">Never Null</span>): Represents the class reference of
+ *             the object being serialized. It's useful in case the {@link Object} parameter is null</li>
  *         </ul>
  *         <ul>
- *             <li>{@link Config} <strong>(Optional)</strong>: This parameter is optional, and is used to retrieve some
- *             essential configurations about the serialization process properties</li>
+ *             <li>{@link Object}: Any object type may be passed. However, if the object
+ *             passed is incompatible with the method’s expected type, an exception will
+ *             occur during serialization.</li>
+ *         </ul>
+ *         <ul>
+ *             <li>{@link Config} <strong>(Optional)</strong> (<span style="color:red">Never Null</span>): Used to access configuration
+ *             details related to the serialization process.</li>
  *         </ul>
  *     </li>
- *     <li>It must return {@link Context}, with the serialized data inside.</li>
- *     <li>It must be static, meaning it is not bound to a particular instance of the class where it is declared.</li>
- *     <li>The method can throw anything (Runtime or not exceptions).</li>
+ *     <li>The return type can be any object (including null and excluding voids). The returned object will then be serialized
+ *     recursively until the data is compatible with a valid {@link Context}.</li>
+ *     <li>It must be static, so it’s not bound to an instance of the declaring class.</li>
+ *     <li>The method can throw any exception, whether runtime or checked.</li>
  * </ol>
  * <p>
- * The deserialization method must follow these specific rules:
+ * The deserialization method must adhere to these rules:
  * <ol>
  *     <li>It can have any access modifier.</li>
- *     <li>It must accepts only one parameter:
+ *     <li>It must accept up to three parameters in the following sequence:
  *         <ul>
- *             <li>{@link Context}: The context that contains the necessary information and
- *             utilities for reading the serialized data.</li>
+ *             <li>{@link Class} <strong>(Optional)</strong> (<span style="color:red">Never Null</span>): Represents the class reference of
+ *             the object being deserialized.</li>
+ *         </ul>
+ *         <ul>
+ *             <li>{@link Context} (<span style="color:red">Never Null</span>): Provides necessary information and utilities for reading
+ *             the serialized data.</li>
+ *         </ul>
+ *         <ul>
+ *             <li>{@link Config} <strong>(Optional)</strong> (<span style="color:red">Never Null</span>): Contains configuration data, allowing
+ *             advanced deserialization behavior.</li>
  *         </ul>
  *     </li>
- *     <li>It must return an object of any type. However, if the returned object is not compatible with
- *     the object expected by the deserialization context, an exception will be thrown during deserialization.</li>
- *     <li>The method can throw anything (Runtime or not exceptions).</li>
+ *     <li>It must return any type of object. If the returned object does not match the
+ *     expected type in the deserialization context, an exception will occur.</li>
+ *     <li>The method can throw any exception.</li>
  * </ol>
  * <p>
- * If this annotation is applied to a field, but the class type of the field already has this annotation,
- * the field-level annotation will take precedence, allowing more granular control over serialization
- * behavior at the field level.
+ * If applied to a field but the field's type already has this annotation, the field-level annotation
+ * will take precedence, providing more granular serialization control.
+ * <p>
+ * <strong>Important:</strong> If multiple valid methods for serialization or deserialization exist
+ * (e.g., one with only {@link Object} and another with {@link Object} and {@link Config}),
+ * the method with the most parameters will take precedence. For example, if both {@code #serialize(Object)}
+ * and {@code #serialize(Object, Config)} are present, {@code #serialize(Object, Config)} will be chosen.
  *
- * <p><strong>Important:</strong> It is crucial to ensure that the serialized and deserialized object types are
- * compatible with the serialization and deserialization methods, as improper configurations can lead
- * to exceptions and potential data corruption during the deserialization process.</p>
+ * <p><strong>Important:</strong> Ensure that serialized and deserialized types are compatible with
+ * their respective methods to avoid exceptions or potential data corruption.</p>
  *
  * Example usages:
  * <pre>
@@ -61,13 +77,12 @@ import java.lang.annotation.*;
  *
  *     public static @NotNull Context serialize(@NotNull CustomObject object) {
  *         // Serialization process here
- *         // return context.serialize(object); // <- The default serializer
+ *         // return Context.from(object.getName());
  *     }
  *     public static @NotNull CustomObject deserialize(@NotNull Context context) throws EOFException {
  *         // Deserialization process here
- *         // return context.deserialize(); // <- The default deserializer
+ *         // return new CustomObject(context.getAsPrimitive().getAsString());
  *     }
- *
  * }
  * }
  * </pre>
@@ -77,26 +92,23 @@ import java.lang.annotation.*;
  * public class CustomObject {
  *     // Fields and methods
  *
- *     public static @NotNull Context serialize(@NotNull CustomObject object, @NotNull SerializationProperties properties) {
+ *     public static @NotNull Object serialize(@NotNull CustomObject object, @NotNull Config config) {
  *         // Serialization process here
- *         // return context.serialize(object); // <- The default serializer
+ *         // return config.getContext().serialize(object); // <- Uses the default serializer
  *     }
  *     public static @NotNull CustomObject deserialize(@NotNull Context context) throws EOFException {
  *         // Deserialization process here
- *         // return context.deserialize(); // <- The default deserializer
+ *         // return context.deserialize(); // <- Uses the default deserializer
  *     }
- *
  * }
  * }
  * </pre>
  *
- * <p>If the serializer/deserializer methods is missing, an {@link MalformedSerializerException} exception will be thrown</p>
- * <p>If the serializer/deserializer doesn't supports the object (the parameter of the serialize or the return of deserialize not assignable), an {@link UnsupportedOperationException} exception will be thrown</p>
+ * <p>If serializer/deserializer methods are missing, a {@link MalformedSerializerException} will be thrown.</p>
+ * <p>If the serializer/deserializer cannot support the object, an {@link UnsupportedOperationException} will be thrown.</p>
  *
- * @author Daniel Meinicke (Laivy)
  * @since 1.1-SNAPSHOT
  */
-// todo: serialization can return any type
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD})

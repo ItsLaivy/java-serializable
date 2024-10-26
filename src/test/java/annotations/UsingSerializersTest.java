@@ -2,8 +2,9 @@ package annotations;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.UsingSerializers;
-import codes.laivy.serializable.context.SerializeInputContext;
-import codes.laivy.serializable.context.SerializeOutputContext;
+import codes.laivy.serializable.config.Config;
+import codes.laivy.serializable.context.Context;
+import codes.laivy.serializable.context.PrimitiveContext;
 import codes.laivy.serializable.exception.MalformedSerializerException;
 import codes.laivy.serializable.json.JsonSerializer;
 import com.google.gson.JsonElement;
@@ -109,11 +110,11 @@ public final class UsingSerializersTest {
             this(expected.getAsString());
         }
 
-        public static void serialize(@NotNull Normal normal, @NotNull SerializeOutputContext context) {
-            context.write(normal.name);
+        public static @NotNull Context serialize(@NotNull Normal normal, @NotNull Config config) {
+            return PrimitiveContext.create(normal.name);
         }
-        public static @NotNull Normal deserialize(@NotNull SerializeInputContext context) throws EOFException {
-            return new Normal(context.readLine());
+        public static @NotNull Normal deserialize(@NotNull Context context) throws EOFException {
+            return new Normal(context.getAsPrimitive().getAsString());
         }
 
         // Implementations
@@ -158,18 +159,24 @@ public final class UsingSerializersTest {
             this(expected.getAsString());
         }
 
-        public static void serialize01(@NotNull Object object, @NotNull SerializeOutputContext context) {
-            if (context.getReference() == Custom.class) {
-                context.write(((Custom) object).name);
-            } else if (context.getReference() == CustomDifferentClass.class) {
-                context.write(((CustomDifferentClass) object).name);
+        public static @Nullable String serialize01(@NotNull Class<?> reference, @Nullable Object object, @NotNull Config config) {
+            if (object == null) {
+                return null;
+            }
+
+            if (reference == Custom.class) {
+                return ((Custom) object).name;
+            } else if (reference == CustomDifferentClass.class) {
+                return ((CustomDifferentClass) object).name;
+            } else {
+                throw new UnsupportedOperationException();
             }
         }
-        public static @NotNull Object deserialize01(@NotNull SerializeInputContext context) throws EOFException {
-            if (context.getReference() == Custom.class) {
-                return new Custom(context.readLine());
-            } else if (context.getReference() == CustomDifferentClass.class) {
-                return new CustomDifferentClass(context.readLine());
+        public static @NotNull Object deserialize01(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
+            if (reference == Custom.class) {
+                return new Custom(context.getAsPrimitive().getAsString());
+            } else if (reference == CustomDifferentClass.class) {
+                return new CustomDifferentClass(context.getAsPrimitive().getAsString());
             } else {
                 throw new UnsupportedOperationException();
             }
@@ -242,17 +249,17 @@ public final class UsingSerializersTest {
 
         // Static initializers
 
-        public static void serialize(@NotNull Object object, @NotNull SerializeOutputContext context) {
-            context.write(0);
+        public static int serialize(@NotNull Object object, @NotNull Config config) {
+            return 0;
         }
-        public static @NotNull Object deserialize(@NotNull SerializeInputContext context) throws EOFException {
-            Assertions.assertEquals(0, context.readInt()); // Just to validate the #serialize method
+        public static @NotNull Object deserialize(@NotNull Class<?> reference, @NotNull Context context) throws EOFException {
+            Assertions.assertEquals(0, context.getAsPrimitive().getAsInteger()); // Just to validate the #serialize method
 
-            if (context.getReference() == Normal.class) {
+            if (reference == Normal.class) {
                 return new Normal();
-            } else if (context.getReference() == Custom.class) {
+            } else if (reference == Custom.class) {
                 return new Custom();
-            } else if (context.getReference() == CustomDifferentClass.class) {
+            } else if (reference == CustomDifferentClass.class) {
                 return new CustomDifferentClass();
             } else {
                 throw new UnsupportedOperationException();
@@ -286,9 +293,10 @@ public final class UsingSerializersTest {
 
         private final @NotNull String ignore = "Ignore me! I've added this field so Intellij IDEA doesn't recognizes this class as an utility class.";
 
-        public static void serialize(@NotNull String object, @NotNull SerializeOutputContext context) {
+        public static @NotNull String serialize(@NotNull String object) {
+            return object;
         }
-        public static @NotNull String deserialize(@NotNull SerializeInputContext context) throws EOFException {
+        public static @NotNull String deserialize(@NotNull Context context) {
             return "invalid";
         }
     }

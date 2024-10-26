@@ -450,7 +450,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
         return list;
     }
 
-    // Redirect to the #serialize(Object, SerializationProperties) method
+    // Redirect to the #serialize(Object, Config) method
 
     @Override
     public @Nullable T serialize(@Nullable Serializable object, @NotNull Config config) {
