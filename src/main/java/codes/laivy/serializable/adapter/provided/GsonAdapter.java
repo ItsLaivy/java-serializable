@@ -67,16 +67,16 @@ public final class GsonAdapter implements Adapter {
         @NotNull Function<Context, Class<? extends JsonElement>> locator = new Function<Context, Class<? extends JsonElement>>() {
             @Override
             public @NotNull Class<? extends JsonElement> apply(@NotNull Context context) {
-                if (context.isMapContext()) return JsonObject.class;
-                else if (context.isArrayContext()) return JsonArray.class;
-                else if (context.isPrimitiveContext()) return JsonPrimitive.class;
+                if (context.isMap()) return JsonObject.class;
+                else if (context.isArray()) return JsonArray.class;
+                else if (context.isPrimitive()) return JsonPrimitive.class;
                 else return JsonNull.class;
             }
         };
 
         // Deserialize
         if (reference == JsonObject.class) {
-            if (!context.isMapContext()) {
+            if (!context.isMap()) {
                 throw new IllegalStateException("to deserialize a JsonObject the context should be a Map Context!");
             }
 
@@ -92,7 +92,7 @@ public final class GsonAdapter implements Adapter {
 
             return object;
         } else if (reference == JsonArray.class) {
-            if (!context.isArrayContext()) {
+            if (!context.isArray()) {
                 throw new IllegalStateException("to deserialize a JsonArray the context should be an Array Context!");
             }
 
@@ -105,7 +105,7 @@ public final class GsonAdapter implements Adapter {
 
             return array;
         } else if (reference == JsonPrimitive.class) {
-            if (!context.isPrimitiveContext()) {
+            if (!context.isPrimitive()) {
                 throw new IllegalStateException("to deserialize a JsonPrimitive the context should be a Primitive Context!");
             }
 

@@ -72,7 +72,7 @@ public class CollectionAdapter implements Adapter {
     @Override
     public @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException {
         // Initialize variables
-        @NotNull ArrayContext array = context.getAsArrayContext();
+        @NotNull ArrayContext array = context.getAsArray();
         @NotNull Collection<Class<?>> temp = new LinkedHashSet<>();
         @NotNull Collection collection;
 

@@ -55,10 +55,10 @@ public class CharacterArrayAdapter implements Adapter {
     @Override
     public @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException {
         if (reference == char[].class) {
-            if (context.isPrimitiveContext()) {
-                return context.getAsPrimitiveContext().getAsString().toCharArray();
-            } else if (context.isArrayContext()) {
-                @NotNull ArrayContext iterable = context.getAsArrayContext();
+            if (context.isPrimitive()) {
+                return context.getAsPrimitive().getAsString().toCharArray();
+            } else if (context.isArray()) {
+                @NotNull ArrayContext iterable = context.getAsArray();
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 while (true) {
@@ -72,8 +72,8 @@ public class CharacterArrayAdapter implements Adapter {
                 throw new UnsupportedOperationException("context not supported by char[] adapter '" + context + "'");
             }
         } else if (reference == Character[].class) {
-            if (context.isPrimitiveContext()) {
-                char[] original = context.getAsPrimitiveContext().getAsString().toCharArray();
+            if (context.isPrimitive()) {
+                char[] original = context.getAsPrimitive().getAsString().toCharArray();
                 @NotNull Character[] characters = new Character[original.length];
 
                 for (int index = 0; index < original.length; index++) {
@@ -81,8 +81,8 @@ public class CharacterArrayAdapter implements Adapter {
                 }
 
                 return characters;
-            } else if (context.isArrayContext()) {
-                @NotNull ArrayContext iterable = context.getAsArrayContext();
+            } else if (context.isArray()) {
+                @NotNull ArrayContext iterable = context.getAsArray();
                 @NotNull StringBuilder builder = new StringBuilder();
 
                 while (true) {

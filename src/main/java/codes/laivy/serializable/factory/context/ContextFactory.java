@@ -26,7 +26,7 @@ public interface ContextFactory {
 
     // Object
 
-    @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config);
+    @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config);
     @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws IOException, InstantiationException;
 
 }

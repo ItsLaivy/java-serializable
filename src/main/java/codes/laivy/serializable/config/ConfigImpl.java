@@ -128,7 +128,7 @@ final class ConfigImpl implements Config {
 
     @Override
     public @NotNull String toString() {
-        return "SerializationPropertiesImpl{" +
+        return "ConfigImpl{" +
                 "father=" + father +
                 ", outerInstance=" + outerInstance +
                 ", typeConcretes=" + typeConcretes +

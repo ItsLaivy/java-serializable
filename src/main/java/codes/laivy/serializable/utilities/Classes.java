@@ -171,7 +171,7 @@ public final class Classes {
         return methods;
     }
     public static <E> @Nullable E javaDeserializeObject(@NotNull Class<?> reference, @NotNull ArrayContext context) throws IOException, ClassNotFoundException {
-        if (context.isNullContext()) {
+        if (context.isNull()) {
             return null;
         }
 
@@ -180,7 +180,7 @@ public final class Classes {
 
         int row = 0;
         for (@NotNull Context element : context) {
-            bytes[row] = element.getAsPrimitiveContext().getAsByte();
+            bytes[row] = element.getAsPrimitive().getAsByte();
             row++;
         }
 

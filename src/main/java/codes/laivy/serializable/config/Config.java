@@ -30,7 +30,7 @@ public interface Config {
         @NotNull InstanceFactory instanceFactory;
         @NotNull ContextFactory contextFactory;
 
-        if (reference.isAssignableFrom(UsingSerializers.class)) {
+        if (reference.isAnnotationPresent(UsingSerializers.class)) {
             contextFactory = ContextFactory.methods(reference, reference.getAnnotation(UsingSerializers.class));
         } else {
             contextFactory = ContextFactory.field();
@@ -102,7 +102,7 @@ public interface Config {
 
         // todo: The used reference should be the compatible!
         if (field.isAnnotationPresent(UsingSerializers.class)) {
-            contextFactory = ContextFactory.methods(field.getDeclaringClass(), field.getDeclaringClass().getAnnotation(UsingSerializers.class));
+            contextFactory = ContextFactory.methods(field.getDeclaringClass(), field.getAnnotation(UsingSerializers.class));
         } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
             contextFactory = ContextFactory.methods(reference, reference.getAnnotation(UsingSerializers.class));
         } else {

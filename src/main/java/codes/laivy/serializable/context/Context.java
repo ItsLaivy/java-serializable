@@ -6,47 +6,47 @@ public interface Context {
 
     // Object
 
-    default @NotNull ArrayContext getAsArrayContext() {
+    default @NotNull ArrayContext getAsArray() {
         if (this instanceof ArrayContext) {
             return (ArrayContext) this;
         } else {
             throw new IllegalStateException("this instance isn't an array context");
         }
     }
-    default boolean isArrayContext() {
+    default boolean isArray() {
         return this instanceof ArrayContext;
     }
 
-    default @NotNull PrimitiveContext getAsPrimitiveContext() {
+    default @NotNull PrimitiveContext getAsPrimitive() {
         if (this instanceof PrimitiveContext) {
             return (PrimitiveContext) this;
         } else {
             throw new IllegalStateException("this instance isn't a primitive context");
         }
     }
-    default boolean isPrimitiveContext() {
+    default boolean isPrimitive() {
         return this instanceof PrimitiveContext;
     }
 
-    default @NotNull MapContext getAsMapContext() {
+    default @NotNull MapContext getAsMap() {
         if (this instanceof MapContext) {
             return (MapContext) this;
         } else {
             throw new IllegalStateException("this instance isn't a map context");
         }
     }
-    default boolean isMapContext() {
+    default boolean isMap() {
         return this instanceof MapContext;
     }
 
-    default @NotNull NullContext getAsNullContext() {
+    default @NotNull NullContext getAsNull() {
         if (this instanceof NullContext) {
             return (NullContext) this;
         } else {
             throw new IllegalStateException("this instance isn't a null context");
         }
     }
-    default boolean isNullContext() {
+    default boolean isNull() {
         return this instanceof NullContext;
     }
 
