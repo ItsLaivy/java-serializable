@@ -5,6 +5,7 @@ import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
+import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -69,25 +70,38 @@ public class CollectionAdapter implements Adapter {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException {
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException {
         // Initialize variables
         @NotNull ArrayContext array = context.getAsArrayContext();
         @NotNull Collection<Class<?>> temp = new LinkedHashSet<>();
         @NotNull Collection collection;
 
+        if (config.getGenericConcretes().isEmpty()) {
+            throw new IllegalStateException("configuration without generic concretes. To use the collection adapter it should have at least one: " + reference.getName());
+        }
+
         // Retrieve generic types
         @NotNull Consumer<Collection<Object>> adder = objects -> {
+            w:
             while (true) {
-                try {
-                    // todo: function to retrieve type generic
-                    @Nullable Object object = array.readObject(reference);
-                    objects.add(object);
-                } catch (@NotNull EOFException ignore) {
-                    break;
-                } catch (@NotNull Throwable throwable) {
-                    throw new RuntimeException("cannot deserialize object to collection '" + objects.getClass().getName() + "' using references '" + reference.getName() + "'", throwable);
+                for (@NotNull Class<?> type : config.getGenericConcretes()) {
+                    try {
+                        // todo: function to retrieve type generic
+                        @Nullable Object object = array.readObject(type, Config.create());
+                        objects.add(object);
+
+                        continue w;
+                    } catch (@NotNull IncompatibleReferenceException ignore) {
+                    } catch (@NotNull EOFException ignore) {
+                        break w;
+                    } catch (@NotNull Throwable throwable) {
+                        throw new RuntimeException("cannot deserialize object to collection '" + objects.getClass().getName() + "' using references '" + reference.getName() + "'", throwable);
+                    }
                 }
+
+                throw new IncompatibleReferenceException("there's no compatible reference to deserialize " + reference + "': " + config.getGenericConcretes());
             }
+
         };
 
         // Read

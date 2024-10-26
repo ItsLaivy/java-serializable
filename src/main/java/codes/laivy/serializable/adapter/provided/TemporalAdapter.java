@@ -42,7 +42,7 @@ public class TemporalAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException {
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException {
         @NotNull PrimitiveContext object = context.getAsPrimitiveContext();
 
         if (reference == Date.class) {

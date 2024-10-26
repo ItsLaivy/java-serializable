@@ -22,7 +22,7 @@ public class UUIDAdapter implements Adapter {
         return PrimitiveContext.create(object.toString());
     }
     @Override
-    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException {
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException {
         return UUID.fromString(context.getAsPrimitiveContext().getAsString());
     }
 

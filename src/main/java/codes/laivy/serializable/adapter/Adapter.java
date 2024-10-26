@@ -12,6 +12,6 @@ public interface Adapter {
     @NotNull Class<?> @NotNull [] getReferences();
 
     @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config);
-    @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException;
+    @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException;
 
 }

@@ -53,7 +53,7 @@ public class CharacterArrayAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws EOFException {
+    public @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException {
         if (reference == char[].class) {
             if (context.isPrimitiveContext()) {
                 return context.getAsPrimitiveContext().getAsString().toCharArray();
