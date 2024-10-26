@@ -2,9 +2,9 @@ package codes.laivy.serializable.factory.context;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.UsingSerializers;
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.exception.MalformedSerializerException;
-import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,7 +21,7 @@ public final class MethodsContextFactory implements ContextFactory {
     private static boolean checkSerializerMethod(@NotNull Method method, @NotNull String name) {
         return method.getName().equals(name) &&
                 Modifier.isStatic(method.getModifiers()) &&
-                (method.getParameterCount() == 1 || (method.getParameterCount() == 2 && method.getParameters()[1].getType().isAssignableFrom(SerializationProperties.class))) &&
+                (method.getParameterCount() == 1 || (method.getParameterCount() == 2 && method.getParameters()[1].getType().isAssignableFrom(Config.class))) &&
                 Context.class.isAssignableFrom(method.getReturnType());
     }
     private static boolean checkDeserializerMethod(@NotNull Method method, @NotNull String name) {
@@ -114,7 +114,7 @@ public final class MethodsContextFactory implements ContextFactory {
     // Modules
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @Nullable SerializationProperties properties) {
+    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
         try {
             if (!this.serializer.getParameters()[0].getType().isAssignableFrom(object.getClass())) {
                 throw new UnsupportedOperationException("the serializer cannot be used by reference '" + object.getClass() + "' because it's not a subclass/implementation from '" + this.serializer.getParameters()[0].getType() + "' parameter class");
@@ -126,14 +126,14 @@ public final class MethodsContextFactory implements ContextFactory {
             if (this.serializer.getParameterCount() == 1) {
                 return (Context) this.serializer.invoke(null, object);
             } else {
-                return (Context) this.serializer.invoke(null, object, properties);
+                return (Context) this.serializer.invoke(null, object, config);
             }
         } catch (@NotNull IllegalAccessException | @NotNull InvocationTargetException e) {
             throw new RuntimeException("cannot execute serialize method from @UsingSerializers annotation", e);
         }
     }
     @Override
-    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context) throws EOFException, InstantiationException {
+    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException, InstantiationException {
         try {
             if (!deserializer.getReturnType().isAssignableFrom(reference)) {
                 throw new UnsupportedOperationException("the deserializer cannot be used by reference '" + reference + "' because it's not a subclass/implementation from '" + deserializer.getReturnType() + "' return class");

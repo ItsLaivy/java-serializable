@@ -233,7 +233,7 @@ public final class NativeContextFactory implements ContextFactory {
             }
         }
 
-        throw new IllegalStateException("the reference object '" + reference.getName() + "' (" + Allocator.isAssignableFromIncludingPrimitive(Integer.class, reference) + ") is missing adapters: " + context);
+        throw new IllegalStateException("the reference object '" + reference.getName() + "' is missing adapters: " + context);
     }
 
 }

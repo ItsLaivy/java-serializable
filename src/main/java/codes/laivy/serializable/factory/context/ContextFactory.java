@@ -2,8 +2,8 @@ package codes.laivy.serializable.factory.context;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.UsingSerializers;
+import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
-import codes.laivy.serializable.properties.SerializationProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +15,7 @@ public interface ContextFactory {
     // Static initializers
 
     static @NotNull ContextFactory field() {
-        return new FieldContextFactory();
+        return new NativeContextFactory();
     }
     static @NotNull ContextFactory methods(@NotNull Method serializer, @NotNull Method deserializer) {
         return new MethodsContextFactory(serializer, deserializer, true);
@@ -26,7 +26,7 @@ public interface ContextFactory {
 
     // Object
 
-    @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @Nullable SerializationProperties properties);
-    @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context) throws IOException, InstantiationException;
+    @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config);
+    @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws IOException, InstantiationException;
 
 }

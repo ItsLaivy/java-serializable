@@ -32,7 +32,7 @@ final class AllocatorInstanceFactory implements InstanceFactory {
         // Modifiers check
         int mod = reference.getModifiers();
         if (Modifier.isAbstract(mod) || Modifier.isInterface(mod)) {
-            throw new InstantiationException("the class must be concrete to be generated using allocator!");
+            throw new InstantiationException("the class must be concrete to be generated using allocator: " + reference.getName());
         }
 
         // Finish
