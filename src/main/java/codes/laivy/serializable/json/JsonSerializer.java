@@ -5,13 +5,13 @@ import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
+import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import codes.laivy.serializable.factory.context.ContextFactory;
 import codes.laivy.serializable.utilities.Classes;
 import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.lang.reflect.Array;
 
@@ -30,8 +30,6 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
     @Override
     public @NotNull JsonElement serialize(@Nullable Object object, @NotNull Config config) {
-        @NotNull ContextFactory contextFactory = config.getContextFactory();
-
         // Check nullability
         if (object == null) {
             return JsonNull.INSTANCE;
@@ -42,9 +40,10 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
         // Adapters
         @NotNull Class<?> reference = object.getClass();
         @Nullable Adapter adapter = config.getAdapter();
+        @NotNull ContextFactory contextFactory = config.getContextFactory();
 
         if (adapter != null) {
-            return serialize(adapter.write(object, this, config));
+            contextFactory = adapter;
         }
 
         // Serialize
@@ -60,46 +59,37 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
     // Deserialization
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @NotNull Config config) {
+    public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws IncompatibleReferenceException {
         // Start deserialization with compatible reference
         if (!Classes.isConcrete(reference)) {
             throw new IllegalArgumentException("the references should be all concretes: '" + reference.getName() + "'");
         }
 
-        // Adapters
-        @Nullable Adapter adapter = config.getAdapter();
+        // Adapters and factory
+        @NotNull ContextFactory factory;
 
-        if (adapter != null) try {
-            return (E) adapter.read(reference, this, context, config);
-        } catch (@NotNull EOFException e) {
-            // todo: exception message
-            throw new RuntimeException(e);
-        }
-
-        if (context.isNull()) {
-            return null;
-        }
-
-        // Factory
-        @NotNull ContextFactory factory = config.getContextFactory();
+        if (config.getAdapter() != null) factory = config.getAdapter();
+        else factory = config.getContextFactory();
 
         // Deserialize with factory
         try {
-            @Nullable Object deserialized = factory.read(reference, this, context, config);
-
-            // todo: check type
-            return (E) deserialized;
+            return factory.read(reference, this, context, config);
         } catch (@NotNull IOException e) {
             throw new RuntimeException(e);
         } catch (@NotNull InstantiationException e) {
             throw new RuntimeException("cannot instantiate '" + reference.getName() + "'", e);
         }
     }
+
     @Override
     public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable JsonElement element, @NotNull Config config) {
         return deserialize(reference, toContext(element), config);
+    }
+
+    @Override
+    public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable JsonElement element, @NotNull Config config) throws IncompatibleReferenceException {
+        return deserializeUnsafe(reference, toContext(element), config);
     }
 
     // Context
@@ -110,9 +100,10 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
             return NullContext.create();
         } else {
             @NotNull Class<?> reference = object.getClass();
+            @NotNull ContextFactory contextFactory;
 
             if (adapters.map.containsKey(reference)) {
-                return adapters.map.get(reference).write(object, this, config);
+                contextFactory = adapters.map.get(reference);
             } else if (object instanceof Context) {
                 throw new IllegalArgumentException("you cannot convert a context into a context");
             } else if (object instanceof Enum<?>) {
@@ -146,15 +137,17 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
                 return context;
             } else {
-                @Nullable ContextFactory factory = config.getContextFactory();
-                @Nullable Object instance = factory.write(reference, object, this, config);
+                contextFactory = config.getContextFactory();
+            }
 
-                if (instance instanceof Context) {
-                    return (Context) instance;
-                } else {
-                    // Repeat recursively the serialization
-                    return toContext(instance);
-                }
+            // Generate using context factory
+            @Nullable Object instance = contextFactory.write(reference, object, this, config);
+
+            if (instance instanceof Context) {
+                return (Context) instance;
+            } else {
+                // Repeat recursively the serialization
+                return toContext(instance);
             }
         }
     }

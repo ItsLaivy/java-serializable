@@ -537,8 +537,39 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
     }
 
     @Override
+    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @NotNull Config config) throws IncompatibleReferenceException {
+        @Nullable Object object = deserializeUnsafe(reference, context, config);
+
+        if (object != null && !Allocator.isAssignableFromIncludingPrimitive(reference, object.getClass())) {
+            throw new ClassCastException("the returned object from deserialization is '" + object + "' and cannot be cast to '" + reference.getName() + "'");
+        }
+
+        //noinspection unchecked
+        return (E) object;
+    }
+    @Override
+    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T element, @NotNull Config config) throws IncompatibleReferenceException {
+        @Nullable Object object = deserializeUnsafe(reference, element, config);
+
+        if (object != null && !Allocator.isAssignableFromIncludingPrimitive(reference, object.getClass())) {
+            throw new ClassCastException("the returned object from deserialization is '" + object + "' and cannot be cast to '" + reference.getName() + "'");
+        }
+
+        //noinspection unchecked
+        return (E) object;
+    }
+
+    @Override
     public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) throws IncompatibleReferenceException {
         return deserialize(reference, context, Config.create(this, reference));
+    }
+    @Override
+    public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @NotNull Context context) throws IncompatibleReferenceException {
+        return deserializeUnsafe(reference, context, Config.create(this, reference));
+    }
+    @Override
+    public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable T element) throws IncompatibleReferenceException {
+        return deserializeUnsafe(reference, element, Config.create(this, reference));
     }
 
     @Override

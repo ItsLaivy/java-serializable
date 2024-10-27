@@ -5,6 +5,7 @@ import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
+import codes.laivy.serializable.context.NullContext;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
-public class CollectionAdapter implements Adapter {
+public final class CollectionAdapter implements Adapter {
 
     public static final @NotNull Class<?> ARRAYS_ARRAYLIST;
 
@@ -50,7 +51,11 @@ public class CollectionAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
+    public @NotNull Context write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
+        if (object == null) {
+            return NullContext.create();
+        }
+
         if (object instanceof Collection<?>) {
             // Start
             @NotNull Collection<?> collection = (Collection<?>) object;

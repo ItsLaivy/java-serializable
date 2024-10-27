@@ -203,6 +203,9 @@ public interface TypeSerializer<T> extends Serializer {
     <E> @NotNull Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull Iterable<@Nullable T> iterable) throws IncompatibleReferenceException;
     <E> @NotNull Iterable<@Nullable E> deserialize(@NotNull Class<E> reference, @NotNull Iterable<@Nullable T> iterable, @NotNull Config config) throws IncompatibleReferenceException;
 
+    @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable T element) throws IncompatibleReferenceException;
+    @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable T element, @NotNull Config config) throws IncompatibleReferenceException;
+
     // Context
 
     @Nullable T serialize(@NotNull Context context);

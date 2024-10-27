@@ -6,12 +6,13 @@ import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.context.PrimitiveContext;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
 import java.time.*;
 import java.util.Date;
 
-public class TemporalAdapter implements Adapter {
+public final class TemporalAdapter implements Adapter {
 
     @Override
     public @NotNull Class<?> @NotNull [] getReferences() {
@@ -33,14 +34,17 @@ public class TemporalAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
-        if (object.getClass() == Date.class) {
-            return PrimitiveContext.create(((Date) object).getTime());
+    public @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
+        if (object == null) {
+            return null;
+        }
+
+        if (object instanceof Date) {
+            return ((Date) object).getTime();
         } else {
-            return PrimitiveContext.create(object.toString());
+            return object.toString();
         }
     }
-
     @Override
     public @NotNull Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException {
         @NotNull PrimitiveContext object = context.getAsPrimitive();

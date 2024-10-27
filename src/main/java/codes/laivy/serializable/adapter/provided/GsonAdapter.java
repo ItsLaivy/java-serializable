@@ -6,8 +6,10 @@ import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
 import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
+import java.util.Objects;
 import java.util.function.Function;
 
 public final class GsonAdapter implements Adapter {
@@ -23,13 +25,18 @@ public final class GsonAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Context write(@NotNull Object element, @NotNull Serializer serializer, @NotNull Config config) {
+    public @NotNull Context write(@NotNull Class<?> reference, @Nullable Object element, @NotNull Serializer serializer, @NotNull Config config) {
+        if (element == null) {
+            return NullContext.create();
+        }
+
         if (element instanceof JsonObject) {
             @NotNull MapContext context = MapContext.create(serializer);
             @NotNull JsonObject object = (JsonObject) element;
 
             for (@NotNull String key : object.keySet()) {
-                context.setContext(key, write(object.get(key), serializer, Config.create()));
+                @NotNull JsonElement value = object.get(key);
+                context.setContext(key, (Context) Objects.requireNonNull(write(value.getClass(), value, serializer, Config.create())));
             }
 
             return context;
@@ -38,7 +45,7 @@ public final class GsonAdapter implements Adapter {
             @NotNull JsonArray array = (JsonArray) element;
 
             for (@NotNull JsonElement target : array) {
-                context.write(write(target, serializer, Config.create()));
+                context.write((Context) Objects.requireNonNull(write(target.getClass(), target, serializer, Config.create())));
             }
 
             return context;

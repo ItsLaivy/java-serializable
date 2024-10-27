@@ -169,6 +169,9 @@ public interface Serializer {
     <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) throws IncompatibleReferenceException;
     <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context, @NotNull Config config) throws IncompatibleReferenceException;
 
+    @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @NotNull Context context) throws IncompatibleReferenceException;
+    @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws IncompatibleReferenceException;
+
     @NotNull Context toContext(@Nullable Object object);
     @NotNull Context toContext(@Nullable Object object, @NotNull Config config);
 

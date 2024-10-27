@@ -14,7 +14,7 @@ import java.io.EOFException;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class CharacterArrayAdapter implements Adapter {
+public final class CharacterArrayAdapter implements Adapter {
 
     @Override
     public @NotNull Class<?> @NotNull [] getReferences() {
@@ -25,7 +25,11 @@ public class CharacterArrayAdapter implements Adapter {
     }
 
     @Override
-    public @NotNull Context write(@NotNull Object object, @NotNull Serializer serializer, @NotNull Config config) {
+    public @Nullable Context write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
+        if (object == null) {
+            return null;
+        }
+
         if (object instanceof Character[]) {
             @Nullable Character[] instance = (Character[]) object;
 
