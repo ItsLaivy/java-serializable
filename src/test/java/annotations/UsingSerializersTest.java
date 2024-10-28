@@ -62,6 +62,12 @@ public final class UsingSerializersTest {
         Assertions.assertEquals(new Custom(), deserialized.custom, "the serializer from the field hasn't been used.");
         Assertions.assertEquals(new CustomDifferentClass(), deserialized.different, "the serializer from the field hasn't been used.");
     }
+    @Test
+    @DisplayName("Using a custom deserialization reference")
+    public void customDeserializationReference() {
+        @NotNull CustomDeserializationReference deserialized = Objects.requireNonNull(Serializer.fromJson(CustomDeserializationReference.class, Serializer.toJson(new CustomDeserializationReference())));
+        Assertions.assertEquals(new CustomDeserializationReference().name, deserialized.name);
+    }
 
     @Test
     @DisplayName("Expect fail without methods")
@@ -279,6 +285,48 @@ public final class UsingSerializersTest {
             this.normal = new Normal("Invalid");
             this.custom = new Custom("Invalid");
             this.different = new CustomDifferentClass("Invalid");
+        }
+
+    }
+
+    @UsingSerializers
+    private static final class CustomDeserializationReference {
+
+        // Object
+
+        private final @NotNull String name;
+
+        public CustomDeserializationReference() {
+            this.name = "Laivy is a nice person! :)";
+        }
+        private CustomDeserializationReference(@NotNull String name) {
+            this.name = name;
+        }
+
+        public static @NotNull String serialize(@NotNull CustomDeserializationReference normal, @NotNull Config config) {
+            return normal.name;
+        }
+        public static @NotNull CustomDeserializationReference deserialize(@NotNull String string) throws EOFException {
+            return new CustomDeserializationReference(string);
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof Normal)) return false;
+            @NotNull Normal normal = (Normal) object;
+            return Objects.equals(name, normal.name);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return name;
         }
 
     }

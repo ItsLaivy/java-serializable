@@ -3,6 +3,7 @@ package codes.laivy.serializable.annotations;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.exception.MalformedSerializerException;
+import codes.laivy.serializable.factory.context.MethodsContextFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
@@ -44,7 +45,7 @@ import java.lang.annotation.*;
  *             the object being deserialized.</li>
  *         </ul>
  *         <ul>
- *             <li>{@link Context} (<span style="color:red">Never Null</span>): Provides necessary information and utilities for reading
+ *             <li>{@link Context} (or any concrete object) (<span style="color:red">Never Null</span>): Provides necessary information and utilities for reading
  *             the serialized data.</li>
  *         </ul>
  *         <ul>
@@ -54,6 +55,10 @@ import java.lang.annotation.*;
  *     </li>
  *     <li>It must return any type of object. If the returned object does not match the
  *     expected type in the deserialization context, an exception will occur.</li>
+ *     <li>The second parameter in deserialization methods may be any `Object`, and the serializer
+ *     will automatically attempt to deserialize using the type of the provided reference object.
+ *     To ensure accurate deserialization, only concrete objects should be specified here. Alternatively,
+ *     the `@Concrete` annotation can be used to clearly define the concrete types for this parameter.</li>
  *     <li>The method can throw any exception.</li>
  * </ol>
  * <p>
@@ -107,6 +112,7 @@ import java.lang.annotation.*;
  * <p>If serializer/deserializer methods are missing, a {@link MalformedSerializerException} will be thrown.</p>
  * <p>If the serializer/deserializer cannot support the object, an {@link UnsupportedOperationException} will be thrown.</p>
  *
+ * @see MethodsContextFactory this annotation uses this context factory
  * @since 1.1-SNAPSHOT
  */
 @Documented

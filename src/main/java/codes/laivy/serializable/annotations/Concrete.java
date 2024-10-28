@@ -77,6 +77,7 @@ import java.lang.annotation.*;
  * @author Daniel Meinicke (Laivy)
  * @since 1.1-SNAPSHOT
  */
+// todo: The concrete references should be an implementation of the main reference
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(value = Concretes.class)
