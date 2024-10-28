@@ -8,6 +8,7 @@ import codes.laivy.serializable.context.PrimitiveContext;
 import codes.laivy.serializable.exception.MalformedSerializerException;
 import codes.laivy.serializable.json.JsonSerializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.EOFException;
 import java.util.Objects;
+import java.util.UUID;
 
 public final class UsingSerializersTest {
 
@@ -65,9 +67,21 @@ public final class UsingSerializersTest {
     @Test
     @DisplayName("Using a custom deserialization reference")
     public void customDeserializationReference() {
-        @NotNull CustomDeserializationReference deserialized = Objects.requireNonNull(Serializer.fromJson(CustomDeserializationReference.class, Serializer.toJson(new CustomDeserializationReference())));
-        Assertions.assertEquals(new CustomDeserializationReference().name, deserialized.name);
+        @NotNull AdvancedSerializers deserialized = Objects.requireNonNull(Serializer.fromJson(AdvancedSerializers.class, Serializer.toJson(new AdvancedSerializers())));
+        Assertions.assertEquals(new AdvancedSerializers().name, deserialized.name);
     }
+    @Test
+    @DisplayName("Test priority over adapter")
+    public void priority() {
+        @NotNull JsonObject serialized = Serializer.toJson(new PriorityOverAdapter()).getAsJsonObject();
+
+        Assertions.assertTrue(serialized.getAsJsonPrimitive("uuid").getAsString().startsWith("UUID:"), "serializer method not used! '" + serialized.getAsJsonPrimitive("uuid").getAsString() + "'");
+
+        @NotNull PriorityOverAdapter deserialized = Objects.requireNonNull(Serializer.fromJson(PriorityOverAdapter.class, serialized));
+        Assertions.assertEquals(new PriorityOverAdapter(), deserialized);
+    }
+
+    // Failures
 
     @Test
     @DisplayName("Expect fail without methods")
@@ -329,6 +343,89 @@ public final class UsingSerializersTest {
             return name;
         }
 
+    }
+
+    @UsingSerializers
+    private static final class AdvancedSerializers {
+
+        private final @NotNull String name;
+
+        private AdvancedSerializers() {
+            this.name = "Laivy!!!";
+        }
+        private AdvancedSerializers(@NotNull String name) {
+            this.name = name;
+        }
+
+        // Serializers
+
+        public static @NotNull String serialize(@NotNull AdvancedSerializers advanced) {
+            return advanced.name;
+        }
+        public static @NotNull AdvancedSerializers deserialize(@NotNull PrimitiveContext primitive) throws EOFException {
+            return new AdvancedSerializers(primitive.getAsString());
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof AdvancedSerializers)) return false;
+            @NotNull AdvancedSerializers that = (AdvancedSerializers) object;
+            return Objects.equals(name, that.name);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return name;
+        }
+
+    }
+
+    private static final class PriorityOverAdapter {
+
+        @UsingSerializers
+        private final @NotNull UUID uuid;
+
+        public PriorityOverAdapter() {
+            // todo: Check if UUIDAdapter is present
+            this.uuid = UUID.fromString("44e062c8-7122-4de6-8e38-494ada95da48");
+        }
+        private PriorityOverAdapter(@NotNull UUID uuid) {
+            this.uuid = uuid;
+        }
+
+        public static @NotNull String serialize(@NotNull UUID uuid) {
+            return "UUID:" + uuid;
+        }
+        public static @NotNull UUID deserialize(@NotNull String string) {
+            return UUID.fromString(string.split("UUID:")[1]);
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof PriorityOverAdapter)) return false;
+            @NotNull PriorityOverAdapter that = (PriorityOverAdapter) object;
+            return Objects.equals(uuid, that.uuid);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(uuid);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return uuid.toString();
+        }
+        
     }
 
     // Failures

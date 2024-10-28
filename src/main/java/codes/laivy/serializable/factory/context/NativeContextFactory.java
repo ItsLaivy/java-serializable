@@ -2,6 +2,7 @@ package codes.laivy.serializable.factory.context;
 
 import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
+import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
@@ -16,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InvalidClassException;
 import java.io.StreamCorruptedException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -32,7 +32,11 @@ public final class NativeContextFactory implements ContextFactory {
 
     @Override
     public @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
-        if (object == null) {
+        @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
+
+        if (adapter != null) {
+            return adapter.write(reference, object, serializer, config);
+        } else if (object == null) {
             return null;
         }
 
@@ -117,9 +121,12 @@ public final class NativeContextFactory implements ContextFactory {
     }
     @SuppressWarnings("unchecked")
     @Override
-    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws EOFException, InstantiationException, InvalidClassException {
-        // Deserialize normally
-        if (context.isNull()) {
+    public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws IOException, InstantiationException {
+        @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
+
+        if (adapter != null) {
+            return adapter.read(reference, serializer, context, config);
+        } else if (context.isNull()) {
             return null;
         } else if (context.isMap()) {
             // Variables

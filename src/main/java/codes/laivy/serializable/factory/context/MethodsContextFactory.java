@@ -89,7 +89,25 @@ public final class MethodsContextFactory implements ContextFactory {
     @SuppressWarnings("RedundantIfStatement")
     private static boolean checkDeserializerMethod(@NotNull Method method) {
         // Check object parameter's concrete reference
-        @NotNull Predicate<Parameter> predicate = parameter -> Arrays.stream(getType(parameter)).anyMatch(reference -> isConcrete(reference) || reference.isAssignableFrom(Context.class));
+        @NotNull Predicate<Parameter> predicate = parameter -> {
+            @NotNull Class<?> reference = parameter.getType();
+
+            if (reference == Context.class) {
+                return true;
+            } else if (reference == ArrayContext.class) {
+                return true;
+            } else if (reference == MapContext.class) {
+                return true;
+            } else if (reference == PrimitiveContext.class) {
+                return true;
+            } else if (reference == NullContext.class) {
+                return true;
+            } else if (Context.class.isAssignableFrom(reference)) {
+                throw new UnsupportedOperationException("illegal context type '" + reference + "'. You should only use Context, ArrayContext, MapContext, PrimitiveContext or NullContext");
+            } else {
+                return Arrays.stream(getType(parameter)).anyMatch(Classes::isConcrete);
+            }
+        };
 
         // Validation
         if (!Modifier.isStatic(method.getModifiers())) {
@@ -147,11 +165,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
         // Get methods
         for (@NotNull Method method : declaringClass.getDeclaredMethods()) {
-            if (!method.getName().equals(name)) {
-                continue;
-            }
-
-            if (checkSerializerMethod(method)) {
+            if (method.getName().equals(name) && checkSerializerMethod(method)) {
                 return method;
             }
         }
@@ -179,11 +193,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
         // Get methods
         for (@NotNull Method method : declaringClass.getDeclaredMethods()) {
-            if (!method.getName().equals(name)) {
-                continue;
-            }
-
-            if (checkDeserializerMethod(method)) {
+            if (method.getName().equals(name) && checkDeserializerMethod(method)) {
                 return method;
             }
         }
@@ -345,7 +355,7 @@ public final class MethodsContextFactory implements ContextFactory {
                         return context.getAsPrimitive();
                     } else if (parameter.getType() == NullContext.class) {
                         return context.getAsNull();
-                    } else if (parameter.getType().isAssignableFrom(Context.class)) {
+                    } else if (Context.class.isAssignableFrom(parameter.getType())) {
                         throw new UnsupportedOperationException("illegal context type '" + parameter.getType() + "'. You should only use Context, ArrayContext, MapContext, PrimitiveContext or NullContext");
                     } else {
                         @NotNull Class<?>[] classes = getType(parameter);
@@ -367,7 +377,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
             // Check if return type is assignable
             if (!method.getReturnType().isAssignableFrom(reference)) {
-                throw new UnsupportedOperationException("the deserializer method '" + method + "' cannot be used to deserialize reference '" + reference + "' because it's not a subclass/implementation from '" + method.getReturnType() + "' return class");
+                throw new UnsupportedOperationException("the deserializer method '" + method + "' cannot be used to deserialize reference '" + reference.getName() + "' because it's not a subclass/implementation from '" + method.getReturnType() + "' return class");
             }
 
             // Try deserialize

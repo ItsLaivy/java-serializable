@@ -2,18 +2,15 @@ package codes.laivy.serializable.json;
 
 import codes.laivy.serializable.AbstractTypeSerializer;
 import codes.laivy.serializable.Allocator;
-import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
-import codes.laivy.serializable.factory.context.ContextFactory;
 import codes.laivy.serializable.utilities.Classes;
 import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 
 public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
@@ -37,17 +34,8 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
             throw new IllegalArgumentException("you should use #serialize(Class, Context) to serialize contexts!");
         }
 
-        // Adapters
-        @NotNull Class<?> reference = object.getClass();
-        @Nullable Adapter adapter = config.getAdapter();
-        @NotNull ContextFactory contextFactory = config.getContextFactory();
-
-        if (adapter != null) {
-            contextFactory = adapter;
-        }
-
         // Serialize
-        @Nullable Object response = contextFactory.write(reference, object, this, config);
+        @Nullable Object response = config.getContextFactory().write(object.getClass(), object, this, config);
 
         if (response instanceof Context) {
             return serialize((Context) response);
@@ -66,15 +54,9 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
             throw new IllegalArgumentException("the references should be all concretes: '" + reference.getName() + "'");
         }
 
-        // Adapters and factory
-        @NotNull ContextFactory factory;
-
-        if (config.getAdapter() != null) factory = config.getAdapter();
-        else factory = config.getContextFactory();
-
         // Deserialize with factory
         try {
-            return factory.read(reference, this, context, config);
+            return config.getContextFactory().read(reference, this, context, config);
         } catch (@NotNull IOException e) {
             throw new RuntimeException(e);
         } catch (@NotNull InstantiationException e) {
@@ -99,49 +81,8 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
         if (object == null) {
             return NullContext.create();
         } else {
-            @NotNull Class<?> reference = object.getClass();
-            @NotNull ContextFactory contextFactory;
-
-            if (adapters.map.containsKey(reference)) {
-                contextFactory = adapters.map.get(reference);
-            } else if (object instanceof Context) {
-                throw new IllegalArgumentException("you cannot convert a context into a context");
-            } else if (object instanceof Enum<?>) {
-                return PrimitiveContext.create(((Enum<?>) object).name());
-            } else if (object instanceof Boolean) {
-                return PrimitiveContext.create((Boolean) object);
-            } else if (object instanceof Short) {
-                return PrimitiveContext.create((Short) object);
-            } else if (object instanceof Integer) {
-                return PrimitiveContext.create((Integer) object);
-            } else if (object instanceof Long) {
-                return PrimitiveContext.create((Long) object);
-            } else if (object instanceof Float) {
-                return PrimitiveContext.create((Float) object);
-            } else if (object instanceof Double) {
-                return PrimitiveContext.create((Double) object);
-            } else if (object instanceof Character) {
-                return PrimitiveContext.create((Character) object);
-            } else if (object instanceof Byte) {
-                return PrimitiveContext.create((Byte) object);
-            } else if (object instanceof String) {
-                return PrimitiveContext.create((String) object);
-            } else if (reference.isArray()) {
-                @NotNull ArrayContext context = ArrayContext.create(this);
-                final int length = Array.getLength(object);
-
-                for (int index = 0; index < length; index++) {
-                    @Nullable Object element = Array.get(object, index);
-                    context.write(toContext(element));
-                }
-
-                return context;
-            } else {
-                contextFactory = config.getContextFactory();
-            }
-
             // Generate using context factory
-            @Nullable Object instance = contextFactory.write(reference, object, this, config);
+            @Nullable Object instance = config.getContextFactory().write(object.getClass(), object, this, config);
 
             if (instance instanceof Context) {
                 return (Context) instance;
