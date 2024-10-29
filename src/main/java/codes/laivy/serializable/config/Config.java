@@ -24,7 +24,7 @@ public interface Config {
     }
     static @NotNull Config create(@NotNull Serializer serializer, @NotNull Class<?> reference) {
         // Concretes
-        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new LinkedHashMap<>();
+        @NotNull Map<Type, Collection<Class<?>>> generics = new LinkedHashMap<>();
 
         // Instance factories
         @NotNull InstanceFactory instanceFactory;
@@ -46,7 +46,7 @@ public interface Config {
         @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
 
         // Finish
-        return new ConfigImpl(null, null, new LinkedHashSet<>(), genericConcretes, false, new LinkedHashSet<>(getFields(null, reference).values()), contextFactory, instanceFactory, adapter);
+        return new ConfigImpl(null, null, new LinkedHashSet<>(), generics, false, new LinkedHashSet<>(getFields(null, reference).values()), contextFactory, instanceFactory, adapter);
     }
     static @NotNull Config create(@NotNull Serializer serializer, @NotNull Father father) {
         @NotNull Field field = father.getField();
@@ -54,12 +54,10 @@ public interface Config {
         boolean bypassTransients = field.isAnnotationPresent(BypassTransient.class);
 
         // Concretes
-        @NotNull Set<Class<?>> typeConcretes = new LinkedHashSet<>();
-        if (isConcrete(field.getType())) {
-            typeConcretes.add(field.getType());
-        }
+        @NotNull Set<Class<?>> types = new LinkedHashSet<>();
 
-        typeConcretes.addAll(Arrays.stream(field.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toSet()));
+        types.add(field.getType());
+        types.addAll(Arrays.stream(field.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toSet()));
 
         @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new LinkedHashMap<>();
 
@@ -121,8 +119,8 @@ public interface Config {
         // Adapter
         @Nullable Adapter adapter;
 
-        if (!typeConcretes.isEmpty()) {
-            adapter = serializer.getAdapter(typeConcretes.stream().findFirst().orElseThrow(NullPointerException::new)).orElse(null);
+        if (!types.isEmpty()) {
+            adapter = serializer.getAdapter(types.stream().findFirst().orElseThrow(NullPointerException::new)).orElse(null);
         } else {
             adapter = serializer.getAdapter(field.getType()).orElse(null);
         }
@@ -140,7 +138,7 @@ public interface Config {
         }
 
         // Finish
-        return new ConfigImpl(father, null, typeConcretes, genericConcretes, bypassTransients, fields, contextFactory, instanceFactory, adapter);
+        return new ConfigImpl(father, null, types, genericConcretes, bypassTransients, fields, contextFactory, instanceFactory, adapter);
     }
     static @NotNull Builder builder() {
         return new Builder();
@@ -153,10 +151,10 @@ public interface Config {
     @Nullable Object getOuterInstance();
     void setOuterInstance(@Nullable Object instance);
 
-    @NotNull Collection<Class<?>> getTypeConcretes();
+    @NotNull Collection<Class<?>> getTypes();
 
-    @NotNull Collection<Class<?>> getGenericConcretes();
-    @NotNull Collection<Class<?>> getGenericConcretes(@NotNull Type type);
+    @NotNull Collection<Class<?>> getGenerics();
+    @NotNull Collection<Class<?>> getGenerics(@NotNull Type type);
 
     boolean isBypassTransients();
     void setBypassTransients(boolean bypass);

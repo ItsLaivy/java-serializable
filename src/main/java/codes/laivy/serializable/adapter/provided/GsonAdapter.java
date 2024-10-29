@@ -121,7 +121,7 @@ public final class GsonAdapter implements Adapter {
             if (primitive.isBoolean()) {
                 return new JsonPrimitive(primitive.getAsBoolean());
             } else if (primitive.isNumber()) {
-                return new JsonPrimitive((Number) primitive.getObject());
+                return new JsonPrimitive(primitive.getAsNumber());
             } else if (primitive.isString()) {
                 return new JsonPrimitive(primitive.getAsString());
             } else {

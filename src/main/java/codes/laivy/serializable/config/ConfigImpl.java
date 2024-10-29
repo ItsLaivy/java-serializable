@@ -57,17 +57,17 @@ final class ConfigImpl implements Config {
     }
 
     @Override
-    public @NotNull Collection<Class<?>> getTypeConcretes() {
+    public @NotNull Collection<Class<?>> getTypes() {
         return typeConcretes;
     }
 
     @Override
-    public @NotNull Collection<Class<?>> getGenericConcretes() {
+    public @NotNull Collection<Class<?>> getGenerics() {
         return genericConcretes.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     @Override
-    public @NotNull Collection<Class<?>> getGenericConcretes(@NotNull Type type) {
+    public @NotNull Collection<Class<?>> getGenerics(@NotNull Type type) {
         return genericConcretes.getOrDefault(type, new ArrayList<>());
     }
 
@@ -119,26 +119,22 @@ final class ConfigImpl implements Config {
         if (this == object) return true;
         if (!(object instanceof ConfigImpl)) return false;
         ConfigImpl that = (ConfigImpl) object;
-        return isBypassTransients() == that.isBypassTransients() && Objects.equals(getFather(), that.getFather()) && Objects.equals(getOuterInstance(), that.getOuterInstance()) && Objects.equals(getTypeConcretes(), that.getTypeConcretes()) && Objects.equals(genericConcretes, that.genericConcretes) && Objects.equals(getIncludedFields(), that.getIncludedFields()) && Objects.equals(getContextFactory(), that.getContextFactory()) && Objects.equals(getInstanceFactory(), that.getInstanceFactory()) && Objects.equals(getAdapter(), that.getAdapter());
+        return isBypassTransients() == that.isBypassTransients() && Objects.equals(getFather(), that.getFather()) && Objects.equals(getOuterInstance(), that.getOuterInstance()) && Objects.equals(getTypes(), that.getTypes()) && Objects.equals(genericConcretes, that.genericConcretes) && Objects.equals(getIncludedFields(), that.getIncludedFields()) && Objects.equals(getContextFactory(), that.getContextFactory()) && Objects.equals(getInstanceFactory(), that.getInstanceFactory()) && Objects.equals(getAdapter(), that.getAdapter());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getFather(), getOuterInstance(), getTypeConcretes(), genericConcretes, isBypassTransients(), getIncludedFields(), getContextFactory(), getInstanceFactory(), getAdapter());
+        return Objects.hash(getFather(), getOuterInstance(), getTypes(), genericConcretes, isBypassTransients(), getIncludedFields(), getContextFactory(), getInstanceFactory(), getAdapter());
     }
 
     @Override
     public @NotNull String toString() {
-        return "ConfigImpl{" +
-                "father=" + father +
-                ", outerInstance=" + outerInstance +
-                ", typeConcretes=" + typeConcretes +
-                ", genericConcretes=" + genericConcretes +
-                ", bypassTransients=" + bypassTransients +
-                ", includedFields=" + includedFields +
-                ", contextFactory=" + contextFactory +
-                ", instanceFactory=" + instanceFactory +
-                ", adapter=" + adapter +
-                '}';
+        return "Configuration {" +
+                "father=" + father + ", " +
+                "context factory=" + contextFactory + ", " +
+                "instance factory=" + instanceFactory + ", " +
+                "bypass transients=" + bypassTransients + ", " +
+                "types=" + typeConcretes.toString().replaceFirst("\\[", "").replace("]", "") +
+                "}";
     }
 
 }

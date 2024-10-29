@@ -18,8 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.EOFException;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public final class UsingSerializersTest {
 
@@ -79,6 +78,12 @@ public final class UsingSerializersTest {
 
         @NotNull PriorityOverAdapter deserialized = Objects.requireNonNull(Serializer.fromJson(PriorityOverAdapter.class, serialized));
         Assertions.assertEquals(new PriorityOverAdapter(), deserialized);
+    }
+    @Test
+    @DisplayName("Test using serializers and without concrete references")
+    public void withoutReferences() {
+        @NotNull WithoutReferences deserialized = Objects.requireNonNull(Serializer.fromJson(WithoutReferences.class, Serializer.toJson(new WithoutReferences())));
+        Assertions.assertEquals(new WithoutReferences(), deserialized);
     }
 
     // Failures
@@ -425,7 +430,58 @@ public final class UsingSerializersTest {
         public @NotNull String toString() {
             return uuid.toString();
         }
-        
+
+    }
+    private static final class WithoutReferences {
+
+        @UsingSerializers
+        private final @NotNull List<String> list;
+
+        public WithoutReferences() {
+            list = new ArrayList<>();
+            list.add("A");
+            list.add("B");
+            list.add("C");
+            list.add("D");
+        }
+
+        // Serializers
+
+        public static @NotNull String serialize(@NotNull List<String> list) {
+            @NotNull StringBuilder builder = new StringBuilder();
+
+            for (@NotNull String string : list) {
+                if (builder.length() > 0) {
+                    builder.append(",");
+                }
+                builder.append(string);
+            }
+
+            return builder.toString();
+        }
+        public static @NotNull List<String> deserialize(@NotNull String string) {
+            return Arrays.asList(string.split(","));
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof WithoutReferences)) return false;
+            @NotNull WithoutReferences that = (WithoutReferences) object;
+            return Objects.equals(list, that.list);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(list);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return String.valueOf(list);
+        }
+
     }
 
     // Failures

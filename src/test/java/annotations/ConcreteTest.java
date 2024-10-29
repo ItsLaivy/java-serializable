@@ -2,7 +2,7 @@ package annotations;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.Concrete;
-import codes.laivy.serializable.exception.NullConcreteClassException;
+import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import codes.laivy.serializable.json.JsonSerializer;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +46,7 @@ public final class ConcreteTest {
 
             Assertions.assertEquals(generic, Serializer.fromJson(generic.getClass(), element));
             Assertions.fail("Didn't failed with the missing @Concrete annotation");
-        } catch (@NotNull NullConcreteClassException ignore) {
+        } catch (@NotNull IncompatibleReferenceException ignore) {
         }
     }
 

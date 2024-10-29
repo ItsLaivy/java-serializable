@@ -31,28 +31,31 @@ public interface PrimitiveContext extends Context {
         }
     }
     default byte getAsByte() {
-        return (byte) getObject();
+        return isNumber() ? getAsNumber().byteValue() : Byte.parseByte(getAsString());
     }
     default short getAsShort() {
-        return (short) getObject();
+        return isNumber() ? getAsNumber().shortValue() : Short.parseShort(getAsString());
     }
     default char getAsCharacter() {
         return getObject() instanceof Character ? (char) getObject() : getAsString().charAt(0);
     }
     default int getAsInteger() {
-        return (int) getObject();
+        return isNumber() ? getAsNumber().intValue() : Integer.parseInt(getAsString());
     }
     default long getAsLong() {
-        return (long) getObject();
+        return isNumber() ? getAsNumber().longValue() : Long.parseLong(getAsString());
     }
     default float getAsFloat() {
-        return (float) getObject();
+        return isNumber() ? getAsNumber().floatValue() : Float.parseFloat(getAsString());
     }
     default double getAsDouble() {
-        return (double) getObject();
+        return isNumber() ? getAsNumber().doubleValue() : Double.parseDouble(getAsString());
     }
     default @NotNull String getAsString() {
         return getObject() instanceof String ? (String) getObject() : String.valueOf(getObject());
+    }
+    default @NotNull Number getAsNumber() {
+        return (Number) getObject();
     }
 
     void setAsBoolean(boolean b);

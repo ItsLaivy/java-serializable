@@ -9,7 +9,6 @@ import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IllegalConcreteTypeException;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import codes.laivy.serializable.exception.MalformedSerializerException;
-import codes.laivy.serializable.exception.NonConcreteReferenceException;
 import codes.laivy.serializable.utilities.Classes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -170,7 +169,7 @@ public final class MethodsContextFactory implements ContextFactory {
             }
         }
 
-        throw new MalformedSerializerException("there's no valid serialize method named '" + name + "' at class '" + declaringClass + "'");
+        throw new MalformedSerializerException("there's no valid #serialize method named '" + name + "' at class '" + declaringClass + "'");
     }
     public static @NotNull Method getDeserializerMethod(@NotNull Class<?> declaringClass, @NotNull UsingSerializers annotation) {
         @NotNull String string = annotation.deserialization();
@@ -238,7 +237,7 @@ public final class MethodsContextFactory implements ContextFactory {
         try {
             return deserialization.call(reference, serializer, context, config);
         } catch (@NotNull InvocationTargetException e) {
-            throw new RuntimeException("cannot execute deserialize method from @UsingSerializers annotation", e);
+            throw new RuntimeException("cannot execute deserialize method from @UsingSerializers annotation", e.getCause());
         }
     }
 
@@ -361,7 +360,7 @@ public final class MethodsContextFactory implements ContextFactory {
                         @NotNull Class<?>[] classes = getType(parameter);
 
                         if (classes.length == 0) {
-                            throw new NonConcreteReferenceException("there's no available concrete reference available at #" + method.getName() + " parameter: " + parameter.getName());
+                            throw new IllegalConcreteTypeException("there's no available concrete reference available at #" + method.getName() + " parameter: " + parameter.getName());
                         }
 
                         for (@NotNull Class<?> reference : classes) try {

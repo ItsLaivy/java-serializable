@@ -46,7 +46,7 @@ final class FatherImpl implements Father {
 
     @Override
     public @NotNull String toString() {
-        return "FatherImpl{" +
+        return "Father {" +
                 "field=" + field +
                 ", instance=" + instance +
                 '}';

@@ -81,7 +81,7 @@ public final class CollectionAdapter implements Adapter {
         @NotNull Collection<Class<?>> temp = new LinkedHashSet<>();
         @NotNull Collection collection;
 
-        if (config.getGenericConcretes().isEmpty()) {
+        if (config.getGenerics().isEmpty()) {
             throw new IllegalStateException("configuration without generic concretes. To use the collection adapter it should have at least one: " + reference.getName());
         }
 
@@ -89,7 +89,7 @@ public final class CollectionAdapter implements Adapter {
         @NotNull Consumer<Collection<Object>> adder = objects -> {
             w:
             while (true) {
-                for (@NotNull Class<?> type : config.getGenericConcretes()) {
+                for (@NotNull Class<?> type : config.getGenerics()) {
                     try {
                         // todo: function to retrieve type generic
                         @Nullable Object object = array.readObject(type, Config.create());
@@ -104,7 +104,7 @@ public final class CollectionAdapter implements Adapter {
                     }
                 }
 
-                throw new IncompatibleReferenceException("there's no compatible reference to deserialize " + reference + "': " + config.getGenericConcretes());
+                throw new IncompatibleReferenceException("there's no compatible reference to deserialize " + reference + "': " + config.getGenerics());
             }
 
         };

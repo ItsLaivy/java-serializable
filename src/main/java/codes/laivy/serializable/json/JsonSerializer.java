@@ -5,7 +5,6 @@ import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
-import codes.laivy.serializable.utilities.Classes;
 import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,11 +48,6 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
     @Override
     public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws IncompatibleReferenceException {
-        // Start deserialization with compatible reference
-        if (!Classes.isConcrete(reference)) {
-            throw new IllegalArgumentException("the references should be all concretes: '" + reference.getName() + "'");
-        }
-
         // Deserialize with factory
         try {
             return config.getContextFactory().read(reference, this, context, config);
