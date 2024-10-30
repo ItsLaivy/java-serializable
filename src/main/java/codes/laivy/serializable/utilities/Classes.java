@@ -26,6 +26,31 @@ public final class Classes {
 
     // Static initializers
 
+    public static @Nullable Field getOuterClassField(@NotNull Class<?> reference) {
+        @Nullable Field field = null;
+        int amount = 0;
+
+        while (field == null) {
+            @NotNull StringBuilder string = new StringBuilder("this$0");
+            for (int row = 0; row < amount; row++) {
+                string.append("$");
+            }
+
+            try {
+                field = reference.getDeclaredField(string.toString());
+            } catch (NoSuchFieldException e) {
+                return null;
+            }
+
+            if (!field.isSynthetic()) field = null;
+
+            amount++;
+        }
+
+        // Finish
+        return field;
+    }
+
     public static @NotNull Class<?> @NotNull [] getReferences(@NotNull Field field) {
         @NotNull List<Class<?>> classes = new LinkedList<>();
 

@@ -57,12 +57,6 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
             throw new RuntimeException("cannot instantiate '" + reference.getName() + "'", e);
         }
     }
-
-    @Override
-    public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable JsonElement element, @NotNull Config config) {
-        return deserialize(reference, toContext(element), config);
-    }
-
     @Override
     public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable JsonElement element, @NotNull Config config) throws IncompatibleReferenceException {
         return deserializeUnsafe(reference, toContext(element), config);

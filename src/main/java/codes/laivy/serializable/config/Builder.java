@@ -59,7 +59,7 @@ public final class Builder {
         typeConcretes.add(reference);
         return this;
     }
-    @Contract(value = "_->this")
+    @Contract(value = "_,_->this")
     public @NotNull Builder addTypeConcrete(@NotNull Type type, @NotNull Class<?> reference) {
         genericConcretes.putIfAbsent(type, new LinkedList<>());
         genericConcretes.get(type).add(reference);
