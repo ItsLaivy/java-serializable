@@ -82,6 +82,18 @@ public final class NativeContextFactory implements ContextFactory {
             }
         }
 
+        // Call #writeReplace method
+        try {
+            object = Classes.callWriteReplace(object, config.isIgnoreCasting());
+
+            if (object == null) {
+                return null;
+            } else if (object.getClass() != reference) {
+                return write(object.getClass(), object, serializer, config);
+            }
+        } catch (@NotNull NoSuchMethodException ignore) {
+        }
+
         // Java serialization block
         {
             if (Classes.usesJavaSerialization(reference)) {
@@ -143,7 +155,7 @@ public final class NativeContextFactory implements ContextFactory {
                     @Nullable Father father = config.getFather();
 
                     // Serialize
-                    @NotNull Object instance = instanceFactory.generate(reference);
+                    @Nullable Object instance = instanceFactory.generate(reference);
 
                     @NotNull MapContext object = context.getAsMap();
                     @NotNull Map<String, Field> fields = getFields(father, reference);
@@ -180,7 +192,6 @@ public final class NativeContextFactory implements ContextFactory {
                         } else {
                             config = Config.create(serializer, Father.create(field, instance));
 
-                            System.out.println(field.getName());
                             if (field.getName().startsWith("this$0") && field.isSynthetic()) {
                                 if (config.getOuterInstance() == null) {
                                     throw new NullPointerException("this class is not static, the outer instance must be defined at the config: " + config);
@@ -188,7 +199,6 @@ public final class NativeContextFactory implements ContextFactory {
                                     throw new IllegalArgumentException("this outer instance isn't the same outer class from this inner object: " + config);
                                 }
 
-                                System.out.println("Outer defined!");
                                 // Set outer field instance
                                 Allocator.setFieldValue(field, instance, config.getOuterInstance());
                             } else {
@@ -206,6 +216,12 @@ public final class NativeContextFactory implements ContextFactory {
                                 throw new IncompatibleReferenceException("cannot deserialize field '" + field + "' because there's no compatible references for it: " + Arrays.toString(references) + ", configuration: " + config);
                             }
                         }
+                    }
+
+                    // Call #readResolve method
+                    try {
+                        instance = Classes.callReadResolve(instance, config.isIgnoreCasting());
+                    } catch (@NotNull NoSuchMethodException ignore) {
                     }
 
                     // Finish

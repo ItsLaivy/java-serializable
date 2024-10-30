@@ -31,6 +31,8 @@ public final class Builder {
 
     private @Nullable Adapter adapter;
 
+    private boolean ignoreCasting = true;
+
     Builder() {
     }
 
@@ -96,10 +98,16 @@ public final class Builder {
         return this;
     }
 
+    @Contract(value = "_->this")
+    public @NotNull Builder ignoreCasting(boolean ignoreCasting) {
+        this.ignoreCasting = ignoreCasting;
+        return this;
+    }
+
     // Builder
 
     public @NotNull Config build() {
-        return new ConfigImpl(father, outerInstance, typeConcretes, genericConcretes, bypassTransients, includedFields, contextFactory, instanceFactory, adapter);
+        return new ConfigImpl(father, outerInstance, typeConcretes, genericConcretes, bypassTransients, includedFields, contextFactory, instanceFactory, adapter, ignoreCasting);
     }
 
 }

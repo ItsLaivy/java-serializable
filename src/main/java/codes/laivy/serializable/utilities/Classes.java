@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -25,6 +26,53 @@ import static codes.laivy.serializable.config.Config.Father;
 public final class Classes {
 
     // Static initializers
+
+    public static @Nullable Object callWriteReplace(@NotNull Object object, boolean ignoreCasting) throws NoSuchMethodException {
+        try {
+            @NotNull Method method = object.getClass().getDeclaredMethod("writeReplace");
+            method.setAccessible(true);
+
+            if (Modifier.isStatic(method.getModifiers())) {
+                throw new NoSuchMethodException("the #writeReplace method cannot be static");
+            } else if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
+                throw new NoSuchMethodException("invalid #writeReplace method return type");
+            }
+
+            @NotNull Class<?> reference = object.getClass();
+            object = method.invoke(object);
+
+            if (!ignoreCasting && object != null && !reference.isAssignableFrom(object.getClass())) {
+                throw new ClassCastException("the #writeReplace method returns a type (" + object.getClass() + ") that isn't assignable with the object class '" + reference + "'");
+            }
+
+            return object;
+        } catch (@NotNull InvocationTargetException | @NotNull IllegalAccessException e) {
+            throw new RuntimeException("cannot execute #writeReplace method", e);
+        }
+    }
+    public static @Nullable Object callReadResolve(@NotNull Object object, boolean ignoreCasting) throws NoSuchMethodException {
+        try {
+            @NotNull Method method = object.getClass().getDeclaredMethod("readResolve");
+            method.setAccessible(true);
+
+            if (Modifier.isStatic(method.getModifiers())) {
+                throw new NoSuchMethodException("the #readResolve method cannot be static");
+            } else if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
+                throw new NoSuchMethodException("invalid #readResolve method return type");
+            }
+
+            @NotNull Class<?> reference = object.getClass();
+            object = method.invoke(object);
+
+            if (!ignoreCasting && object != null && !reference.isAssignableFrom(object.getClass())) {
+                throw new ClassCastException("the #readResolve method returns a type (" + object.getClass() + ") that isn't assignable with the object class '" + reference + "'");
+            }
+
+            return object;
+        } catch (@NotNull InvocationTargetException | @NotNull IllegalAccessException e) {
+            throw new RuntimeException("cannot execute #readResolve method", e);
+        }
+    }
 
     public static @Nullable Field getOuterClassField(@NotNull Class<?> reference) {
         @Nullable Field field = null;

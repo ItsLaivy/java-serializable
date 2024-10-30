@@ -28,7 +28,9 @@ final class ConfigImpl implements Config {
 
     private @Nullable Adapter adapter;
 
-    public ConfigImpl(@Nullable Father father, @Nullable Object outerInstance, @NotNull Set<Class<?>> typeConcretes, @NotNull Map<Type, Collection<Class<?>>> genericConcretes, boolean bypassTransients, @NotNull Set<Field> includedFields, @NotNull ContextFactory contextFactory, @NotNull InstanceFactory instanceFactory, @Nullable Adapter adapter) {
+    private boolean ignoreCasting;
+
+    public ConfigImpl(@Nullable Father father, @Nullable Object outerInstance, @NotNull Set<Class<?>> typeConcretes, @NotNull Map<Type, Collection<Class<?>>> genericConcretes, boolean bypassTransients, @NotNull Set<Field> includedFields, @NotNull ContextFactory contextFactory, @NotNull InstanceFactory instanceFactory, @Nullable Adapter adapter, boolean ignoreCasting) {
         this.father = father;
         this.outerInstance = outerInstance;
         this.typeConcretes = typeConcretes;
@@ -38,6 +40,7 @@ final class ConfigImpl implements Config {
         this.contextFactory = contextFactory;
         this.instanceFactory = instanceFactory;
         this.adapter = adapter;
+        this.ignoreCasting = ignoreCasting;
     }
 
     // Modules
@@ -110,6 +113,11 @@ final class ConfigImpl implements Config {
     @Override
     public void setAdapter(@Nullable Adapter adapter) {
         this.adapter = adapter;
+    }
+
+    @Override
+    public boolean isIgnoreCasting() {
+        return ignoreCasting;
     }
 
     // Implementations

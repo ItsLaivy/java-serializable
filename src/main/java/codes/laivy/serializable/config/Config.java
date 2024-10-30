@@ -20,7 +20,7 @@ public interface Config {
     // Static initializers
 
     static @NotNull Config create() {
-        return new ConfigImpl(null, null, new LinkedHashSet<>(), new LinkedHashMap<>(), false, new LinkedHashSet<>(), ContextFactory.field(), InstanceFactory.allocator(), null);
+        return new ConfigImpl(null, null, new LinkedHashSet<>(), new LinkedHashMap<>(), false, new LinkedHashSet<>(), ContextFactory.field(), InstanceFactory.allocator(), null, true);
     }
     static @NotNull Config create(@NotNull Serializer serializer, @NotNull Class<?> reference) {
         // Concretes
@@ -46,7 +46,7 @@ public interface Config {
         @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
 
         // Finish
-        return new ConfigImpl(null, null, new LinkedHashSet<>(), generics, false, new LinkedHashSet<>(getFields(null, reference).values()), contextFactory, instanceFactory, adapter);
+        return new ConfigImpl(null, null, new LinkedHashSet<>(), generics, false, new LinkedHashSet<>(getFields(null, reference).values()), contextFactory, instanceFactory, adapter, true);
     }
     static @NotNull Config create(@NotNull Serializer serializer, @NotNull Father father) {
         @NotNull Field field = father.getField();
@@ -138,7 +138,7 @@ public interface Config {
         }
 
         // Finish
-        return new ConfigImpl(father, null, types, genericConcretes, bypassTransients, fields, contextFactory, instanceFactory, adapter);
+        return new ConfigImpl(father, null, types, genericConcretes, bypassTransients, fields, contextFactory, instanceFactory, adapter, true);
     }
     static @NotNull Builder builder() {
         return new Builder();
@@ -169,6 +169,13 @@ public interface Config {
 
     @Nullable Adapter getAdapter();
     void setAdapter(@Nullable Adapter adapter);
+
+    /**
+     * If true, this method will ignore the casting at the #readResolve and #writeReplace methods,
+     * allowing those methods to return types that isn't originally assignable from the original declaring class/reference
+     * @return
+     */
+    boolean isIgnoreCasting();
 
     // Classes
 
