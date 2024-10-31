@@ -119,6 +119,10 @@ final class ConfigImpl implements Config {
     public boolean isIgnoreCasting() {
         return ignoreCasting;
     }
+    @Override
+    public void setIgnoreCasting(boolean ignoreCasting) {
+        this.ignoreCasting = ignoreCasting;
+    }
 
     // Implementations
 
@@ -141,6 +145,7 @@ final class ConfigImpl implements Config {
                 "context factory=" + contextFactory + ", " +
                 "instance factory=" + instanceFactory + ", " +
                 "bypass transients=" + bypassTransients + ", " +
+                "included fields=" + includedFields + ", " +
                 "types=" + typeConcretes.toString().replaceFirst("\\[", "").replace("]", "") +
                 "}";
     }

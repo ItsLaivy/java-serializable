@@ -99,12 +99,9 @@ public final class Classes {
         return field;
     }
 
-    public static @NotNull Class<?> @NotNull [] getReferences(@NotNull Field field) {
-        @NotNull List<Class<?>> classes = new LinkedList<>();
-
-        if (isConcrete(field.getType())) {
-            classes.add(field.getType());
-        }
+    public static @NotNull Set<Class<?>> getReferences(@NotNull Field field) {
+        @NotNull Set<Class<?>> classes = new LinkedHashSet<>();
+        classes.add(field.getType());
 
         if (field.isAnnotationPresent(Concretes.class)) {
             classes.addAll(Arrays.stream(field.getAnnotationsByType(Concretes.class)).flatMap(c -> Arrays.stream(c.value())).map(Concrete::type).collect(Collectors.toList()));
@@ -113,22 +110,21 @@ public final class Classes {
         }
 
         for (@NotNull Class<?> reference : classes) {
-            if (!isConcrete(reference)) {
+            if (reference != field.getType() && !isConcrete(reference)) {
                 throw new IllegalStateException("the reference '" + reference.getName() + "' isn't concrete!");
             }
         }
 
-        return classes.toArray(new Class[0]);
+        return classes;
     }
     public static @NotNull Map<String, Field> getFields(@Nullable Father father, final @NotNull Class<?> reference) {
         @NotNull Map<String, Field> map = new LinkedHashMap<>();
         @NotNull Map<String, Integer> repeat = new HashMap<>();
 
         @NotNull Class<?> temp = reference;
-        while (temp != Object.class && temp != null) {
-            @NotNull Set<Field> fields = Arrays.stream(temp.getDeclaredFields()).collect(Collectors.toSet());
 
-            for (@NotNull Field field : fields) {
+        while (temp != Object.class && temp != null) {
+            for (@NotNull Field field : temp.getDeclaredFields()) {
                 // @BypassTransient annotation
                 boolean bypassTransients = father != null && father.getField().isAnnotationPresent(BypassTransient.class);
 

@@ -26,14 +26,14 @@ public interface MapContext extends Context {
     @NotNull Context getContext(@NotNull String name);
 
     default void setObject(@NotNull String name, @Nullable Object object) {
-        setObject(name, object, object != null ? Config.create(getSerializer(), object.getClass()) : Config.create());
+        setObject(name, object, object != null ? Config.builder(getSerializer(), object.getClass()).build() : Config.builder().build());
     }
     default void setObject(@NotNull String name, @Nullable Object object, @NotNull Config config) {
         setContext(name, getSerializer().toContext(object, config));
     }
     // todo IncompatibleReferenceException
     default <E> @Nullable E getObject(@NotNull Class<E> reference, @NotNull String name) {
-        return getObject(reference, name, Config.create(getSerializer(), reference));
+        return getObject(reference, name, Config.builder(getSerializer(), reference).build());
     }
     default <E> @Nullable E getObject(@NotNull Class<E> reference, @NotNull String name, @NotNull Config config) {
         return getSerializer().deserialize(reference, getContext(name), config);

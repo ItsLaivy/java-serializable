@@ -39,7 +39,7 @@ public final class CharacterArrayAdapter implements Adapter {
                 @NotNull ArrayContext context = ArrayContext.create(serializer);
 
                 for (@Nullable Character c : instance) {
-                    context.write(c, Config.create(serializer, Character.class));
+                    context.write(c, Config.builder(serializer, Character.class).build());
                 }
 
                 return context;

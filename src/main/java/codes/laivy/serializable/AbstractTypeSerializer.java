@@ -49,7 +49,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Serializable object) {
-        return serialize(object, object != null ? Config.create(this, object.getClass()) : Config.create());
+        return serialize(object, object != null ? Config.builder(this, object.getClass()).build() : Config.builder().build());
     }
 
     @Override
@@ -58,7 +58,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
         for (@Nullable Serializable object : array) {
             if (object != null) {
-                list.add(serialize(object, Config.create(this, object.getClass())));
+                list.add(serialize(object, Config.builder(this, object.getClass()).build()));
             } else {
                 list.add(null);
             }
@@ -73,7 +73,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
         for (@Nullable Serializable object : iterable) {
             if (object != null) {
-                list.add(serialize(object, Config.create(this, object.getClass())));
+                list.add(serialize(object, Config.builder(this, object.getClass()).build()));
             } else {
                 list.add(null);
             }
@@ -100,7 +100,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Enum<?> e) {
-        return serialize(e, e != null ? Config.create(this, e.getClass()) : Config.create());
+        return serialize(e, e != null ? Config.builder(this, e.getClass()).build() : Config.builder().build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Enum<?> @NotNull ... array) {
@@ -108,7 +108,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
         for (@Nullable Enum<?> e : array) {
             if (e != null) {
-                list.add(serialize(e, Config.create(this, e.getClass())));
+                list.add(serialize(e, Config.builder(this, e.getClass()).build()));
             } else {
                 list.add(null);
             }
@@ -126,7 +126,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Boolean b) {
-        return serialize(b, Config.create(this, Boolean.class));
+        return serialize(b, Config.builder(this, Boolean.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Boolean @NotNull ... array) {
@@ -141,7 +141,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(boolean b) {
-        return Objects.requireNonNull(serialize(b, Config.create(this, boolean.class)));
+        return Objects.requireNonNull(serialize(b, Config.builder(this, boolean.class).build()));
     }
     @Override
     public @NotNull Iterable<T> serialize(boolean @NotNull ... array) {
@@ -163,7 +163,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Short s) {
-        return serialize(s, Config.create(this, Short.class));
+        return serialize(s, Config.builder(this, Short.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Short @NotNull ... array) {
@@ -178,7 +178,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(short s) {
-        return Objects.requireNonNull(serialize(s, Config.create(this, short.class)));
+        return Objects.requireNonNull(serialize(s, Config.builder(this, short.class).build()));
     }
     @Override
     public @NotNull Iterable<T> serialize(short @NotNull ... array) {
@@ -200,7 +200,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Integer i) {
-        return serialize(i, Config.create(this, Integer.class));
+        return serialize(i, Config.builder(this, Integer.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Integer @NotNull ... array) {
@@ -215,7 +215,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(int i) {
-        return Objects.requireNonNull(serialize(i, Config.create(this, int.class)));
+        return Objects.requireNonNull(serialize(i, Config.builder(this, int.class).build()));
     }
     @Override
     public @NotNull Iterable<T> serialize(int @NotNull ... array) {
@@ -237,7 +237,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Long l) {
-        return serialize(l, Config.create(this, Long.class));
+        return serialize(l, Config.builder(this, Long.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Long @NotNull ... array) {
@@ -252,7 +252,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(long l) {
-        return Objects.requireNonNull(serialize(l, Config.create(this, long.class)));
+        return Objects.requireNonNull(serialize(l, Config.builder(this, long.class).build()));
     }
     @Override
     public @NotNull Iterable<T> serialize(long @NotNull ... array) {
@@ -274,11 +274,11 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Float f) {
-        return serialize(f, Config.create(this, Float.class));
+        return serialize(f, Config.builder(this, Float.class).build());
     }
     @Override
     public @NotNull T serialize(float f) {
-        return Objects.requireNonNull(serialize(f, Config.create(this, float.class)));
+        return Objects.requireNonNull(serialize(f, Config.builder(this, float.class).build()));
     }
 
     @Override
@@ -311,7 +311,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Double d) {
-        return serialize(d, Config.create(this, Double.class));
+        return serialize(d, Config.builder(this, Double.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Double @NotNull ... array) {
@@ -326,7 +326,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(double d) {
-        return Objects.requireNonNull(serialize(d, Config.create(this, double.class)));
+        return Objects.requireNonNull(serialize(d, Config.builder(this, double.class).build()));
     }
     @Override
     public @NotNull Iterable<T> serialize(double @NotNull ... array) {
@@ -348,7 +348,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Character c) {
-        return serialize(c, c != null ? Config.create(this, c.getClass()) : Config.create(this, Character.class));
+        return serialize(c, c != null ? Config.builder(this, c.getClass()).build() : Config.builder(this, Character.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Character @NotNull ... array) {
@@ -363,7 +363,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(char c) {
-        return serialize(c, Config.create(this, char.class));
+        return serialize(c, Config.builder(this, char.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(char @NotNull ... array) {
@@ -385,7 +385,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Byte b) {
-        return serialize(b, Config.create(this, Byte.class));
+        return serialize(b, Config.builder(this, Byte.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Byte @NotNull ... array) {
@@ -400,7 +400,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @NotNull T serialize(byte b) {
-        return serialize(b, Config.create(this, byte.class));
+        return serialize(b, Config.builder(this, byte.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(byte @NotNull ... array) {
@@ -417,7 +417,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable String string) {
-        return serialize(string, Config.create(this, String.class));
+        return serialize(string, Config.builder(this, String.class).build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable String @NotNull ... array) {
@@ -434,7 +434,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public @Nullable T serialize(@Nullable Object object) {
-        return serialize(object, object != null ? Config.create(this, object.getClass()) : Config.create());
+        return serialize(object, object != null ? Config.builder(this, object.getClass()).build() : Config.builder().build());
     }
     @Override
     public @NotNull Iterable<T> serialize(@Nullable Object @NotNull ... array) {
@@ -523,7 +523,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public <E> @Nullable E deserialize(@NotNull Class<E> reference, @Nullable T element) throws IncompatibleReferenceException {
-        return deserialize(reference, element, Config.create(this, reference));
+        return deserialize(reference, element, Config.builder(this, reference).build());
     }
 
     @Override
@@ -562,20 +562,20 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
 
     @Override
     public <E> @Nullable E deserialize(@NotNull Class<E> reference, @NotNull Context context) throws IncompatibleReferenceException {
-        return deserialize(reference, context, Config.create(this, reference));
+        return deserialize(reference, context, Config.builder(this, reference).build());
     }
     @Override
     public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @NotNull Context context) throws IncompatibleReferenceException {
-        return deserializeUnsafe(reference, context, Config.create(this, reference));
+        return deserializeUnsafe(reference, context, Config.builder(this, reference).build());
     }
     @Override
     public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable T element) throws IncompatibleReferenceException {
-        return deserializeUnsafe(reference, element, Config.create(this, reference));
+        return deserializeUnsafe(reference, element, Config.builder(this, reference).build());
     }
 
     @Override
     public @NotNull Context toContext(@Nullable Object object) {
-        return toContext(object, object != null ? Config.create(this, object.getClass()) : Config.create());
+        return toContext(object, object != null ? Config.builder(this, object.getClass()).build() : Config.builder().build());
     }
 
     // Classes

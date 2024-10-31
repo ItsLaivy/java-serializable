@@ -63,7 +63,7 @@ public final class CollectionAdapter implements Adapter {
 
             // Add elements to collection
             for (@Nullable Object element : collection) {
-                context.write(element, element != null ? Config.create(serializer, element.getClass()) : Config.create());
+                context.write(element, element != null ? Config.builder(serializer, element.getClass()).build() : Config.builder().build());
             }
 
             // Finish
@@ -92,7 +92,7 @@ public final class CollectionAdapter implements Adapter {
                 for (@NotNull Class<?> type : config.getGenerics()) {
                     try {
                         // todo: function to retrieve type generic
-                        @Nullable Object object = array.readObject(type, Config.create());
+                        @Nullable Object object = array.readObject(type, Config.builder().build());
                         objects.add(object);
 
                         continue w;

@@ -1,5 +1,6 @@
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.config.Config;
+import codes.laivy.serializable.json.JsonSerializer;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -26,7 +27,7 @@ public final class NonStaticClassTest {
         Assertions.assertEquals(0, inner.getNumber(), "cannot match reference from inner created object");
 
         @NotNull JsonObject object = Serializer.toJson(inner).getAsJsonObject();
-        inner = Objects.requireNonNull(Serializer.fromJson(Inner.class, object, Config.builder().outerInstance(this).build()));
+        inner = Objects.requireNonNull(Serializer.fromJson(Inner.class, object, Config.builder(JsonSerializer.getInstance(), Inner.class).outerInstance(this).build()));
 
         Assertions.assertEquals(0, inner.getNumber(), "cannot match reference from inner deserialized object");
     }

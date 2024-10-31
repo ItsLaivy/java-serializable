@@ -23,7 +23,7 @@ public interface ArrayContext extends Context, Collection<Context> {
     @NotNull Serializer getSerializer();
 
     default <E> @Nullable E readObject(@NotNull Class<E> reference) throws EOFException {
-        return readObject(reference, Config.create(getSerializer(), reference));
+        return readObject(reference, Config.builder(getSerializer(), reference).build());
     }
     default <E> @Nullable E readObject(@NotNull Class<E> reference, @NotNull Config config) throws EOFException {
         @NotNull Context context = stream().findFirst().orElseThrow(EOFException::new);
@@ -64,7 +64,7 @@ public interface ArrayContext extends Context, Collection<Context> {
     }
 
     default void write(@Nullable Object object) {
-        write(object, object != null ? Config.create(getSerializer(), object.getClass()) : Config.create());
+        write(object, object != null ? Config.builder(getSerializer(), object.getClass()).build() : Config.builder().build());
     }
     default void write(@Nullable Object object, @NotNull Config config) {
         write(getSerializer().toContext(object, config));

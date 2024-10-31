@@ -4,10 +4,7 @@ import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.config.Config;
-import codes.laivy.serializable.context.ArrayContext;
-import codes.laivy.serializable.context.Context;
-import codes.laivy.serializable.context.MapContext;
-import codes.laivy.serializable.context.PrimitiveContext;
+import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IllegalConcreteTypeException;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import codes.laivy.serializable.exception.MissingOuterClassException;
@@ -22,9 +19,9 @@ import java.io.StreamCorruptedException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import static codes.laivy.serializable.config.Config.Father;
 import static codes.laivy.serializable.utilities.Classes.getFields;
@@ -100,7 +97,7 @@ public final class NativeContextFactory implements ContextFactory {
                 return Classes.javaSerializeObject(serializer, object);
             }
         }
-        
+
         // Retrieve fields
         @Nullable Father father = config.getFather();
         @NotNull Map<String, Field> fields = getFields(father, reference);
@@ -124,10 +121,17 @@ public final class NativeContextFactory implements ContextFactory {
                 continue;
             }
 
-            @NotNull Config fieldConfig = Config.create(serializer, Father.create(field, object));
-            @NotNull Context t = serializer.toContext(Allocator.getFieldValue(field, object), fieldConfig);
+            @Nullable Object value = Allocator.getFieldValue(field, object);
+            @NotNull Context fieldContext;
 
-            context.setContext(name, t);
+            if (value != null) {
+                @NotNull Config fieldConfig = Config.builder(serializer, value.getClass(), Father.create(field, object)).build();
+                fieldContext = serializer.toContext(value, fieldConfig);
+            } else {
+                fieldContext = NullContext.create();
+            }
+
+            context.setContext(name, fieldContext);
         }
 
         // Finish
@@ -190,8 +194,6 @@ public final class NativeContextFactory implements ContextFactory {
                             // Set outer field instance
                             Allocator.setFieldValue(field, instance, null);
                         } else {
-                            config = Config.create(serializer, Father.create(field, instance));
-
                             if (field.getName().startsWith("this$0") && field.isSynthetic()) {
                                 if (config.getOuterInstance() == null) {
                                     throw new NullPointerException("this class is not static, the outer instance must be defined at the config: " + config);
@@ -201,10 +203,15 @@ public final class NativeContextFactory implements ContextFactory {
 
                                 // Set outer field instance
                                 Allocator.setFieldValue(field, instance, config.getOuterInstance());
-                            } else {
-                                @NotNull Class<?>[] references = config.getTypes().toArray(new Class[0]);
+                                continue;
+                            }
 
-                                for (@NotNull Class<?> fieldReference : references) try {
+                            @NotNull Set<Class<?>> references = Classes.getReferences(field);
+
+                            for (@NotNull Class<?> fieldReference : references) {
+                                config = Config.builder(serializer, fieldReference, Father.create(field, instance)).build();
+
+                                try {
                                     // Set normal field instance
                                     @Nullable Object value = object.getObject(fieldReference, name, config);
                                     Allocator.setFieldValue(field, instance, value);
@@ -212,9 +219,9 @@ public final class NativeContextFactory implements ContextFactory {
                                     continue fields;
                                 } catch (@NotNull IllegalConcreteTypeException | @NotNull IncompatibleReferenceException ignore) {
                                 }
-
-                                throw new IncompatibleReferenceException("cannot deserialize field '" + field + "' because there's no compatible references for it: " + Arrays.toString(references) + ", configuration: " + config);
                             }
+
+                            throw new IncompatibleReferenceException("cannot deserialize field '" + field + "' because there's no compatible references for it: " + references + ", configuration: " + config);
                         }
                     }
 

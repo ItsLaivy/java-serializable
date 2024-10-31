@@ -8,9 +8,7 @@ import org.junit.jupiter.api.Test;
 import utilities.ArrayUtils;
 
 import java.time.*;
-import java.util.Date;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public final class ObjectTest {
 
@@ -125,12 +123,18 @@ public final class ObjectTest {
     // Classes
 
     private static final class TestClass {
+
+        private final @NotNull LinkedList<String> values = new LinkedList<>();
         private final @NotNull String name;
         private final int age;
 
         public TestClass(@NotNull String name, int age) {
             this.name = name;
             this.age = age;
+
+            this.values.add("One");
+            this.values.add("Two");
+            this.values.add("Three");
         }
 
         public @NotNull String getName() {
@@ -147,17 +151,18 @@ public final class ObjectTest {
             if (this == object) return true;
             if (!(object instanceof TestClass)) return false;
             @NotNull TestClass testClass = (TestClass) object;
-            return getAge() == testClass.getAge() && Objects.equals(getName(), testClass.getName());
+            return getAge() == testClass.getAge() && Objects.equals(values, testClass.values) && Objects.equals(getName(), testClass.getName());
         }
         @Override
         public int hashCode() {
-            return Objects.hash(getName(), getAge());
+            return Objects.hash(values, getName(), getAge());
         }
 
         @Override
         public @NotNull String toString() {
             return "TestClass{" +
-                    "name='" + name + '\'' +
+                    "values=" + values +
+                    ", name='" + name + '\'' +
                     ", age=" + age +
                     '}';
         }

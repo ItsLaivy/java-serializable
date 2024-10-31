@@ -36,7 +36,7 @@ public final class GsonAdapter implements Adapter {
 
             for (@NotNull String key : object.keySet()) {
                 @NotNull JsonElement value = object.get(key);
-                context.setContext(key, (Context) Objects.requireNonNull(write(value.getClass(), value, serializer, Config.create())));
+                context.setContext(key, (Context) Objects.requireNonNull(write(value.getClass(), value, serializer, Config.builder().build())));
             }
 
             return context;
@@ -45,7 +45,7 @@ public final class GsonAdapter implements Adapter {
             @NotNull JsonArray array = (JsonArray) element;
 
             for (@NotNull JsonElement target : array) {
-                context.write((Context) Objects.requireNonNull(write(target.getClass(), target, serializer, Config.create())));
+                context.write((Context) Objects.requireNonNull(write(target.getClass(), target, serializer, Config.builder().build())));
             }
 
             return context;
@@ -94,7 +94,7 @@ public final class GsonAdapter implements Adapter {
                 @NotNull Context value = map.getContext(key);
                 @NotNull Class<?> valueClass = locator.apply(value);
 
-                object.add(key, (JsonElement) read(valueClass, serializer, context, Config.create(serializer, valueClass)));
+                object.add(key, (JsonElement) read(valueClass, serializer, context, Config.builder(serializer, valueClass).build()));
             }
 
             return object;
@@ -107,7 +107,7 @@ public final class GsonAdapter implements Adapter {
 
             for (@NotNull Context value : (ArrayContext) context) {
                 @NotNull Class<?> valueClass = locator.apply(value);
-                array.add((JsonElement) read(valueClass, serializer, context, Config.create(serializer, valueClass)));
+                array.add((JsonElement) read(valueClass, serializer, context, Config.builder(serializer, valueClass).build()));
             }
 
             return array;
