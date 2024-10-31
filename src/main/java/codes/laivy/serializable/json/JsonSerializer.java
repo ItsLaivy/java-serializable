@@ -134,4 +134,11 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
         }
     }
 
+    // Implementations
+
+    @Override
+    public @NotNull String toString() {
+        return "JsonSerializer";
+    }
+
 }

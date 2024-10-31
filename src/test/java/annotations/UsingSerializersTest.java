@@ -3,7 +3,9 @@ package annotations;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.UsingSerializers;
 import codes.laivy.serializable.config.Config;
+import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
+import codes.laivy.serializable.context.MapContext;
 import codes.laivy.serializable.context.PrimitiveContext;
 import codes.laivy.serializable.exception.MalformedSerializerException;
 import codes.laivy.serializable.json.JsonSerializer;
@@ -84,6 +86,12 @@ public final class UsingSerializersTest {
     public void withoutReferences() {
         @NotNull WithoutReferences deserialized = Objects.requireNonNull(Serializer.fromJson(WithoutReferences.class, Serializer.toJson(new WithoutReferences())));
         Assertions.assertEquals(new WithoutReferences(), deserialized);
+    }
+    @Test
+    @DisplayName("Test using custom context returnings")
+    public void withCustomContextReturn() {
+        @NotNull WithCustomContextReturn deserialized = Objects.requireNonNull(Serializer.fromJson(WithCustomContextReturn.class, Serializer.toJson(new WithCustomContextReturn())));
+        Assertions.assertEquals(new WithCustomContextReturn(), deserialized);
     }
 
     // Failures
@@ -480,6 +488,52 @@ public final class UsingSerializersTest {
         @Override
         public @NotNull String toString() {
             return String.valueOf(list);
+        }
+
+    }
+    private static final class WithCustomContextReturn {
+
+        private final @NotNull String name;
+
+        public WithCustomContextReturn() {
+            this.name = "Cool";
+        }
+        private WithCustomContextReturn(@NotNull String name) {
+            this.name = name;
+        }
+
+        // Serializers
+
+        public static @NotNull MapContext serialize(@NotNull WithCustomContextReturn object) {
+            @NotNull MapContext map = MapContext.create(serializer);
+
+            map.setObject("name", object.name);
+
+            return map;
+        }
+        public static @NotNull WithCustomContextReturn deserialize(@NotNull MapContext map) {
+            return new WithCustomContextReturn(Objects.requireNonNull(map.getObject(String.class, "name")));
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            if (!(object instanceof WithCustomContextReturn)) return false;
+            WithCustomContextReturn that = (WithCustomContextReturn) object;
+            return Objects.equals(name, that.name);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return "WithCustomContextReturn{" +
+                    "name='" + name + '\'' +
+                    '}';
         }
 
     }

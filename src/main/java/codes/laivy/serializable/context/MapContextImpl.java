@@ -4,10 +4,7 @@ import codes.laivy.serializable.Serializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 final class MapContextImpl implements MapContext {
 
@@ -16,7 +13,7 @@ final class MapContextImpl implements MapContext {
     private final @NotNull Object lock = new Object();
     private final @NotNull Serializer serializer;
 
-    private final @NotNull Map<String, Context> contextMap = new HashMap<>();
+    private final @NotNull Map<String, Context> contextMap = new LinkedHashMap<>();
 
     public MapContextImpl(@NotNull Serializer serializer) {
         this.serializer = serializer;
@@ -57,6 +54,16 @@ final class MapContextImpl implements MapContext {
     @Override
     public @NotNull Set<@NotNull String> keySet() {
         return contextMap.keySet();
+    }
+
+    @Override
+    public @NotNull Set<Map.@NotNull Entry<@NotNull String, @NotNull Context>> entrySet() {
+        return contextMap.entrySet();
+    }
+
+    @Override
+    public @NotNull Collection<@NotNull Context> values() {
+        return contextMap.values();
     }
 
     // Implementations

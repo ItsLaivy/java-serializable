@@ -5,6 +5,9 @@ import codes.laivy.serializable.config.Config;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 public interface MapContext extends Context {
@@ -26,7 +29,7 @@ public interface MapContext extends Context {
         setObject(name, object, object != null ? Config.create(getSerializer(), object.getClass()) : Config.create());
     }
     default void setObject(@NotNull String name, @Nullable Object object, @NotNull Config config) {
-        setObject(name, getSerializer().toContext(object, config));
+        setContext(name, getSerializer().toContext(object, config));
     }
     // todo IncompatibleReferenceException
     default <E> @Nullable E getObject(@NotNull Class<E> reference, @NotNull String name) {
@@ -41,6 +44,8 @@ public interface MapContext extends Context {
     boolean contains(@NotNull String name);
 
     @NotNull Set<@NotNull String> keySet();
+    @NotNull Set<@NotNull Entry<@NotNull String, @NotNull Context>> entrySet();
+    @NotNull Collection<@NotNull Context> values();
 
     default int size() {
         return keySet().size();
