@@ -45,6 +45,11 @@ final class MapContextImpl implements MapContext {
     }
 
     @Override
+    public @Nullable Context remove(@NotNull String name) {
+        return contextMap.remove(name);
+    }
+
+    @Override
     public boolean contains(@NotNull String name) {
         return contextMap.containsKey(name);
     }

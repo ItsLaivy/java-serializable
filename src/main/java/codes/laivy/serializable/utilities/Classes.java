@@ -28,49 +28,49 @@ public final class Classes {
     // Static initializers
 
     public static @Nullable Object callWriteReplace(@NotNull Object object, boolean ignoreCasting) throws NoSuchMethodException {
-        try {
-            @NotNull Method method = object.getClass().getDeclaredMethod("writeReplace");
-            method.setAccessible(true);
+        @NotNull Class<?> reference = object.getClass();
+        @NotNull Method method = reference.getDeclaredMethod("writeReplace");
+        method.setAccessible(true);
 
+        try {
             if (Modifier.isStatic(method.getModifiers())) {
-                throw new NoSuchMethodException("the #writeReplace method cannot be static");
+                throw new NoSuchMethodException("the #" + method.getName() + " method cannot be static");
             } else if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
-                throw new NoSuchMethodException("invalid #writeReplace method return type");
+                throw new NoSuchMethodException("invalid #" + method.getName() + " method return type");
             }
 
-            @NotNull Class<?> reference = object.getClass();
             object = method.invoke(object);
 
-            if (!ignoreCasting && object != null && !reference.isAssignableFrom(object.getClass())) {
-                throw new ClassCastException("the #writeReplace method returns a type (" + object.getClass() + ") that isn't assignable with the object class '" + reference + "'");
+            if (!ignoreCasting && object != null && !reference.isAssignableFrom(reference)) {
+                throw new ClassCastException("the #" + method.getName() + " method returns a type (" + reference + ") that isn't assignable with the object class '" + reference + "'");
             }
 
             return object;
         } catch (@NotNull InvocationTargetException | @NotNull IllegalAccessException e) {
-            throw new RuntimeException("cannot execute #writeReplace method", e);
+            throw new RuntimeException("cannot execute #" + method.getName() + " method", e);
         }
     }
     public static @Nullable Object callReadResolve(@NotNull Object object, boolean ignoreCasting) throws NoSuchMethodException {
-        try {
-            @NotNull Method method = object.getClass().getDeclaredMethod("readResolve");
-            method.setAccessible(true);
+        @NotNull Class<?> reference = object.getClass();
+        @NotNull Method method = reference.getDeclaredMethod("readResolve");
+        method.setAccessible(true);
 
+        try {
             if (Modifier.isStatic(method.getModifiers())) {
-                throw new NoSuchMethodException("the #readResolve method cannot be static");
+                throw new NoSuchMethodException("the #" + method.getName() + " method cannot be static");
             } else if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
-                throw new NoSuchMethodException("invalid #readResolve method return type");
+                throw new NoSuchMethodException("invalid #" + method.getName() + " method return type");
             }
 
-            @NotNull Class<?> reference = object.getClass();
             object = method.invoke(object);
 
-            if (!ignoreCasting && object != null && !reference.isAssignableFrom(object.getClass())) {
-                throw new ClassCastException("the #readResolve method returns a type (" + object.getClass() + ") that isn't assignable with the object class '" + reference + "'");
+            if (!ignoreCasting && object != null && !reference.isAssignableFrom(reference)) {
+                throw new ClassCastException("the #" + method.getName() + " method returns a type (" + reference + ") that isn't assignable with the object class '" + reference + "'");
             }
 
             return object;
         } catch (@NotNull InvocationTargetException | @NotNull IllegalAccessException e) {
-            throw new RuntimeException("cannot execute #readResolve method", e);
+            throw new RuntimeException("cannot execute #" + method.getName() + " method", e);
         }
     }
 

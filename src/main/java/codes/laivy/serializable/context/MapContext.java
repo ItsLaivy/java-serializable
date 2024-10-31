@@ -36,6 +36,8 @@ public interface MapContext extends Context {
         return getSerializer().deserialize(reference, getContext(name), config);
     }
 
+    @Nullable Context remove(@NotNull String name);
+
     boolean contains(@NotNull String name);
 
     @NotNull Set<@NotNull String> keySet();
