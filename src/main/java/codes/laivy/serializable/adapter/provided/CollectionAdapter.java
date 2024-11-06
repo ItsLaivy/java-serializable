@@ -92,7 +92,7 @@ public final class CollectionAdapter implements Adapter {
                 for (@NotNull Class<?> type : config.getGenerics()) {
                     try {
                         // todo: function to retrieve type generic
-                        @Nullable Object object = array.readObject(type, Config.builder().build());
+                        @Nullable Object object = array.readObject(type, Config.builder(serializer, type).build());
                         objects.add(object);
 
                         continue w;
