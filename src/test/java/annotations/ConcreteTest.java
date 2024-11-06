@@ -36,6 +36,15 @@ public final class ConcreteTest {
 
         Assertions.assertEquals(generic, result, "Cannot deserialize '" + element + "' into expected generic: " + result);
     }
+    @Test
+    @DisplayName("Test declared at class")
+    public void concreteDeclaredAtClass() {
+        @NotNull Gender gender = new Male();
+        @NotNull JsonElement element = Serializer.toJson(gender);
+        @Nullable Gender result = Serializer.fromJson(Gender.class, element);
+
+        Assertions.assertEquals(gender, result, "Cannot deserialize '" + element + "' into expected generic: " + result);
+    }
 
     @Test
     @DisplayName("Expect fail missing generic")
@@ -51,6 +60,55 @@ public final class ConcreteTest {
     }
 
     // Classes
+
+    @Concrete(type = Female.class)
+    @Concrete(type = Male.class)
+    // Let's suppose that class is sealed
+    private static abstract class Gender {
+    }
+    private static final class Female extends Gender {
+        private final @NotNull String female = "It's a female";
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            return object instanceof Female;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(female);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return "Female{" +
+                    "female='" + female + '\'' +
+                    '}';
+        }
+
+
+    }
+    private static final class Male extends Gender {
+        private final @NotNull String male = "It's a male";
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            return object instanceof Male;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(male);
+        }
+
+        @Override
+        public @NotNull String toString() {
+            return "Male{" +
+                    "male='" + male + '\'' +
+                    '}';
+        }
+
+    }
 
     private static final class Normal {
 

@@ -146,7 +146,7 @@ final class ConfigImpl implements Config {
                 "instance factory=" + instanceFactory + ", " +
                 "bypass transients=" + bypassTransients + ", " +
                 "included fields=" + includedFields + ", " +
-                "types=" + typeConcretes.toString().replaceFirst("\\[", "").replace("]", "") +
+                "types=" + typeConcretes +
                 "}";
     }
 

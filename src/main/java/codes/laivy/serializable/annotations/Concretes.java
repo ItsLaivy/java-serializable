@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE_USE, ElementType.FIELD})
+@Target({ElementType.TYPE_USE, ElementType.FIELD, ElementType.TYPE})
 public @interface Concretes {
     @NotNull Concrete[] value();
 }

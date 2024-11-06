@@ -43,11 +43,13 @@ public final class Builder {
     Builder() {
     }
     Builder(@NotNull Serializer serializer, @NotNull Class<?> reference) {
-        if (!isConcrete(reference)) {
-            throw new IllegalConcreteTypeException("the reference must be concrete!");
+        @NotNull Set<Class<?>> references = Classes.getReferences(reference);
+
+        if (references.size() == 1 && !isConcrete(reference)) {
+            throw new IllegalConcreteTypeException("this reference '" + reference + "' isn't concrete. Try to include @Concrete annotations");
         }
 
-        // Instance factories
+        // Factories
         @NotNull InstanceFactory instanceFactory;
         @NotNull ContextFactory contextFactory;
 
@@ -69,7 +71,7 @@ public final class Builder {
         // Finish
         this.father = null;
         this.outerInstance = null;
-        this.typeConcretes.add(reference);
+        this.typeConcretes.addAll(references);
         this.bypassTransients = false;
         this.includedFields.addAll(getFields(null, reference).values());
         this.contextFactory = contextFactory;

@@ -99,14 +99,37 @@ public final class Classes {
         return field;
     }
 
+    public static @NotNull Set<Class<?>> getReferences(@NotNull Class<?> reference) {
+        @NotNull Set<Class<?>> references = new LinkedHashSet<>();
+        references.add(reference);
+
+        if (reference.isAnnotationPresent(Concretes.class)) {
+            references.addAll(Arrays.stream(reference.getAnnotationsByType(Concretes.class)).flatMap(c -> Arrays.stream(c.value())).map(Concrete::type).collect(Collectors.toList()));
+        } if (reference.isAnnotationPresent(Concrete.class)) {
+            references.addAll(Arrays.stream(reference.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toList()));
+        }
+
+        for (@NotNull Class<?> temp : references) {
+            if (reference != temp && !isConcrete(temp)) {
+                throw new IllegalStateException("the reference '" + temp.getName() + "' isn't concrete!");
+            }
+        }
+
+        return references;
+    }
     public static @NotNull Set<Class<?>> getReferences(@NotNull Field field) {
         @NotNull Set<Class<?>> classes = new LinkedHashSet<>();
-        classes.add(field.getType());
 
-        if (field.isAnnotationPresent(Concretes.class)) {
-            classes.addAll(Arrays.stream(field.getAnnotationsByType(Concretes.class)).flatMap(c -> Arrays.stream(c.value())).map(Concrete::type).collect(Collectors.toList()));
-        } if (field.isAnnotationPresent(Concrete.class)) {
-            classes.addAll(Arrays.stream(field.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toList()));
+        if (field.isAnnotationPresent(Concretes.class) || field.isAnnotationPresent(Concrete.class)) {
+            classes.add(field.getType());
+
+            if (field.isAnnotationPresent(Concretes.class)) {
+                classes.addAll(Arrays.stream(field.getAnnotationsByType(Concretes.class)).flatMap(c -> Arrays.stream(c.value())).map(Concrete::type).collect(Collectors.toList()));
+            } if (field.isAnnotationPresent(Concrete.class)) {
+                classes.addAll(Arrays.stream(field.getAnnotationsByType(Concrete.class)).map(Concrete::type).collect(Collectors.toList()));
+            }
+        } else {
+            classes.addAll(Classes.getReferences(field.getType()));
         }
 
         for (@NotNull Class<?> reference : classes) {
