@@ -1,9 +1,8 @@
 package annotations;
 
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.annotations.UsingSerializers;
+import codes.laivy.serializable.annotations.serializers.Serializers;
 import codes.laivy.serializable.config.Config;
-import codes.laivy.serializable.context.ArrayContext;
 import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.context.MapContext;
 import codes.laivy.serializable.context.PrimitiveContext;
@@ -22,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import java.io.EOFException;
 import java.util.*;
 
-public final class UsingSerializersTest {
+public final class SerializersTest {
 
     private static final @NotNull JsonSerializer serializer = new JsonSerializer();
 
@@ -121,7 +120,7 @@ public final class UsingSerializersTest {
 
     // Classes
 
-    @UsingSerializers
+    @Serializers
     private static final class Normal {
 
         // Static initializers
@@ -170,7 +169,7 @@ public final class UsingSerializersTest {
         }
 
     }
-    @UsingSerializers(deserialization = "#deserialize01", serialization = "#serialize01")
+    @Serializers(deserialization = "#deserialize01", serialization = "#serialize01")
     private static final class Custom {
 
         // Static initializers
@@ -235,7 +234,7 @@ public final class UsingSerializersTest {
         }
 
     }
-    @UsingSerializers(deserialization = "annotations.UsingSerializersTest$Custom#deserialize01", serialization = "annotations.UsingSerializersTest$Custom#serialize01")
+    @Serializers(deserialization = "annotations.SerializersTest$Custom#deserialize01", serialization = "annotations.SerializersTest$Custom#serialize01")
     private static final class CustomDifferentClass {
 
         // Static initializers
@@ -301,11 +300,11 @@ public final class UsingSerializersTest {
 
         // Object
 
-        @UsingSerializers
+        @Serializers
         private final @NotNull Normal normal;
-        @UsingSerializers
+        @Serializers
         private final @NotNull Custom custom;
-        @UsingSerializers
+        @Serializers
         private final @NotNull CustomDifferentClass different;
 
         public UsingFields() {
@@ -316,7 +315,7 @@ public final class UsingSerializersTest {
 
     }
 
-    @UsingSerializers
+    @Serializers
     private static final class CustomDeserializationReference {
 
         // Object
@@ -358,7 +357,7 @@ public final class UsingSerializersTest {
 
     }
 
-    @UsingSerializers
+    @Serializers
     private static final class AdvancedSerializers {
 
         private final @NotNull String name;
@@ -402,7 +401,7 @@ public final class UsingSerializersTest {
 
     private static final class PriorityOverAdapter {
 
-        @UsingSerializers
+        @Serializers
         private final @NotNull UUID uuid;
 
         public PriorityOverAdapter() {
@@ -442,7 +441,7 @@ public final class UsingSerializersTest {
     }
     private static final class WithoutReferences {
 
-        @UsingSerializers
+        @Serializers
         private final @NotNull List<String> list;
 
         public WithoutReferences() {
@@ -540,10 +539,10 @@ public final class UsingSerializersTest {
 
     // Failures
 
-    @UsingSerializers
+    @Serializers
     private static final class WithoutMethods {
     }
-    @UsingSerializers
+    @Serializers
     private static final class IncompatibleMethods {
 
         private final @NotNull String ignore = "Ignore me! I've added this field so Intellij IDEA doesn't recognizes this class as an utility class.";

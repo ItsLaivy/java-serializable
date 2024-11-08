@@ -3,7 +3,7 @@ package codes.laivy.serializable.factory.context;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.Concrete;
 import codes.laivy.serializable.annotations.Concretes;
-import codes.laivy.serializable.annotations.UsingSerializers;
+import codes.laivy.serializable.annotations.serializers.Serializers;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IllegalConcreteTypeException;
@@ -143,7 +143,7 @@ public final class MethodsContextFactory implements ContextFactory {
         return true;
     }
 
-    public static @NotNull Method getSerializerMethod(@NotNull Class<?> declaringClass, @NotNull UsingSerializers annotation) {
+    public static @NotNull Method getSerializerMethod(@NotNull Class<?> declaringClass, @NotNull Serializers annotation) {
         @NotNull String string = annotation.serialization();
         @NotNull String[] parts = string.split("#");
         @NotNull String name;
@@ -157,7 +157,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
             name = parts[1];
         } catch (@NotNull ClassNotFoundException e) {
-            throw new RuntimeException("cannot find class '" + parts[0] + "' from @UsingSerializers annotation", e);
+            throw new RuntimeException("cannot find class '" + parts[0] + "' from serialize method at @Serializers annotation", e);
         } else {
             name = parts[0];
         }
@@ -171,7 +171,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
         throw new MalformedSerializerException("there's no valid #serialize method named '" + name + "' at class '" + declaringClass + "'");
     }
-    public static @NotNull Method getDeserializerMethod(@NotNull Class<?> declaringClass, @NotNull UsingSerializers annotation) {
+    public static @NotNull Method getDeserializerMethod(@NotNull Class<?> declaringClass, @NotNull Serializers annotation) {
         @NotNull String string = annotation.deserialization();
         @NotNull String[] parts = string.split("#");
         @NotNull String name;
@@ -185,7 +185,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
             name = parts[1];
         } catch (@NotNull ClassNotFoundException e) {
-            throw new RuntimeException("cannot find class '" + parts[0] + "' from @UsingSerializers annotation", e);
+            throw new RuntimeException("cannot find class '" + parts[0] + "' from deserialize method at @Serializers annotation", e);
         } else {
             name = parts[0];
         }
@@ -229,7 +229,7 @@ public final class MethodsContextFactory implements ContextFactory {
         try {
             return serialization.call(reference, object, config);
         } catch (@NotNull InvocationTargetException e) {
-            throw new RuntimeException("cannot execute serialize method from @UsingSerializers annotation", e);
+            throw new RuntimeException("cannot execute serialize method from @Serializers annotation", e);
         }
     }
     @Override
@@ -237,7 +237,7 @@ public final class MethodsContextFactory implements ContextFactory {
         try {
             return deserialization.call(reference, serializer, context, config);
         } catch (@NotNull InvocationTargetException e) {
-            throw new RuntimeException("cannot execute deserialize method from @UsingSerializers annotation", e.getCause());
+            throw new RuntimeException("cannot execute deserialize method from @Serializers annotation", e.getCause());
         }
     }
 

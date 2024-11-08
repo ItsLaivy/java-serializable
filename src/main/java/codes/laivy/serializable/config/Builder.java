@@ -3,6 +3,8 @@ package codes.laivy.serializable.config;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
 import codes.laivy.serializable.annotations.*;
+import codes.laivy.serializable.annotations.serializers.EnheritSerializers;
+import codes.laivy.serializable.annotations.serializers.Serializers;
 import codes.laivy.serializable.config.Config.Father;
 import codes.laivy.serializable.exception.IllegalConcreteTypeException;
 import codes.laivy.serializable.factory.context.ContextFactory;
@@ -14,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static codes.laivy.serializable.utilities.Classes.getFields;
@@ -45,17 +48,20 @@ public final class Builder {
     Builder(@NotNull Serializer serializer, @NotNull Class<?> reference) {
         @NotNull Set<Class<?>> references = Classes.getReferences(reference);
 
-        if (references.size() == 1 && !isConcrete(reference)) {
-            throw new IllegalConcreteTypeException("this reference '" + reference + "' isn't concrete. Try to include @Concrete annotations");
-        }
+        // Check @EnheritSerializers annotations
+        @Nullable MethodSerializer serializers = getSerializers(reference);
 
         // Factories
         @NotNull InstanceFactory instanceFactory;
         @NotNull ContextFactory contextFactory;
 
-        if (reference.isAnnotationPresent(UsingSerializers.class)) {
-            contextFactory = ContextFactory.methods(reference, reference.getAnnotation(UsingSerializers.class));
+        if (serializers != null) {
+            contextFactory = ContextFactory.methods(serializers.reference, serializers.serializers);
         } else {
+            if (references.size() == 1 && !isConcrete(reference)) {
+                throw new IllegalConcreteTypeException("this reference '" + reference + "' isn't concrete. Try to include @Concrete annotations");
+            }
+
             contextFactory = ContextFactory.field();
         }
 
@@ -126,12 +132,11 @@ public final class Builder {
         }
 
         // Context factory
+        @Nullable MethodSerializer serializers = field.isAnnotationPresent(Serializers.class) ? new MethodSerializer(father.getInstance().getClass(), field.getAnnotation(Serializers.class)) : getSerializers(father.getInstance().getClass());
         @NotNull ContextFactory contextFactory;
 
-        if (field.isAnnotationPresent(UsingSerializers.class)) {
-            contextFactory = ContextFactory.methods(field.getDeclaringClass(), field.getAnnotation(UsingSerializers.class));
-        } else if (reference.isAnnotationPresent(UsingSerializers.class)) {
-            contextFactory = ContextFactory.methods(reference, reference.getAnnotation(UsingSerializers.class));
+        if (serializers != null) {
+            contextFactory = ContextFactory.methods(serializers.reference, serializers.serializers);
         } else {
             contextFactory = ContextFactory.field();
         }
@@ -250,6 +255,56 @@ public final class Builder {
 
     public @NotNull Config build() {
         return new ConfigImpl(father, outerInstance, typeConcretes, genericConcretes, bypassTransients, includedFields, contextFactory, instanceFactory, adapter, ignoreCasting);
+    }
+
+    // Utilities
+
+    private static @Nullable MethodSerializer getSerializers(@NotNull Class<?> reference) {
+        // Functions
+        @NotNull Function<Class<?>, Void> function = ref -> {
+            if (reference.isAnnotationPresent(Serializers.class) && reference.isAnnotationPresent(EnheritSerializers.class)) {
+                throw new IllegalStateException("the reference '" + reference.getName() + "' includes both @EnheritSerializers and @Serializers annotation!");
+            }
+            return null;
+        };
+
+        // Retrieve method serializer instance
+        @NotNull Class<?> owner = reference;
+        @Nullable Serializers serializers = null;
+        function.apply(reference);
+
+        if (reference.isAnnotationPresent(EnheritSerializers.class)) {
+            @NotNull Class<?> sub = reference.getSuperclass();
+
+            while (sub != Object.class) {
+                function.apply(sub);
+
+                if (sub.isAnnotationPresent(EnheritSerializers.class)) {
+                    sub = sub.getSuperclass();
+                } else if (sub.isAnnotationPresent(Serializers.class)) {
+                    serializers = sub.getAnnotation(Serializers.class);
+                    owner = sub;
+                    break;
+                } else {
+                    throw new IllegalStateException("there's no valid @Serializers found at reference's super classes '" + reference.getName() + "'");
+                }
+            }
+        } else if (reference.isAnnotationPresent(Serializers.class)) {
+            serializers = reference.getAnnotation(Serializers.class);
+        }
+
+        // Finish
+        System.out.println(owner.getName() + " - " + serializers);
+        return serializers != null ? new MethodSerializer(owner, serializers) : null;
+    }
+    private static final class MethodSerializer {
+        private final @NotNull Class<?> reference;
+        private final @NotNull Serializers serializers;
+
+        public MethodSerializer(@NotNull Class<?> reference, @NotNull Serializers serializers) {
+            this.reference = reference;
+            this.serializers = serializers;
+        }
     }
 
 }

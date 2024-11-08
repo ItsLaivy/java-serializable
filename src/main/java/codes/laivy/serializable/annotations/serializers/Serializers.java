@@ -1,4 +1,4 @@
-package codes.laivy.serializable.annotations;
+package codes.laivy.serializable.annotations.serializers;
 
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
@@ -76,7 +76,7 @@ import java.lang.annotation.*;
  * Example usages:
  * <pre>
  * {@code
- * @UsingSerializers
+ * @Serializers
  * public class CustomObject {
  *     // Fields and methods
  *
@@ -93,7 +93,7 @@ import java.lang.annotation.*;
  * </pre>
  * <pre>
  * {@code
- * @UsingSerializers
+ * @Serializers
  * public class CustomObject {
  *     // Fields and methods
  *
@@ -118,7 +118,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD})
-public @interface UsingSerializers {
+public @interface Serializers {
 
     /**
      * Specifies the fully qualified name of the deserialization method to be used.

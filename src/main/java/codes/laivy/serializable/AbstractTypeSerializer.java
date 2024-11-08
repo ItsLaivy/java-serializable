@@ -24,7 +24,8 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
                 new UUIDAdapter(),
                 new CollectionAdapter(),
                 new GsonAdapter(),
-                new MapAdapter()
+                new MapAdapter(),
+                new ClassAdapter()
         };
 
         for (@NotNull Adapter adapter : adapters) {

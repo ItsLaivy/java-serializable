@@ -1,5 +1,7 @@
 package codes.laivy.serializable.annotations;
 
+import codes.laivy.serializable.annotations.serializers.Serializers;
+
 import java.lang.annotation.*;
 
 /**
@@ -13,7 +15,7 @@ import java.lang.annotation.*;
  * when applying this annotation, as failure to do so will result in a runtime error during the creation
  * of the instance.</p>
  *
- * <p><strong>Note ²:</strong> If the field/class uses {@link UsingSerializers} annotation, it's not guaranteed the
+ * <p><strong>Note ²:</strong> If the field/class uses {@link Serializers} annotation, it's not guaranteed the
  * usage of this annotation, since the custom serializers generally instances the objects using the available constructors</p>
  * or any other way, ignoring the native allocators</p>
  *
