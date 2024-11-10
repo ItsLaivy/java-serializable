@@ -174,9 +174,6 @@ public final class Allocator {
 
     @Internal
     public static boolean isAssignableFromIncludingPrimitive(@NotNull Class<?> c1, @NotNull Class<?> c2) {
-        // Debug
-        //System.out.println("'" + c1 + "' - '" + c2 + "': " + ((c1 == c2) || (c1.isAssignableFrom(c2)) || WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2)) + " | '" + (c1 == c2) + "' - '" + c1.isAssignableFrom(c2) + "' - '" + (WRAPPERS.containsKey(c1) && WRAPPERS.get(c1).isAssignableFrom(c2)) + "'");
-
         if (c1 == c2) {
             return true;
         } else if (c1.isAssignableFrom(c2)) {

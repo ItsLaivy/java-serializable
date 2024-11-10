@@ -3,7 +3,7 @@ package codes.laivy.serializable.factory.context;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.Concrete;
 import codes.laivy.serializable.annotations.Concretes;
-import codes.laivy.serializable.annotations.serializers.Serializers;
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IllegalConcreteTypeException;
@@ -143,7 +143,7 @@ public final class MethodsContextFactory implements ContextFactory {
         return true;
     }
 
-    public static @NotNull Method getSerializerMethod(@NotNull Class<?> declaringClass, @NotNull Serializers annotation) {
+    public static @NotNull Method getSerializerMethod(@NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
         @NotNull String string = annotation.serialization();
         @NotNull String[] parts = string.split("#");
         @NotNull String name;
@@ -171,7 +171,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
         throw new MalformedSerializerException("there's no valid #serialize method named '" + name + "' at class '" + declaringClass + "'");
     }
-    public static @NotNull Method getDeserializerMethod(@NotNull Class<?> declaringClass, @NotNull Serializers annotation) {
+    public static @NotNull Method getDeserializerMethod(@NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
         @NotNull String string = annotation.deserialization();
         @NotNull String[] parts = string.split("#");
         @NotNull String name;
@@ -222,6 +222,15 @@ public final class MethodsContextFactory implements ContextFactory {
         this(serialization, deserialization, true);
     }
 
+    // Getters
+
+    public @NotNull Method getSerialization() {
+        return serialization.getMethod();
+    }
+    public @NotNull Method getDeserialization() {
+        return deserialization.getMethod();
+    }
+
     // Modules
 
     @Override
@@ -253,6 +262,14 @@ public final class MethodsContextFactory implements ContextFactory {
     @Override
     public int hashCode() {
         return Objects.hash(serialization, deserialization);
+    }
+
+    @Override
+    public @NotNull String toString() {
+        return "MethodsContextFactory{" +
+                "serialization=" + serialization.getMethod() +
+                ", deserialization=" + deserialization.getMethod() +
+                '}';
     }
 
     // Classes

@@ -29,6 +29,8 @@ import static codes.laivy.serializable.utilities.Classes.isConcrete;
 
 public final class NativeContextFactory implements ContextFactory {
 
+    // Object
+
     @Override
     public @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
         @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
@@ -298,6 +300,13 @@ public final class NativeContextFactory implements ContextFactory {
         } else {
             throw new IncompatibleReferenceException("there's no compatible reference to read object: " + config);
         }
+    }
+
+    // Implementations
+
+    @Override
+    public @NotNull String toString() {
+        return "NativeContextFactory{}";
     }
 
 }
