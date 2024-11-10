@@ -13,7 +13,7 @@ import java.lang.annotation.*;
  * <ul>
  *     <li>The superclass containing the serializer must be compatible with all subclasses that inherit it.</li>
  *     <li>The serialization method must meet the conditions and structure expected by the inheriting class.</li>
- *     <li>The superclass with the expected serializer class must include the {@link Serializers} annotation. If not, an exception will be thrown during
+ *     <li>The superclass with the expected serializer class must include the {@link MethodSerialization} annotation. If not, an exception will be thrown during
  *     the serialization process.</li>
  * </ul>
  * <p>
@@ -23,5 +23,5 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface EnheritSerializers {
+public @interface EnheritSerialization {
 }

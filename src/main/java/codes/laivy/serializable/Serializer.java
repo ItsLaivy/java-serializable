@@ -59,6 +59,7 @@ public interface Serializer {
 
     // Enum
 
+    // todo: enums must have @MethodSerialization support!
     @Nullable Object serialize(@Nullable Enum<?> e, @NotNull Config config);
 
     @Nullable Object serialize(@Nullable Enum<?> e);

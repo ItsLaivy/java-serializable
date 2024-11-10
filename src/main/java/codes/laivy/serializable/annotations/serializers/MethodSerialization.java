@@ -118,7 +118,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD})
-public @interface Serializers {
+public @interface MethodSerialization {
 
     /**
      * Specifies the fully qualified name of the deserialization method to be used.

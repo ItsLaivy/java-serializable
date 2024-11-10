@@ -1,7 +1,7 @@
 package codes.laivy.serializable.factory.context;
 
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.annotations.serializers.Serializers;
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.Context;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,7 @@ public interface ContextFactory {
     static @NotNull ContextFactory methods(@NotNull Method serializer, @NotNull Method deserializer) {
         return new MethodsContextFactory(serializer, deserializer, true);
     }
-    static @NotNull ContextFactory methods(@NotNull Class<?> declaringClass, @NotNull Serializers annotation) {
+    static @NotNull ContextFactory methods(@NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
         return new MethodsContextFactory(MethodsContextFactory.getSerializerMethod(declaringClass, annotation), MethodsContextFactory.getDeserializerMethod(declaringClass, annotation), false);
     }
 

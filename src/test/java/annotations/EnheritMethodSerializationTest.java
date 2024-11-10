@@ -2,12 +2,9 @@ package annotations;
 
 import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
-import codes.laivy.serializable.annotations.serializers.EnheritSerializers;
-import codes.laivy.serializable.annotations.serializers.Serializers;
-import codes.laivy.serializable.context.Context;
-import codes.laivy.serializable.context.MapContext;
+import codes.laivy.serializable.annotations.serializers.EnheritSerialization;
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class EnheritSerializersTest {
+public class EnheritMethodSerializationTest {
 
     @Test
     @DisplayName("Test normally")
@@ -45,11 +42,10 @@ public class EnheritSerializersTest {
 
     // Classes
 
-    @Serializers
+    @MethodSerialization
     private static abstract class Main {
 
         private static @NotNull Class<? extends Main> serialize(@NotNull Main main) {
-            System.out.println("A");
             return main.getClass();
         }
         private static @NotNull Main deserialize(@NotNull Class<? extends Main> reference) {
@@ -64,10 +60,10 @@ public class EnheritSerializersTest {
 
     }
 
-    @EnheritSerializers
+    @EnheritSerialization
     private static class Normally extends Main {
     }
-    @EnheritSerializers
+    @EnheritSerialization
     private static final class Recursively extends Normally {
     }
 
