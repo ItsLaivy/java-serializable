@@ -135,7 +135,7 @@ public final class Builder {
         }
 
         // Context factory
-        @Nullable MethodSerializer serializers = field.isAnnotationPresent(MethodSerialization.class) ? new MethodSerializer(father.getInstance().getClass(), field.getAnnotation(MethodSerialization.class)) : getSerializers(enclosing);
+        @Nullable MethodSerializer serializers = field.isAnnotationPresent(MethodSerialization.class) ? new MethodSerializer(field.getDeclaringClass(), field.getAnnotation(MethodSerialization.class)) : getSerializers(enclosing);
         @NotNull ContextFactory contextFactory;
 
         if (serializers != null) {
@@ -266,7 +266,7 @@ public final class Builder {
         // Functions
         @NotNull Function<Class<?>, Void> function = ref -> {
             if (reference.isAnnotationPresent(MethodSerialization.class) && reference.isAnnotationPresent(EnheritSerialization.class)) {
-                throw new IllegalStateException("the reference '" + reference.getName() + "' includes both @EnheritSerializers and @Serializers annotation!");
+                throw new IllegalStateException("the reference '" + reference.getName() + "' includes both @EnheritSerializers and @MethodSerialization annotation!");
             }
             return null;
         };
@@ -289,7 +289,7 @@ public final class Builder {
                     owner = sub;
                     break;
                 } else {
-                    throw new IllegalStateException("there's no valid @Serializers found at reference's super classes '" + reference.getName() + "'");
+                    throw new IllegalStateException("there's no valid @MethodSerialization found at reference's super classes '" + reference.getName() + "'");
                 }
             }
         } else if (reference.isAnnotationPresent(MethodSerialization.class)) {

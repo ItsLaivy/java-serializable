@@ -128,6 +128,8 @@ public final class NativeContextFactory implements ContextFactory {
 
             if (value != null) {
                 @NotNull Config fieldConfig = Config.builder(serializer, value.getClass(), Father.create(field, object)).build();
+                fieldConfig.getMetadata().putAll(config.getMetadata());
+
                 fieldContext = serializer.toContext(value, fieldConfig);
             } else {
                 fieldContext = NullContext.create();
@@ -210,11 +212,12 @@ public final class NativeContextFactory implements ContextFactory {
                         @NotNull Set<Class<?>> references = Classes.getReferences(field);
 
                         for (@NotNull Class<?> fieldReference : references) {
-                            config = Config.builder(serializer, fieldReference, Father.create(field, instance)).build();
+                            @NotNull Config fieldConfig = Config.builder(serializer, fieldReference, Father.create(field, instance)).build();
+                            fieldConfig.getMetadata().putAll(config.getMetadata());
 
                             try {
                                 // Set normal field instance
-                                @Nullable Object value = object.getObject(fieldReference, name, config);
+                                @Nullable Object value = object.getObject(fieldReference, name, fieldConfig);
                                 Allocator.setFieldValue(field, instance, value);
 
                                 continue fields;
@@ -260,8 +263,11 @@ public final class NativeContextFactory implements ContextFactory {
                     @NotNull Class<?> component = reference.getComponentType();
                     @NotNull Object object = Array.newInstance(component, size);
 
+                    @NotNull Config fieldConfig = Config.builder(serializer, component).build();
+                    fieldConfig.getMetadata().putAll(config.getMetadata());
+
                     for (int row = 0; row < size; row++) {
-                        Array.set(object, row, array.readObject(component));
+                        Array.set(object, row, array.readObject(component, fieldConfig));
                     }
 
                     return object;
@@ -292,13 +298,14 @@ public final class NativeContextFactory implements ContextFactory {
                     return primitive.getAsString();
                 }
             }
-        } catch (@NotNull IncompatibleReferenceException ignore) {
+        } catch (@NotNull IncompatibleReferenceException e) {
+            if (config.getTypes().size() == 1) throw e;
         }
 
         if (config.getTypes().isEmpty() || !isConcrete(main)) {
-            throw new IllegalConcreteTypeException("there's no concrete type for reference '" + main.getName() + "'. Is it missing any adapters? - " + context + ", configuration: " + config);
+            throw new IllegalConcreteTypeException("there's no concrete type for reference '" + main.getName() + "'. Is it missing any adapters? Object " + context + ", configuration: " + config);
         } else {
-            throw new IncompatibleReferenceException("there's no compatible reference to read object: " + config);
+            throw new IncompatibleReferenceException("there's no compatible reference to read object '" + context + "' with configuration: " + config);
         }
     }
 

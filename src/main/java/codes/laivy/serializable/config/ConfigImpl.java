@@ -30,6 +30,8 @@ final class ConfigImpl implements Config {
 
     private boolean ignoreCasting;
 
+    private final @NotNull Map<String, Object> metadata = new LinkedHashMap<>();
+
     public ConfigImpl(@Nullable Father father, @Nullable Object outerInstance, @NotNull Set<Class<?>> typeConcretes, @NotNull Map<Type, Collection<Class<?>>> genericConcretes, boolean bypassTransients, @NotNull Set<Field> includedFields, @NotNull ContextFactory contextFactory, @NotNull InstanceFactory instanceFactory, @Nullable Adapter adapter, boolean ignoreCasting) {
         this.father = father;
         this.outerInstance = outerInstance;
@@ -113,6 +115,11 @@ final class ConfigImpl implements Config {
     @Override
     public void setAdapter(@Nullable Adapter adapter) {
         this.adapter = adapter;
+    }
+
+    @Override
+    public @NotNull Map<String, Object> getMetadata() {
+        return metadata;
     }
 
     @Override

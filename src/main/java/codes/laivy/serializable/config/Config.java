@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Map;
 
 public interface Config {
 
@@ -50,6 +51,8 @@ public interface Config {
 
     @Nullable Adapter getAdapter();
     void setAdapter(@Nullable Adapter adapter);
+
+    @NotNull Map<String, Object> getMetadata();
 
     /**
      * If true, this method will ignore the casting at the #readResolve and #writeReplace methods,

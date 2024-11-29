@@ -92,6 +92,15 @@ public final class MethodSerializationTest {
         @NotNull WithCustomContextReturn deserialized = Objects.requireNonNull(Serializer.fromJson(WithCustomContextReturn.class, Serializer.toJson(new WithCustomContextReturn())));
         Assertions.assertEquals(new WithCustomContextReturn(), deserialized);
     }
+    @Test
+    @DisplayName("Test using custom sub inner class")
+    public void subInnerClass() {
+        @NotNull WithSubClass.Sub expected = new WithSubClass.Sub();
+        @NotNull JsonElement json = Serializer.toJson(expected);
+        
+        @NotNull WithSubClass.Sub deserialized = Objects.requireNonNull(Serializer.fromJson(expected.getClass(), json));
+        Assertions.assertEquals(expected, deserialized);
+    }
 
     // Failures
 
@@ -533,6 +542,75 @@ public final class MethodSerializationTest {
             return "WithCustomContextReturn{" +
                     "name='" + name + '\'' +
                     '}';
+        }
+
+    }
+
+    private static abstract class WithSubClass {
+
+        // Static initializers
+
+        private static int serialize(@NotNull String string) {
+            return Integer.parseInt(string);
+        }
+        private static @NotNull String deserialize(int i) {
+            return String.valueOf(i);
+        }
+
+        // Object
+
+        @MethodSerialization
+        protected final @NotNull String test;
+
+        public WithSubClass(@NotNull String test) {
+            this.test = test;
+        }
+
+        // Implementations
+
+        @Override
+        public boolean equals(@Nullable Object object) {
+            if (this == object) return true;
+            if (!(object instanceof WithSubClass)) return false;
+            WithSubClass that = (WithSubClass) object;
+            return Objects.equals(test, that.test);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(test);
+        }
+
+        // Classes
+
+        private static final class Sub extends WithSubClass {
+
+            private final @NotNull String cool = "a";
+
+            public Sub() {
+                super(String.valueOf(new Random().nextInt(99999)));
+            }
+
+            @Override
+            public boolean equals(@Nullable Object object) {
+                if (this == object) return true;
+                if (!(object instanceof Sub)) return false;
+                if (!super.equals(object)) return false;
+                Sub sub = (Sub) object;
+                return true;
+            }
+            @Override
+            public int hashCode() {
+                return Objects.hash(super.hashCode(), cool);
+            }
+
+            @Override
+            public @NotNull String toString() {
+                return "Sub{" +
+                        "cool='" + cool + '\'' +
+                        ", test='" + test + '\'' +
+                        '}';
+            }
+
         }
 
     }

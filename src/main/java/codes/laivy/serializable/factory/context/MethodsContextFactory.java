@@ -157,7 +157,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
             name = parts[1];
         } catch (@NotNull ClassNotFoundException e) {
-            throw new RuntimeException("cannot find class '" + parts[0] + "' from serialize method at @Serializers annotation", e);
+            throw new RuntimeException("cannot find class '" + parts[0] + "' from serialize method at @MethodSerialization annotation", e);
         } else {
             name = parts[0];
         }
@@ -185,7 +185,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
             name = parts[1];
         } catch (@NotNull ClassNotFoundException e) {
-            throw new RuntimeException("cannot find class '" + parts[0] + "' from deserialize method at @Serializers annotation", e);
+            throw new RuntimeException("cannot find class '" + parts[0] + "' from deserialize method at @MethodSerialization annotation", e);
         } else {
             name = parts[0];
         }
@@ -238,7 +238,7 @@ public final class MethodsContextFactory implements ContextFactory {
         try {
             return serialization.call(reference, object, config);
         } catch (@NotNull InvocationTargetException e) {
-            throw new RuntimeException("cannot execute serialize method from @Serializers annotation", e);
+            throw new RuntimeException("cannot execute serialize method from @MethodSerialization annotation", e);
         }
     }
     @Override
@@ -246,7 +246,7 @@ public final class MethodsContextFactory implements ContextFactory {
         try {
             return deserialization.call(reference, serializer, context, config);
         } catch (@NotNull InvocationTargetException e) {
-            throw new RuntimeException("cannot execute deserialize method from @Serializers annotation", e.getCause());
+            throw new RuntimeException("cannot execute deserialize method from @MethodSerialization annotation", e);
         }
     }
 

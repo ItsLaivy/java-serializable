@@ -76,7 +76,7 @@ import java.lang.annotation.*;
  * Example usages:
  * <pre>
  * {@code
- * @Serializers
+ * @MethodSerialization
  * public class CustomObject {
  *     // Fields and methods
  *
@@ -93,7 +93,7 @@ import java.lang.annotation.*;
  * </pre>
  * <pre>
  * {@code
- * @Serializers
+ * @MethodSerialization
  * public class CustomObject {
  *     // Fields and methods
  *

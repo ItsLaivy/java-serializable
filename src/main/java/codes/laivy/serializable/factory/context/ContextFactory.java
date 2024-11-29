@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+// todo: IdentifierSerialization
+//       It will allow to serialize/deserialize using id fields
 public interface ContextFactory {
 
     // Static initializers

@@ -46,7 +46,7 @@ public final class MapAdapter implements Adapter {
             return null;
         } else if (element instanceof Map) {
             @NotNull Map<?, ?> instance = (Map<?, ?>) element;
-            @NotNull Class<?> keyReference = config.getGenerics().stream().findFirst().orElseThrow(UnsupportedOperationException::new);
+            @Nullable Class<?> keyReference = config.getGenerics().stream().findFirst().orElse(null);
 
             if (keyReference == String.class) {
                 @NotNull MapContext map = MapContext.create(serializer);
