@@ -1,7 +1,6 @@
 package codes.laivy.serializable;
 
 import codes.laivy.serializable.config.Config;
-import codes.laivy.serializable.context.Context;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -205,9 +204,5 @@ public interface TypeSerializer<T> extends Serializer {
 
     @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable T element) throws IncompatibleReferenceException;
     @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @Nullable T element, @NotNull Config config) throws IncompatibleReferenceException;
-
-    // Context
-
-    @Nullable T serialize(@NotNull Context context);
 
 }

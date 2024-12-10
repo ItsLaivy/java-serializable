@@ -543,7 +543,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
         @Nullable Object object = deserializeUnsafe(reference, context, config);
 
         if (object != null && !Allocator.isAssignableFromIncludingPrimitive(reference, object.getClass())) {
-            throw new ClassCastException("the returned object from deserialization is '" + object + "' and cannot be cast to '" + reference.getName() + "'");
+            throw new ClassCastException("the returned object from deserialization is '" + object.getClass() + "' and cannot be cast to '" + reference.getName() + "'");
         }
 
         //noinspection unchecked
@@ -554,7 +554,7 @@ public abstract class AbstractTypeSerializer<T> implements TypeSerializer<T> {
         @Nullable Object object = deserializeUnsafe(reference, element, config);
 
         if (object != null && !Allocator.isAssignableFromIncludingPrimitive(reference, object.getClass())) {
-            throw new ClassCastException("the returned object from deserialization is '" + object + "' and cannot be cast to '" + reference.getName() + "'");
+            throw new ClassCastException("the returned object from deserialization is '" + object.getClass() + "' and cannot be cast to '" + reference.getName() + "'");
         }
 
         //noinspection unchecked

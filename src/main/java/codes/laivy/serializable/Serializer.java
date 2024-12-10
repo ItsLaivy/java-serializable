@@ -176,4 +176,8 @@ public interface Serializer {
     @NotNull Context toContext(@Nullable Object object);
     @NotNull Context toContext(@Nullable Object object, @NotNull Config config);
 
+    // Context
+
+    @Nullable Object serialize(@NotNull Context context);
+
 }
