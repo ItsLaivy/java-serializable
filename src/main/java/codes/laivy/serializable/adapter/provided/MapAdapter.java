@@ -26,6 +26,9 @@ public final class MapAdapter implements Adapter {
     @Override
     public @NotNull Class<?> @NotNull [] getReferences() {
         return new Class[] {
+                Map.class,
+                AbstractMap.class,
+
                 ConcurrentSkipListMap.class,
                 HashMap.class,
                 Hashtable.class,
@@ -77,7 +80,7 @@ public final class MapAdapter implements Adapter {
             throw new UnsupportedOperationException("cannot write reference '" + reference.getName() + "' using map adapter");
         }
     }
-    @SuppressWarnings({"ExtractMethodRecommender", "unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public @Nullable Object read(@NotNull Class<?> reference, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws IOException, InstantiationException {
         if (context.isNull()) {
@@ -108,6 +111,8 @@ public final class MapAdapter implements Adapter {
                 object = new UIDefaults();
             } else if (reference == WeakHashMap.class) {
                 object = new WeakHashMap<>();
+            } else if (Map.class.isAssignableFrom(reference)) {
+                object = new LinkedHashMap();
             } else {
                 throw new UnsupportedOperationException("you cannot use the reference '" + reference.getName() + "' at the map adapter");
             }

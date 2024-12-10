@@ -34,6 +34,12 @@ public final class CollectionAdapter implements Adapter {
     @Override
     public @NotNull Class<?> @NotNull [] getReferences() {
         return new Class[] {
+                Collection.class,
+                List.class,
+                Set.class,
+                AbstractList.class,
+                AbstractSet.class,
+
                 ARRAYS_ARRAYLIST,
                 ArrayList.class,
                 LinkedList.class,
@@ -138,6 +144,10 @@ public final class CollectionAdapter implements Adapter {
                 collection = new TreeSet();
             } else if (reference == Vector.class) {
                 collection = new Vector();
+            } else if (Set.class.isAssignableFrom(reference)) {
+                collection = new LinkedHashSet();
+            } else if (Collection.class.isAssignableFrom(reference) || List.class.isAssignableFrom(reference)) {
+                collection = new LinkedList();
             } else {
                 throw new UnsupportedOperationException("this reference collection '" + reference + "' isn't supported by this adapter");
             }
