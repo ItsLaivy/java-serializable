@@ -2,7 +2,10 @@ package codes.laivy.serializable.config;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
-import codes.laivy.serializable.annotations.*;
+import codes.laivy.serializable.annotations.BypassTransient;
+import codes.laivy.serializable.annotations.ExcludeFields;
+import codes.laivy.serializable.annotations.OnlyFields;
+import codes.laivy.serializable.annotations.UseEmptyConstructor;
 import codes.laivy.serializable.annotations.serializers.EnheritSerialization;
 import codes.laivy.serializable.annotations.serializers.MethodSerialization;
 import codes.laivy.serializable.config.Config.Father;
@@ -14,10 +17,10 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static codes.laivy.serializable.utilities.Classes.getFields;
 import static codes.laivy.serializable.utilities.Classes.isConcrete;
@@ -49,6 +52,9 @@ public final class Builder {
         @NotNull Class<?> enclosing = reference.isAnonymousClass() ? reference.getEnclosingClass() : reference;
         @NotNull Set<Class<?>> references = Classes.getReferences(enclosing);
 
+        // Adapter
+        @Nullable Adapter adapter = serializer.getAdapter(enclosing).orElse(null);
+
         // Check @EnheritSerializers annotations
         @Nullable MethodSerializer serializers = getSerializers(enclosing);
 
@@ -57,9 +63,9 @@ public final class Builder {
         @NotNull ContextFactory contextFactory;
 
         if (serializers != null) {
-            contextFactory = ContextFactory.methods(serializers.reference, serializers.methodSerialization);
+            contextFactory = ContextFactory.methods(serializer, serializers.reference, serializers.methodSerialization);
         } else {
-            if (references.size() == 1 && !isConcrete(enclosing)) {
+            if (adapter == null && references.size() == 1 && !isConcrete(enclosing)) {
                 throw new IllegalConcreteTypeException("this reference '" + enclosing.getName() + "' isn't concrete. Try to include @Concrete annotations");
             }
 
@@ -71,9 +77,6 @@ public final class Builder {
         } else {
             instanceFactory = InstanceFactory.allocator();
         }
-
-        // Adapter
-        @Nullable Adapter adapter = serializer.getAdapter(enclosing).orElse(null);
 
         // Finish
         this.father = null;
@@ -98,48 +101,14 @@ public final class Builder {
         typeConcretes.addAll(Classes.getReferences(father.getField()));
 
         // Generics
-        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new LinkedHashMap<>();
-
-        @NotNull LinkedList<AnnotatedElement> elements = new LinkedList<>();
-        elements.add(field.getAnnotatedType());
-
-        int count = 0;
-        while (!elements.isEmpty()) try {
-            @NotNull AnnotatedElement element = elements.poll();
-
-            if (element instanceof AnnotatedType) {
-                @NotNull AnnotatedType annotated = (AnnotatedType) element;
-                @NotNull Type type = annotated.getType();
-
-                if (element instanceof AnnotatedParameterizedType) {
-                    @NotNull AnnotatedParameterizedType parameterized = (AnnotatedParameterizedType) element;
-                    elements.addAll(Arrays.asList(parameterized.getAnnotatedActualTypeArguments()));
-                }
-
-                // Skip the first annotated element values to not catch field concretes
-                if (count == 0) {
-                    continue;
-                }
-
-                genericConcretes.putIfAbsent(type, new LinkedHashSet<>());
-                if (type instanceof Class && isConcrete((Class<?>) type)) {
-                    genericConcretes.get(type).add((Class<?>) type);
-                } if (annotated.isAnnotationPresent(Concrete.class)) {
-                    genericConcretes.get(type).add(annotated.getAnnotation(Concrete.class).type());
-                } if (annotated.isAnnotationPresent(Concretes.class)) {
-                    genericConcretes.get(type).addAll(Arrays.stream(annotated.getAnnotationsByType(Concretes.class)).flatMap(concretes -> Arrays.stream(concretes.value())).map(Concrete::type).collect(Collectors.toList()));
-                }
-            }
-        } finally {
-            count++;
-        }
+        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = Classes.getGenericTypes(field.getAnnotatedType());
 
         // Context factory
         @Nullable MethodSerializer serializers = field.isAnnotationPresent(MethodSerialization.class) ? new MethodSerializer(field.getDeclaringClass(), field.getAnnotation(MethodSerialization.class)) : getSerializers(enclosing);
         @NotNull ContextFactory contextFactory;
 
         if (serializers != null) {
-            contextFactory = ContextFactory.methods(serializers.reference, serializers.methodSerialization);
+            contextFactory = ContextFactory.methods(serializer, serializers.reference, serializers.methodSerialization);
         } else {
             contextFactory = ContextFactory.field();
         }
@@ -207,15 +176,20 @@ public final class Builder {
     }
 
     @Contract(value = "_->this")
-    public @NotNull Builder addGenericConcrete(@NotNull Class<?> reference) {
+    public @NotNull Builder addTypeConcrete(@NotNull Class<?> reference) {
         typeConcretes.add(reference);
         return this;
     }
     @Contract(value = "_,_->this")
-    public @NotNull Builder addTypeConcrete(@NotNull Type type, @NotNull Class<?> reference) {
+    public @NotNull Builder addGenericConcrete(@NotNull Type type, @NotNull Class<?> reference) {
         genericConcretes.putIfAbsent(type, new LinkedList<>());
         genericConcretes.get(type).add(reference);
 
+        return this;
+    }
+    @Contract(value = "_->this")
+    public @NotNull Builder addGenericConcrete(@NotNull Map<Type, Collection<Class<?>>> map) {
+        genericConcretes.putAll(map);
         return this;
     }
 
@@ -257,14 +231,14 @@ public final class Builder {
     // Builder
 
     public @NotNull Config build() {
-        return new ConfigImpl(father, outerInstance, typeConcretes, genericConcretes, bypassTransients, includedFields, contextFactory, instanceFactory, adapter, ignoreCasting);
+        return new ConfigImpl(father, outerInstance, typeConcretes, genericConcretes, bypassTransients, includedFields, contextFactory, instanceFactory, adapter, ignoreCasting, true);
     }
 
     // Utilities
 
     private static @Nullable MethodSerializer getSerializers(@NotNull Class<?> reference) {
         // Functions
-        @NotNull Function<Class<?>, Void> function = ref -> {
+        @NotNull Function<Class<?>, Void> verification = ref -> {
             if (reference.isAnnotationPresent(MethodSerialization.class) && reference.isAnnotationPresent(EnheritSerialization.class)) {
                 throw new IllegalStateException("the reference '" + reference.getName() + "' includes both @EnheritSerializers and @MethodSerialization annotation!");
             }
@@ -274,13 +248,13 @@ public final class Builder {
         // Retrieve method serializer instance
         @NotNull Class<?> owner = reference;
         @Nullable MethodSerialization methodSerialization = null;
-        function.apply(reference);
+        verification.apply(reference);
 
         if (reference.isAnnotationPresent(EnheritSerialization.class)) {
             @NotNull Class<?> sub = reference.getSuperclass();
 
             while (sub != Object.class) {
-                function.apply(sub);
+                verification.apply(sub);
 
                 if (sub.isAnnotationPresent(EnheritSerialization.class)) {
                     sub = sub.getSuperclass();

@@ -29,10 +29,11 @@ final class ConfigImpl implements Config {
     private @Nullable Adapter adapter;
 
     private boolean ignoreCasting;
+    private boolean useAdapter;
 
     private final @NotNull Map<String, Object> metadata = new LinkedHashMap<>();
 
-    public ConfigImpl(@Nullable Father father, @Nullable Object outerInstance, @NotNull Set<Class<?>> typeConcretes, @NotNull Map<Type, Collection<Class<?>>> genericConcretes, boolean bypassTransients, @NotNull Set<Field> includedFields, @NotNull ContextFactory contextFactory, @NotNull InstanceFactory instanceFactory, @Nullable Adapter adapter, boolean ignoreCasting) {
+    public ConfigImpl(@Nullable Father father, @Nullable Object outerInstance, @NotNull Set<Class<?>> typeConcretes, @NotNull Map<Type, Collection<Class<?>>> genericConcretes, boolean bypassTransients, @NotNull Set<Field> includedFields, @NotNull ContextFactory contextFactory, @NotNull InstanceFactory instanceFactory, @Nullable Adapter adapter, boolean ignoreCasting, boolean useAdapter) {
         this.father = father;
         this.outerInstance = outerInstance;
         this.typeConcretes = typeConcretes;
@@ -43,6 +44,7 @@ final class ConfigImpl implements Config {
         this.instanceFactory = instanceFactory;
         this.adapter = adapter;
         this.ignoreCasting = ignoreCasting;
+        this.useAdapter = useAdapter;
     }
 
     // Modules
@@ -95,7 +97,7 @@ final class ConfigImpl implements Config {
         return contextFactory;
     }
     @Override
-    public void setConextFactory(@NotNull ContextFactory contextFactory) {
+    public void setContextFactory(@NotNull ContextFactory contextFactory) {
         this.contextFactory = contextFactory;
     }
 
@@ -104,7 +106,7 @@ final class ConfigImpl implements Config {
         return instanceFactory;
     }
     @Override
-    public void setInstancFactory(@NotNull InstanceFactory instanceFactory) {
+    public void setInstanceFactory(@NotNull InstanceFactory instanceFactory) {
         this.instanceFactory = instanceFactory;
     }
 
@@ -129,6 +131,15 @@ final class ConfigImpl implements Config {
     @Override
     public void setIgnoreCasting(boolean ignoreCasting) {
         this.ignoreCasting = ignoreCasting;
+    }
+
+    @Override
+    public boolean useAdapter() {
+        return useAdapter;
+    }
+    @Override
+    public void setUseAdapter(boolean useAdapter) {
+        this.useAdapter = useAdapter;
     }
 
     // Implementations

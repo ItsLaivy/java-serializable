@@ -44,13 +44,16 @@ public interface Config {
     @NotNull Collection<Field> getIncludedFields();
 
     @NotNull ContextFactory getContextFactory();
-    void setConextFactory(@NotNull ContextFactory contextFactory);
+    void setContextFactory(@NotNull ContextFactory contextFactory);
 
     @NotNull InstanceFactory getInstanceFactory();
-    void setInstancFactory(@NotNull InstanceFactory instanceFactory);
+    void setInstanceFactory(@NotNull InstanceFactory instanceFactory);
 
     @Nullable Adapter getAdapter();
     void setAdapter(@Nullable Adapter adapter);
+
+    boolean useAdapter();
+    void setUseAdapter(boolean useAdapter);
 
     @NotNull Map<String, Object> getMetadata();
 
