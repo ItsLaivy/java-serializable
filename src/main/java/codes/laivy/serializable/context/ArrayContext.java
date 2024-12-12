@@ -1,6 +1,7 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.Serializer;
+import codes.laivy.serializable.annotations.Concrete;
 import codes.laivy.serializable.config.Config;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 // todo: writeAll
+@Concrete(type = ArrayContextImpl.class)
 public interface ArrayContext extends Context, Collection<Context> {
 
     // Static initializers

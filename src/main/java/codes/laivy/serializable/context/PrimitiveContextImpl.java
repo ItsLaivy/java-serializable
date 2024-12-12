@@ -1,10 +1,12 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
+@MethodSerialization
 final class PrimitiveContextImpl implements PrimitiveContext {
 
     // Object
@@ -57,6 +59,15 @@ final class PrimitiveContextImpl implements PrimitiveContext {
     @Override
     public @NotNull Object getObject() {
         return object;
+    }
+
+    // Serializers
+
+    private static @NotNull Object serialize(@NotNull PrimitiveContextImpl context) {
+        return context.getObject();
+    }
+    private static @NotNull PrimitiveContextImpl deserialize(@NotNull Object object) {
+        return new PrimitiveContextImpl(object);
     }
 
     // Implementations

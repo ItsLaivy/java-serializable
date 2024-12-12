@@ -1,7 +1,12 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.annotations.Concrete;
 import org.jetbrains.annotations.NotNull;
 
+@Concrete(type = ArrayContextImpl.class)
+@Concrete(type = MapContextImpl.class)
+@Concrete(type = NullContextImpl.class)
+@Concrete(type = PrimitiveContextImpl.class)
 public interface Context {
 
     // Object
@@ -10,7 +15,7 @@ public interface Context {
         if (this instanceof ArrayContext) {
             return (ArrayContext) this;
         } else {
-            throw new IllegalStateException("this instance isn't an array context");
+            throw new IllegalStateException("this instance isn't an array context: " + this.getClass().getName());
         }
     }
     default boolean isArray() {
@@ -21,7 +26,7 @@ public interface Context {
         if (this instanceof PrimitiveContext) {
             return (PrimitiveContext) this;
         } else {
-            throw new IllegalStateException("this instance isn't a primitive context");
+            throw new IllegalStateException("this instance isn't a primitive context: " + this.getClass().getName());
         }
     }
     default boolean isPrimitive() {
@@ -32,7 +37,7 @@ public interface Context {
         if (this instanceof MapContext) {
             return (MapContext) this;
         } else {
-            throw new IllegalStateException("this instance isn't a map context");
+            throw new IllegalStateException("this instance isn't a map context: " + this.getClass().getName());
         }
     }
     default boolean isMap() {
@@ -43,7 +48,7 @@ public interface Context {
         if (this instanceof NullContext) {
             return (NullContext) this;
         } else {
-            throw new IllegalStateException("this instance isn't a null context");
+            throw new IllegalStateException("this instance isn't a null context: " + this.getClass().getName());
         }
     }
     default boolean isNull() {

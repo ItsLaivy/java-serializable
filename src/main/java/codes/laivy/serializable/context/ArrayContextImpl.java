@@ -1,6 +1,8 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.Serializer;
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
+import codes.laivy.serializable.json.JsonSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,6 +12,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Objects;
 
+@MethodSerialization
 final class ArrayContextImpl implements ArrayContext {
 
     // Object
@@ -17,10 +20,15 @@ final class ArrayContextImpl implements ArrayContext {
     private final @NotNull Object lock = new Object();
     private final @NotNull Serializer serializer;
 
-    private final @NotNull LinkedList<Context> contexts = new LinkedList<>();
+    private final @NotNull LinkedList<Context> list;
 
     public ArrayContextImpl(@NotNull Serializer serializer) {
         this.serializer = serializer;
+        this.list = new LinkedList<>();
+    }
+    public ArrayContextImpl(@NotNull LinkedList<Context> list) {
+        this.serializer = JsonSerializer.getInstance();
+        this.list = list;
     }
 
     // Modules
@@ -35,11 +43,11 @@ final class ArrayContextImpl implements ArrayContext {
     @Override
     public @NotNull Context readContext() throws EOFException {
         synchronized (lock) {
-            if (contexts.isEmpty()) {
+            if (list.isEmpty()) {
                 throw new EOFException();
             }
 
-            return contexts.poll();
+            return list.poll();
         }
     }
     @Override
@@ -51,61 +59,70 @@ final class ArrayContextImpl implements ArrayContext {
 
     @Override
     public int size() {
-        return contexts.size();
+        return list.size();
     }
     @Override
     public boolean isEmpty() {
-        return contexts.isEmpty();
+        return list.isEmpty();
     }
 
     @Override
     public boolean contains(Object o) {
-        return contexts.contains(o);
+        return list.contains(o);
     }
 
     @Override
     public @NotNull Iterator<Context> iterator() {
-        return contexts.iterator();
+        return list.iterator();
     }
 
     @Override
     public @Nullable Object @NotNull [] toArray() {
-        return contexts.toArray();
+        return list.toArray();
     }
     @Override
     public <T> @NotNull T @NotNull [] toArray(@NotNull T @NotNull [] a) {
-        return contexts.toArray(a);
+        return list.toArray(a);
     }
 
     @Override
     public boolean add(@NotNull Context context) {
-        return contexts.add(context);
+        return list.add(context);
     }
     @Override
     public boolean remove(Object o) {
-        return contexts.remove(o);
+        return list.remove(o);
     }
 
     @Override
     public boolean containsAll(@NotNull Collection<?> c) {
-        return contexts.containsAll(c);
+        return list.containsAll(c);
     }
     @Override
     public boolean addAll(@NotNull Collection<? extends Context> c) {
-        return contexts.addAll(c);
+        return list.addAll(c);
     }
     @Override
     public boolean removeAll(@NotNull Collection<?> c) {
-        return contexts.removeAll(c);
+        return list.removeAll(c);
     }
     @Override
     public boolean retainAll(@NotNull Collection<?> c) {
-        return contexts.retainAll(c);
+        return list.retainAll(c);
     }
 
     @Override
     public void clear() {
-        contexts.clear();
+        list.clear();
+    }
+
+    // Serializers
+
+    private static @NotNull LinkedList<Context> serialize(@NotNull ArrayContextImpl context) {
+        return context.list;
+    }
+    private static @NotNull ArrayContextImpl deserialize(@NotNull LinkedList<Context> list) {
+        return new ArrayContextImpl(list);
     }
 
     // Implementations
@@ -115,19 +132,16 @@ final class ArrayContextImpl implements ArrayContext {
         if (this == object) return true;
         if (!(object instanceof ArrayContextImpl)) return false;
         @NotNull ArrayContextImpl contexts1 = (ArrayContextImpl) object;
-        return Objects.equals(getSerializer(), contexts1.getSerializer()) && Objects.equals(contexts, contexts1.contexts);
+        return Objects.equals(getSerializer(), contexts1.getSerializer()) && Objects.equals(list, contexts1.list);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getSerializer(), contexts);
+        return Objects.hash(getSerializer(), list);
     }
 
     @Override
     public @NotNull String toString() {
-        return "ArrayContextImpl{" +
-                "serializer=" + serializer +
-                ", contexts=" + contexts +
-                '}';
+        return list.toString();
     }
 
 }

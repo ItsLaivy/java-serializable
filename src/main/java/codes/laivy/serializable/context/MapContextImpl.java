@@ -1,11 +1,14 @@
 package codes.laivy.serializable.context;
 
 import codes.laivy.serializable.Serializer;
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
+import codes.laivy.serializable.json.JsonSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+@MethodSerialization
 final class MapContextImpl implements MapContext {
 
     // Object
@@ -13,10 +16,15 @@ final class MapContextImpl implements MapContext {
     private final @NotNull Object lock = new Object();
     private final @NotNull Serializer serializer;
 
-    private final @NotNull Map<String, Context> contextMap = new LinkedHashMap<>();
+    private final @NotNull Map<String, Context> map;
 
     public MapContextImpl(@NotNull Serializer serializer) {
         this.serializer = serializer;
+        this.map = new LinkedHashMap<>();
+    }
+    public MapContextImpl(@NotNull Map<String, Context> map) {
+        this.serializer = JsonSerializer.getInstance();
+        this.map = map;
     }
 
     // Modules
@@ -29,13 +37,13 @@ final class MapContextImpl implements MapContext {
     @Override
     public void setContext(@NotNull String name, @NotNull Context context) {
         synchronized (lock) {
-            contextMap.put(name, context);
+            map.put(name, context);
         }
     }
     @Override
     public @NotNull Context getContext(@NotNull String name) {
-        if (contextMap.containsKey(name)) {
-            return contextMap.get(name);
+        if (map.containsKey(name)) {
+            return map.get(name);
         } else {
             throw new IllegalArgumentException("there's no context with name '" + name + "'");
         }
@@ -43,27 +51,36 @@ final class MapContextImpl implements MapContext {
 
     @Override
     public @Nullable Context remove(@NotNull String name) {
-        return contextMap.remove(name);
+        return map.remove(name);
     }
 
     @Override
     public boolean contains(@NotNull String name) {
-        return contextMap.containsKey(name);
+        return map.containsKey(name);
     }
 
     @Override
     public @NotNull Set<@NotNull String> keySet() {
-        return contextMap.keySet();
+        return map.keySet();
     }
 
     @Override
     public @NotNull Set<Map.@NotNull Entry<@NotNull String, @NotNull Context>> entrySet() {
-        return contextMap.entrySet();
+        return map.entrySet();
     }
 
     @Override
     public @NotNull Collection<@NotNull Context> values() {
-        return contextMap.values();
+        return map.values();
+    }
+
+    // Serializers
+
+    private static @NotNull Map<String, Context> serialize(@NotNull MapContextImpl context) {
+        return context.map;
+    }
+    private static @NotNull MapContextImpl deserialize(@NotNull Map<String, Context> map) {
+        return new MapContextImpl(map);
     }
 
     // Implementations
@@ -73,19 +90,16 @@ final class MapContextImpl implements MapContext {
         if (this == object) return true;
         if (!(object instanceof MapContextImpl)) return false;
         @NotNull MapContextImpl that = (MapContextImpl) object;
-        return Objects.equals(getSerializer(), that.getSerializer()) && Objects.equals(contextMap, that.contextMap);
+        return Objects.equals(getSerializer(), that.getSerializer()) && Objects.equals(map, that.map);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getSerializer(), contextMap);
+        return Objects.hash(getSerializer(), map);
     }
 
     @Override
     public @NotNull String toString() {
-        return "MapContextImpl{" +
-                "serializer=" + serializer +
-                ", contextMap=" + contextMap +
-                '}';
+        return map.toString();
     }
 
 }

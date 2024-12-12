@@ -1,7 +1,9 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.annotations.Concrete;
 import org.jetbrains.annotations.NotNull;
 
+@Concrete(type = PrimitiveContextImpl.class)
 public interface PrimitiveContext extends Context {
 
     // Static initializers

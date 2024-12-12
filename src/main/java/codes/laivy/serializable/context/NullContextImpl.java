@@ -1,13 +1,24 @@
 package codes.laivy.serializable.context;
 
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@MethodSerialization
 final class NullContextImpl implements NullContext {
 
     // Object
 
     public NullContextImpl() {
+    }
+
+    // Serializers
+
+    private static @Nullable Object serialize(@NotNull NullContextImpl context) {
+        return null;
+    }
+    private static @NotNull NullContextImpl deserialize(@Nullable Object object) {
+        return new NullContextImpl();
     }
 
     // Implementations
