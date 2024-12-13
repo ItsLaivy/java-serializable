@@ -118,6 +118,12 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD})
+// todo: @ConstructorSerialization
+//       allows to deserialize using it's own class constructor, the constructor must have
+//       the same parameters (with same names or @KnownAs names) as the non-transient fields from it
+// todo: A 'propagate' variable that indicates all subclasses from the annotation's class will enherit as default the currently annotation
+// todo: A 'enherit' variable that indicates the class will enherit the first superclass (recursively) method serialization found (and delete @EnheritSerialization)
+// todo: This doesn't works for interface implementations
 public @interface MethodSerialization {
 
     /**
