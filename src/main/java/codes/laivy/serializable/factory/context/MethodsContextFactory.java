@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static codes.laivy.serializable.utilities.Classes.isConcrete;
 
+// todo: The #serialize or #deserialize methods are optional, but if try to serialize/deserialize without the respectively methods it will thrown an exception
 public final class MethodsContextFactory implements ContextFactory {
 
     // Static initializers
@@ -58,7 +59,7 @@ public final class MethodsContextFactory implements ContextFactory {
     }
 
     @SuppressWarnings("RedundantIfStatement")
-    private static boolean checkSerializerMethod(@NotNull Method method) {
+    private static boolean checkSerializerMethod(@NotNull Serializer serializer, @NotNull Method method) {
         if (!Modifier.isStatic(method.getModifiers())) {
             return false; // Must be static
         } else if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
@@ -86,26 +87,30 @@ public final class MethodsContextFactory implements ContextFactory {
         return true;
     }
     @SuppressWarnings("RedundantIfStatement")
-    private static boolean checkDeserializerMethod(@NotNull Method method) {
+    private static boolean checkDeserializerMethod(@NotNull Serializer serializer, @NotNull Method method) {
         // Check object parameter's concrete reference
         @NotNull Predicate<Parameter> predicate = parameter -> {
             @NotNull Class<?> reference = parameter.getType();
 
             if (reference == Context.class) {
                 return true;
-            } else if (reference == ArrayContext.class) {
+            } else if (ArrayContext.class.isAssignableFrom(reference)) {
                 return true;
-            } else if (reference == MapContext.class) {
+            } else if (MapContext.class.isAssignableFrom(reference)) {
                 return true;
-            } else if (reference == PrimitiveContext.class) {
+            } else if (PrimitiveContext.class.isAssignableFrom(reference)) {
                 return true;
-            } else if (reference == NullContext.class) {
+            } else if (NullContext.class.isAssignableFrom(reference)) {
                 return true;
             } else if (Context.class.isAssignableFrom(reference)) {
                 throw new UnsupportedOperationException("illegal context type '" + reference + "'. You should only use Context, ArrayContext, MapContext, PrimitiveContext or NullContext");
-            } else {
-                return Arrays.stream(getType(parameter)).anyMatch(Classes::isConcrete);
+            } else if (Arrays.stream(getType(parameter)).anyMatch(Classes::isConcrete)) {
+                return true;
+            } else if (serializer.getAdapter(parameter.getType()).isPresent()) {
+                return true;
             }
+
+            return false;
         };
 
         // Validation
@@ -143,7 +148,7 @@ public final class MethodsContextFactory implements ContextFactory {
         return true;
     }
 
-    public static @NotNull Method getSerializerMethod(@NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
+    public static @NotNull Method getSerializerMethod(@NotNull Serializer serializer, @NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
         @NotNull String string = annotation.serialization();
         @NotNull String[] parts = string.split("#");
         @NotNull String name;
@@ -164,14 +169,14 @@ public final class MethodsContextFactory implements ContextFactory {
 
         // Get methods
         for (@NotNull Method method : declaringClass.getDeclaredMethods()) {
-            if (method.getName().equals(name) && checkSerializerMethod(method)) {
+            if (method.getName().equals(name) && checkSerializerMethod(serializer, method)) {
                 return method;
             }
         }
 
-        throw new MalformedSerializerException("there's no valid #serialize method named '" + name + "' at class '" + declaringClass + "'");
+        throw new MalformedSerializerException("there's no valid serialize method named '" + name + "' at class '" + declaringClass + "'");
     }
-    public static @NotNull Method getDeserializerMethod(@NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
+    public static @NotNull Method getDeserializerMethod(@NotNull Serializer serializer, @NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
         @NotNull String string = annotation.deserialization();
         @NotNull String[] parts = string.split("#");
         @NotNull String name;
@@ -192,7 +197,7 @@ public final class MethodsContextFactory implements ContextFactory {
 
         // Get methods
         for (@NotNull Method method : declaringClass.getDeclaredMethods()) {
-            if (method.getName().equals(name) && checkDeserializerMethod(method)) {
+            if (method.getName().equals(name) && checkDeserializerMethod(serializer, method)) {
                 return method;
             }
         }
@@ -205,21 +210,21 @@ public final class MethodsContextFactory implements ContextFactory {
     private final @NotNull Serialization serialization;
     private final @NotNull Deserialization deserialization;
 
-    MethodsContextFactory(@NotNull Method serialization, @NotNull Method deserialization, boolean verify) {
+    MethodsContextFactory(@NotNull Serializer serializer, @NotNull Method serializeMethod, @NotNull Method deserializeMethod, boolean verify) {
         if (verify) {
             // Checks
-            if (!checkSerializerMethod(serialization)) {
-                throw new IllegalArgumentException("this serializer method '" + serialization + "' is invalid!");
-            } else if (!checkSerializerMethod(deserialization)) {
-                throw new IllegalArgumentException("this deserializer method '" + deserialization + "' is invalid!");
+            if (!checkSerializerMethod(serializer, serializeMethod)) {
+                throw new IllegalArgumentException("this serializer method '" + serializeMethod + "' is invalid!");
+            } else if (!checkDeserializerMethod(serializer, deserializeMethod)) {
+                throw new IllegalArgumentException("this deserializer method '" + deserializeMethod + "' is invalid!");
             }
         }
 
-        this.serialization = new Serialization(serialization);
-        this.deserialization = new Deserialization(deserialization);
+        this.serialization = new Serialization(serializeMethod);
+        this.deserialization = new Deserialization(deserializeMethod);
     }
-    public MethodsContextFactory(@NotNull Method serialization, @NotNull Method deserialization) {
-        this(serialization, deserialization, true);
+    public MethodsContextFactory(@NotNull Serializer serializer, @NotNull Method serializeMethod, @NotNull Method deserializeMethod) {
+        this(serializer, serializeMethod, deserializeMethod, true);
     }
 
     // Getters
@@ -236,7 +241,19 @@ public final class MethodsContextFactory implements ContextFactory {
     @Override
     public @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
         try {
-            return serialization.call(reference, object, config);
+            @NotNull Method method = serialization.getMethod();
+            @Nullable Object serialized = serialization.call(reference, object, config);
+
+            if (serialized != null) reference = serialized.getClass();
+            else reference = method.getReturnType();
+
+            // todo: Improve this recurring serialization system
+            if (serialized instanceof Context) {
+                return serialized;
+            } else {
+                @NotNull Config temp = Config.builder(serializer, reference).addGenericConcrete(Classes.getGenericTypes(method.getAnnotatedReturnType())).build();
+                return serializer.serialize(serialized, temp);
+            }
         } catch (@NotNull InvocationTargetException e) {
             throw new RuntimeException("cannot execute serialize method from @MethodSerialization annotation", e);
         }
@@ -363,14 +380,30 @@ public final class MethodsContextFactory implements ContextFactory {
                 public @Nullable Object apply(@NotNull Parameter parameter) {
                     if (parameter.getType() == Context.class) {
                         return context;
-                    } else if (parameter.getType() == ArrayContext.class) {
+                    } else if (ArrayContext.class.isAssignableFrom(parameter.getType())) {
+                        if (!context.isArray()) {
+                            throw new IncompatibleReferenceException("to deserialize an array context the context must be an array: " + context);
+                        }
+
                         return context.getAsArray();
-                    } else if (parameter.getType() == MapContext.class) {
+                    } else if (MapContext.class.isAssignableFrom(parameter.getType())) {
+                        if (!context.isMap()) {
+                            throw new IncompatibleReferenceException("to deserialize a map context the context must be a map: " + context);
+                        }
+
                         return context.getAsMap();
-                    } else if (parameter.getType() == PrimitiveContext.class) {
-                        return context.getAsPrimitive();
-                    } else if (parameter.getType() == NullContext.class) {
+                    } else if (NullContext.class.isAssignableFrom(parameter.getType())) {
+                        if (!context.isNull()) {
+                            throw new IncompatibleReferenceException("to deserialize a null context the context must be a null: " + context);
+                        }
+
                         return context.getAsNull();
+                    } else if (PrimitiveContext.class.isAssignableFrom(parameter.getType())) {
+                        if (!context.isPrimitive()) {
+                            throw new IncompatibleReferenceException("to deserialize a primitive context the context must be a primitive: " + context);
+                        }
+
+                        return context.getAsPrimitive();
                     } else if (Context.class.isAssignableFrom(parameter.getType())) {
                         throw new UnsupportedOperationException("illegal context type '" + parameter.getType() + "'. You should only use Context, ArrayContext, MapContext, PrimitiveContext or NullContext");
                     } else {

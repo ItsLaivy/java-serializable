@@ -19,11 +19,11 @@ public interface ContextFactory {
     static @NotNull ContextFactory field() {
         return new NativeContextFactory();
     }
-    static @NotNull ContextFactory methods(@NotNull Method serializer, @NotNull Method deserializer) {
-        return new MethodsContextFactory(serializer, deserializer, true);
+    static @NotNull ContextFactory methods(@NotNull Serializer serializer, @NotNull Method serializeMethod, @NotNull Method deserializeMethod) {
+        return new MethodsContextFactory(serializer, serializeMethod, deserializeMethod, true);
     }
-    static @NotNull ContextFactory methods(@NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
-        return new MethodsContextFactory(MethodsContextFactory.getSerializerMethod(declaringClass, annotation), MethodsContextFactory.getDeserializerMethod(declaringClass, annotation), false);
+    static @NotNull ContextFactory methods(@NotNull Serializer serializer, @NotNull Class<?> declaringClass, @NotNull MethodSerialization annotation) {
+        return new MethodsContextFactory(serializer, MethodsContextFactory.getSerializerMethod(serializer, declaringClass, annotation), MethodsContextFactory.getDeserializerMethod(serializer, declaringClass, annotation), false);
     }
 
     // Object

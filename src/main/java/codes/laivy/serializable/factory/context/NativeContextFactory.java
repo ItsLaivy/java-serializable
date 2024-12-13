@@ -3,6 +3,8 @@ package codes.laivy.serializable.factory.context;
 import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.adapter.Adapter;
+import codes.laivy.serializable.annotations.serializers.EnheritSerialization;
+import codes.laivy.serializable.annotations.serializers.MethodSerialization;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IllegalConcreteTypeException;
@@ -33,9 +35,9 @@ public final class NativeContextFactory implements ContextFactory {
 
     @Override
     public @Nullable Object write(@NotNull Class<?> reference, @Nullable Object object, @NotNull Serializer serializer, @NotNull Config config) {
-        @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
+        @Nullable Adapter adapter = config.getAdapter();
 
-        if (adapter != null) {
+        if (config.useAdapter() && adapter != null) {
             return adapter.write(reference, object, serializer, config);
         } else if (object == null) {
             return null;
@@ -144,10 +146,27 @@ public final class NativeContextFactory implements ContextFactory {
     @SuppressWarnings("unchecked")
     @Override
     public @Nullable Object read(@NotNull Class<?> main, @NotNull Serializer serializer, @NotNull Context context, @NotNull Config config) throws IOException, InstantiationException {
-        for (@NotNull Class<?> reference : config.getTypes()) try {
-            @Nullable Adapter adapter = serializer.getAdapter(reference).orElse(null);
+        @Nullable Adapter adapter = config.getAdapter();
 
-            if (adapter != null) {
+        for (@NotNull Class<?> reference : config.getTypes()) try {
+            if (adapter == null) {
+                adapter = serializer.getAdapter(reference).orElse(null);
+            }
+
+            if (reference.isAnnotationPresent(MethodSerialization.class) || reference.isAnnotationPresent(EnheritSerialization.class)) {
+                @NotNull Config xConfig;
+
+                if (config.getFather() != null) {
+                    xConfig = Config.builder(serializer, reference, config.getFather()).build();
+                } else {
+                    xConfig = Config.builder(serializer, reference).build();
+                }
+
+                xConfig.getMetadata().putAll(config.getMetadata());
+                return serializer.deserialize(reference, context, xConfig);
+            }
+
+            if (config.useAdapter() && adapter != null) {
                 return adapter.read(reference, serializer, context, config);
             } else if (!isConcrete(reference)) {
                 continue;
@@ -302,7 +321,7 @@ public final class NativeContextFactory implements ContextFactory {
             if (config.getTypes().size() == 1) throw e;
         }
 
-        if (config.getTypes().isEmpty() || !isConcrete(main)) {
+        if (config.getTypes().isEmpty() && !isConcrete(main)) {
             throw new IllegalConcreteTypeException("there's no concrete type for reference '" + main.getName() + "'. Is it missing any adapters? Object " + context + ", configuration: " + config);
         } else {
             throw new IncompatibleReferenceException("there's no compatible reference to read object '" + context + "' with configuration: " + config);
