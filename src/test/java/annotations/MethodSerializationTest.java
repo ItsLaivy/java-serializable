@@ -101,6 +101,14 @@ public final class MethodSerializationTest {
         @NotNull WithSubClass.Sub deserialized = Objects.requireNonNull(Serializer.fromJson(expected.getClass(), json));
         Assertions.assertEquals(expected, deserialized);
     }
+    @Test
+    @DisplayName("Test configuration enheritance")
+    public void enheritConfiguration() {
+        @NotNull EnheritConfiguration expected = new EnheritConfiguration();
+        @NotNull JsonElement json = Serializer.toJson(expected);
+
+        Assertions.assertEquals(EnheritConfiguration.expectedJson, json);
+    }
 
     // Failures
 
@@ -178,6 +186,44 @@ public final class MethodSerializationTest {
         }
 
     }
+
+    @MethodSerialization
+    private static final class EnheritConfiguration {
+
+        // Static initializers
+
+        public static final @NotNull Map<String, String> expectedMap = new LinkedHashMap<>();
+        public static final @NotNull JsonObject expectedJson = new JsonObject();
+
+        static {
+            // Expected map
+            expectedMap.put("test1", "result1");
+            expectedMap.put("test2", "result2");
+
+            // Expected json
+            expectedJson.addProperty("test1", "result1");
+            expectedJson.addProperty("test2", "result2");
+        }
+
+        // Object
+
+        // Ignore this field
+        private final @NotNull String ignore = "";
+
+        private EnheritConfiguration() {
+        }
+
+        // Serializers
+
+        private static @NotNull Map<String, String> serialize(@NotNull EnheritConfiguration configuration) {
+            return expectedMap;
+        }
+        private static @NotNull EnheritConfiguration deserialize(@NotNull Map<String, String> map) {
+            return new EnheritConfiguration();
+        }
+
+    }
+
     @MethodSerialization(deserialization = "#deserialize01", serialization = "#serialize01")
     private static final class Custom {
 

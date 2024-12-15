@@ -13,10 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +23,47 @@ import static codes.laivy.serializable.config.Config.Father;
 public final class Classes {
 
     // Static initializers
+
+    public static @NotNull Map<Type, Collection<Class<?>>> getGenericTypes(@NotNull AnnotatedType primary) {
+        // Generics
+        @NotNull Map<Type, Collection<Class<?>>> genericConcretes = new LinkedHashMap<>();
+
+        @NotNull LinkedList<AnnotatedElement> elements = new LinkedList<>();
+        elements.add(primary);
+
+        int count = 0;
+        while (!elements.isEmpty()) try {
+            @NotNull AnnotatedElement element = elements.poll();
+
+            if (element instanceof AnnotatedType) {
+                @NotNull AnnotatedType annotated = (AnnotatedType) element;
+                @NotNull Type type = annotated.getType();
+
+                if (element instanceof AnnotatedParameterizedType) {
+                    @NotNull AnnotatedParameterizedType parameterized = (AnnotatedParameterizedType) element;
+                    elements.addAll(Arrays.asList(parameterized.getAnnotatedActualTypeArguments()));
+                }
+
+                // Skip the first annotated element values to not catch field concretes
+                if (count == 0) {
+                    continue;
+                }
+
+                genericConcretes.putIfAbsent(type, new LinkedHashSet<>());
+                if (type instanceof Class && isConcrete((Class<?>) type)) {
+                    genericConcretes.get(type).add((Class<?>) type);
+                } if (annotated.isAnnotationPresent(Concrete.class)) {
+                    genericConcretes.get(type).add(annotated.getAnnotation(Concrete.class).type());
+                } if (annotated.isAnnotationPresent(Concretes.class)) {
+                    genericConcretes.get(type).addAll(Arrays.stream(annotated.getAnnotationsByType(Concretes.class)).flatMap(concretes -> Arrays.stream(concretes.value())).map(Concrete::type).collect(Collectors.toList()));
+                }
+            }
+        } finally {
+            count++;
+        }
+
+        return genericConcretes;
+    }
 
     public static @Nullable Object callWriteReplace(@NotNull Object object, boolean ignoreCasting) throws NoSuchMethodException {
         @NotNull Class<?> reference = object.getClass();

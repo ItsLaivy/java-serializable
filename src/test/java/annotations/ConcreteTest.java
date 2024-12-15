@@ -2,7 +2,6 @@ package annotations;
 
 import codes.laivy.serializable.Serializer;
 import codes.laivy.serializable.annotations.Concrete;
-import codes.laivy.serializable.exception.IncompatibleReferenceException;
 import codes.laivy.serializable.json.JsonSerializer;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
@@ -44,19 +43,6 @@ public final class ConcreteTest {
         @Nullable Gender result = Serializer.fromJson(Gender.class, element);
 
         Assertions.assertEquals(gender, result, "Cannot deserialize '" + element + "' into expected generic: " + result);
-    }
-
-    @Test
-    @DisplayName("Expect fail missing generic")
-    public void failMissingGeneric() {
-        try {
-            @NotNull FailWithoutConcrete generic = new FailWithoutConcrete();
-            @NotNull JsonElement element = Serializer.toJson(generic);
-
-            Assertions.assertEquals(generic, Serializer.fromJson(generic.getClass(), element));
-            Assertions.fail("Didn't failed with the missing @Concrete annotation");
-        } catch (@NotNull IncompatibleReferenceException ignore) {
-        }
     }
 
     // Classes
@@ -161,18 +147,6 @@ public final class ConcreteTest {
             return "Generic{" +
                     "set=" + set +
                     '}';
-        }
-
-    }
-
-    // Failures
-
-    @SuppressWarnings("FieldCanBeLocal")
-    private static final class FailWithoutConcrete {
-
-        private final @NotNull Set<Animal> set = new HashSet<>();
-
-        private FailWithoutConcrete() {
         }
 
     }

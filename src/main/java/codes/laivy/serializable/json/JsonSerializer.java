@@ -5,11 +5,13 @@ import codes.laivy.serializable.Allocator;
 import codes.laivy.serializable.config.Config;
 import codes.laivy.serializable.context.*;
 import codes.laivy.serializable.exception.IncompatibleReferenceException;
+import codes.laivy.serializable.factory.context.ContextFactory;
 import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
@@ -40,7 +42,7 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
             return serialize((Context) response);
         } else {
             // Serialize again
-            return serialize(response);
+            return Objects.requireNonNull(serialize(response), "serialized response returned an unexpected null");
         }
     }
 
@@ -48,9 +50,38 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
     @Override
     public @Nullable Object deserializeUnsafe(@NotNull Class<?> reference, @NotNull Context context, @NotNull Config config) throws IncompatibleReferenceException {
-        // Deserialize with factory
-        try {
-            return config.getContextFactory().read(reference, this, context, config);
+        if (reference == Context.class) {
+            return context;
+        } else if (MapContext.class.isAssignableFrom(reference)) {
+            if (!context.isMap()) {
+                throw new IncompatibleReferenceException("to deserialize a map context the context must be a map: " + context);
+            }
+
+            return context.getAsMap();
+        } else if (ArrayContext.class.isAssignableFrom(reference)) {
+            if (!context.isArray()) {
+                throw new IncompatibleReferenceException("to deserialize an array context the context must be an array: " + context);
+            }
+
+            return context.getAsArray();
+        } else if (PrimitiveContext.class.isAssignableFrom(reference)) {
+            if (!context.isPrimitive()) {
+                throw new IncompatibleReferenceException("to deserialize a primitive context the context must be a primitive: " + context);
+            }
+
+            return context.isPrimitive();
+        } else if (NullContext.class.isAssignableFrom(reference)) {
+            if (!context.isNull()) {
+                throw new IncompatibleReferenceException("to deserialize a null context the context must be a null: " + context);
+            }
+
+            return context.getAsNull();
+        } else if (Context.class.isAssignableFrom(reference)) {
+            throw new UnsupportedOperationException("illegal context type '" + reference + "'. You should only use Context, ArrayContext, MapContext, PrimitiveContext or NullContext");
+        } else try {
+            // Deserialize with factory
+            @NotNull ContextFactory factory = config.getContextFactory();
+            return factory.read(reference, this, context, config);
         } catch (@NotNull IOException e) {
             throw new RuntimeException(e);
         } catch (@NotNull InstantiationException e) {
@@ -70,7 +101,8 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
             return NullContext.create();
         } else {
             // Generate using context factory
-            @Nullable Object instance = config.getContextFactory().write(object.getClass(), object, this, config);
+            @NotNull ContextFactory factory = config.getContextFactory();
+            @Nullable Object instance = factory.write(object.getClass(), object, this, config);
 
             if (instance instanceof Context) {
                 return (Context) instance;
