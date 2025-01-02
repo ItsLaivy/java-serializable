@@ -32,7 +32,7 @@ public final class Allocator {
     }};
 
     static {
-        try (@NotNull BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Allocator.class.getResourceAsStream("/version"), "cannot retrieve version stream")))) {
+        try (@NotNull BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Allocator.class.getResourceAsStream("/java-serializable-version.txt"), "cannot retrieve version stream")))) {
             VERSION = reader.readLine();
         } catch (@NotNull IOException e) {
             throw new RuntimeException(e);

@@ -46,7 +46,6 @@ public final class NativeContextFactory implements ContextFactory {
         // Array block
         {
             if (reference.isArray()) {
-                @NotNull Class<?> component = reference.getComponentType();
                 @NotNull ArrayContext context = ArrayContext.create(serializer);
                 int length = Array.getLength(object);
 
@@ -60,7 +59,7 @@ public final class NativeContextFactory implements ContextFactory {
 
         // Primitive block
         {
-            if (reference.isEnum()) {
+            if (reference.isEnum() || (reference.getEnclosingClass() != null && reference.getEnclosingClass().isEnum())) {
                 return PrimitiveContext.create(((Enum<?>) object).name());
             } else if (Allocator.isAssignableFromIncludingPrimitive(Boolean.class, reference)) {
                 return PrimitiveContext.create((Boolean) object);
