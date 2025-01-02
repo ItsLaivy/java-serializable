@@ -17,6 +17,10 @@ final class FatherImpl implements Father {
     public FatherImpl(@NotNull Field field, @NotNull Object instance) {
         this.field = field;
         this.instance = instance;
+
+        if (!field.getDeclaringClass().isAssignableFrom(getInstance().getClass())) {
+            throw new IllegalStateException("the father instance isn't from the field class");
+        }
     }
 
     // Getters

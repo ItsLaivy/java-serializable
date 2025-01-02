@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
@@ -143,9 +144,18 @@ public final class Builder {
             includedFields.removeIf(f -> excluded.contains(f.getName()));
         }
 
+        // Outer instance
+        enclosing = reference.getEnclosingClass();
+
+        if (!Modifier.isStatic(reference.getModifiers()) && enclosing != null) {
+
+            if (enclosing == field.getDeclaringClass()) {
+                this.outerInstance = father.getInstance();
+            }
+        }
+
         // Finish
         this.father = father;
-        this.outerInstance = null;
         this.typeConcretes.addAll(typeConcretes);
         this.genericConcretes.putAll(genericConcretes);
         this.bypassTransients = bypassTransients;
