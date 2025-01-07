@@ -259,6 +259,8 @@ public final class Classes {
             return isConcrete(reference.getComponentType());
         } else if (reference.isPrimitive()) {
             return true;
+        } else if (reference.isEnum()) {
+            return true;
         }
 
         return !Modifier.isInterface(reference.getModifiers()) && !Modifier.isAbstract(reference.getModifiers());
