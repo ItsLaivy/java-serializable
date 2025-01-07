@@ -66,7 +66,7 @@ public final class Builder {
         if (serializers != null) {
             contextFactory = ContextFactory.methods(serializer, serializers.reference, serializers.methodSerialization);
         } else {
-            if (adapter == null && references.size() == 1 && !isConcrete(enclosing)) {
+            if (!reference.isArray() && adapter == null && references.size() == 1 && !isConcrete(enclosing)) {
                 throw new IllegalConcreteTypeException("this reference '" + enclosing.getName() + "' isn't concrete. Try to include @Concrete annotations");
             }
 

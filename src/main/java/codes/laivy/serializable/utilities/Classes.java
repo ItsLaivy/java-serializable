@@ -256,7 +256,7 @@ public final class Classes {
     }
     public static boolean isConcrete(@NotNull Class<?> reference) {
         if (reference.isArray()) {
-            return isConcrete(reference.getComponentType());
+            return true;
         } else if (reference.isPrimitive()) {
             return true;
         } else if (reference.isEnum()) {
