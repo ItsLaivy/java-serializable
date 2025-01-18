@@ -200,6 +200,8 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
                 return new JsonPrimitive(primitive.getAsDouble());
             } else if (Allocator.isAssignableFromIncludingPrimitive(String.class, reference)) {
                 return new JsonPrimitive(primitive.getAsString());
+            } else if (Number.class.isAssignableFrom(reference)) {
+                return new JsonPrimitive((Number) primitive.getObject());
             } else {
                 throw new UnsupportedOperationException("cannot deserialize reference '" + reference + "' with a primitive context, is missing any adapter");
             }
