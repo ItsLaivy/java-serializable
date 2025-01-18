@@ -21,6 +21,8 @@ import java.io.StreamCorruptedException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -65,6 +67,8 @@ public final class NativeContextFactory implements ContextFactory {
                 return PrimitiveContext.create((Boolean) object);
             } else if (Allocator.isAssignableFromIncludingPrimitive(Short.class, reference)) {
                 return PrimitiveContext.create((Short) object);
+            } else if (Allocator.isAssignableFromIncludingPrimitive(Byte.class, reference)) {
+                return PrimitiveContext.create((Byte) object);
             } else if (Allocator.isAssignableFromIncludingPrimitive(Integer.class, reference)) {
                 return PrimitiveContext.create((Integer) object);
             } else if (Allocator.isAssignableFromIncludingPrimitive(Long.class, reference)) {
@@ -75,10 +79,10 @@ public final class NativeContextFactory implements ContextFactory {
                 return PrimitiveContext.create((Double) object);
             } else if (Allocator.isAssignableFromIncludingPrimitive(Character.class, reference)) {
                 return PrimitiveContext.create((Character) object);
-            } else if (Allocator.isAssignableFromIncludingPrimitive(Byte.class, reference)) {
-                return PrimitiveContext.create((Byte) object);
             } else if (Allocator.isAssignableFromIncludingPrimitive(String.class, reference)) {
                 return PrimitiveContext.create((String) object);
+            } else if (reference == BigDecimal.class || reference == BigInteger.class) {
+                return PrimitiveContext.create((Number) object);
             }
         }
 

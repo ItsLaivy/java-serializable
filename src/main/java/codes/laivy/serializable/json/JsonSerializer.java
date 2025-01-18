@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
 
@@ -41,8 +40,69 @@ public final class JsonSerializer extends AbstractTypeSerializer<JsonElement> {
         if (response instanceof Context) {
             return serialize((Context) response);
         } else {
-            // Serialize again
-            return Objects.requireNonNull(serialize(response), "serialized response returned an unexpected null");
+            @Nullable JsonElement element;
+
+            if (object instanceof Enum) {
+                element = serialize((Enum<?>) object);
+            } else if (object instanceof Enum[]) {
+                element = (JsonArray) serialize((Enum<?>[]) object);
+            } else if (object instanceof Boolean) {
+                element = serialize((Boolean) object);
+            } else if (object instanceof Boolean[]) {
+                element = (JsonArray) serialize((Boolean[]) object);
+            } else if (object instanceof boolean[]) {
+                element = (JsonArray) serialize((boolean[]) object);
+            } else if (object instanceof Short) {
+                element = serialize((Short) object);
+            } else if (object instanceof Short[]) {
+                element = (JsonArray) serialize((Short[]) object);
+            } else if (object instanceof short[]) {
+                element = (JsonArray) serialize((short[]) object);
+            } else if (object instanceof Byte) {
+                element = serialize((Byte) object);
+            } else if (object instanceof Byte[]) {
+                element = (JsonArray) serialize((Byte[]) object);
+            } else if (object instanceof byte[]) {
+                element = (JsonArray) serialize((byte[]) object);
+            } else if (object instanceof Integer) {
+                element = serialize((Integer) object);
+            } else if (object instanceof Integer[]) {
+                element = (JsonArray) serialize((Integer[]) object);
+            } else if (object instanceof int[]) {
+                element = (JsonArray) serialize((int[]) object);
+            } else if (object instanceof Long) {
+                element = serialize((Long) object);
+            } else if (object instanceof Long[]) {
+                element = (JsonArray) serialize((Long[]) object);
+            } else if (object instanceof long[]) {
+                element = (JsonArray) serialize((long[]) object);
+            } else if (object instanceof Float) {
+                element = serialize((Float) object);
+            } else if (object instanceof Float[]) {
+                element = (JsonArray) serialize((Float[]) object);
+            } else if (object instanceof float[]) {
+                element = (JsonArray) serialize((float[]) object);
+            } else if (object instanceof Double) {
+                element = serialize((Double) object);
+            } else if (object instanceof Double[]) {
+                element = (JsonArray) serialize((Double[]) object);
+            } else if (object instanceof double[]) {
+                element = (JsonArray) serialize((double[]) object);
+            } else if (object instanceof Character) {
+                element = serialize((Character) object);
+            } else if (object instanceof Character[]) {
+                element = (JsonArray) serialize((Character[]) object);
+            } else if (object instanceof char[]) {
+                element = (JsonArray) serialize((char[]) object);
+            } else if (object instanceof String) {
+                element = serialize((String) object);
+            } else if (object instanceof String[]) {
+                element = (JsonArray) serialize((String[]) object);
+            } else {
+                element = serialize(response);
+            }
+
+            return element != null ? element : JsonNull.INSTANCE;
         }
     }
 
